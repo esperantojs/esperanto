@@ -39,8 +39,6 @@ glob( 'sample/output/*' ).then( function ( result ) {
 			Object.keys( profiles ).forEach( function ( id ) {
 				var profile = profiles[ id ];
 
-				console.log( 'profile', profile );
-
 				inputs.forEach( function ( input ) {
 					readFile( input ).then( function ( result ) {
 						var output, dest;
@@ -53,7 +51,9 @@ glob( 'sample/output/*' ).then( function ( result ) {
 								writeFile( dest, output );
 							});
 						} catch ( err ) {
-
+							if ( !/defaultOnly/.test( err ) ) {
+								throw err;
+							}
 						}
 					}).catch( function ( err ) {
 						setTimeout( function () {
