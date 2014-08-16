@@ -73,7 +73,7 @@ define(['foo'], function (foo) {
 
 ## Why not use existing module transpilers?
 
-Let's consider a simple module:
+There are already a couple of ES6 module transpilers. But let's consider a simple module:
 
 **test.js**
 ```js
@@ -82,9 +82,7 @@ var bar = foo.toUpperCase();
 export default bar;
 ```
 
-### transpile
-
-There are already a couple of ES6 module transpilers. First we'll try [transpile](https://github.com/bitovi/transpile):
+### [transpile](https://github.com/bitovi/transpile)
 
 ```js
 var transpile = require( 'transpile' );
@@ -118,9 +116,7 @@ define('sample', ['foo'], function ($__0) {
 Wait, I'm supposed to use Traceur in production? No thanks! Oh, and I still need to support IE8, so that `get default()` is a no-go.
 
 
-### es6-module-transpiler
-
-Let's try [es6-module-transpiler](https://github.com/esnext/es6-module-transpiler) instead:
+###  [es6-module-transpiler](https://github.com/esnext/es6-module-transpiler)
 
 ```js
 var transpiler = require( 'es6-module-transpiler' );
@@ -214,7 +210,7 @@ No muss, no fuss.
 
 ## Credits
 
-Major thanks to [Ben Newman](http://twitter.com/benjamn) for [recast](https://github.com/benjamn/recast), which does all the heavy lifting.
+Many thanks to [Ben Newman](http://twitter.com/benjamn) for [recast](https://github.com/benjamn/recast), which does all the heavy lifting.
 
 
 ## License
