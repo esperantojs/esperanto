@@ -73,9 +73,8 @@ define(['foo'], function (foo) {
 
 ## Why not use existing module transpilers?
 
-There are already a couple of ES6 module transpilers. But let's consider a simple module:
+There are already a couple of ES6 module transpilers. But let's consider a simple module, **test.js**:
 
-**test.js**
 ```js
 import foo from 'foo';
 var bar = foo.toUpperCase();
