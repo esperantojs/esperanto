@@ -11,5 +11,9 @@
     "glob": "~4.0.5",
     "rimraf": "~2.2.8",
     "mkdirp": "~0.5.0"
-  }
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ]
 }
