@@ -73,7 +73,7 @@ define(['foo'], function (foo) {
 
 ## Why not use existing module transpilers?
 
-There are already a couple of ES6 module transpilers. But let's consider a simple module, **test.js**:
+There are already a couple of ES6 module transpilers. But let's consider our example from above:
 
 ```js
 import foo from 'foo';
@@ -88,7 +88,7 @@ var transpile = require( 'transpile' );
 
 var transpiled = transpile.to({
   name: 'test',
-  source: test,
+  source: test, // the contents of the module
   metadata: { format: 'es6' }
 }, 'amd' );
 ```
@@ -205,6 +205,7 @@ No muss, no fuss.
 * Renaming imports (e.g. `import { unlink as rm } from 'fs'`)
 * Source maps
 * Tidy up the result a bit further
+* Allow named modules, if you're into that
 
 
 ## Credits
