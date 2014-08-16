@@ -18,6 +18,14 @@ var profiles = {
 	cjs: {
 		method: 'toCjs',
 		options: {}
+	},
+	amdDefaults: {
+		method: 'toAmd',
+		options: { defaultOnly: true }
+	},
+	cjsDefaults: {
+		method: 'toCjs',
+		options: { defaultOnly: true }
 	}
 };
 
@@ -37,12 +45,16 @@ glob( 'sample/output/*' ).then( function ( result ) {
 					readFile( input ).then( function ( result ) {
 						var output, dest;
 
-						output = esperanto[ profile.method ]( result.toString() );
-						dest = input.replace( 'input', 'output/' + id );
+						try {
+							output = esperanto[ profile.method ]( result.toString(), profile.options );
+							dest = input.replace( 'input', 'output/' + id );
 
-						mkdirp( path.dirname( dest ) ).then( function () {
-							writeFile( dest, output );
-						});
+							mkdirp( path.dirname( dest ) ).then( function () {
+								writeFile( dest, output );
+							});
+						} catch ( err ) {
+
+						}
 					}).catch( function ( err ) {
 						setTimeout( function () {
 							throw err;
