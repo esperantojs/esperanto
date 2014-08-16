@@ -160,7 +160,7 @@ Better, certainly, and you get source maps. Though as with [transpile](https://g
 
 ### esperanto
 
-Here's theh code to generate AMD output:
+Here's the code to generate AMD output:
 
 ```js
 var transpiled = esperanto.toAmd( test );
