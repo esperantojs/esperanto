@@ -1,6 +1,11 @@
 # esperanto
 
-An easier way to convert ES6 modules to AMD and CommonJS.
+A better way to transpile ES6 modules to AMD and CommonJS:
+
+* Easier - no laborious configuration
+* Simpler - doesn't make dangerous assumptions about your project setup
+* Smarter - no runtime Traceur dependency, no ES5-only features, and non-destructive source code transformation
+* Faster - roughly 10x quicker than the alternatives
 
 ## Installation
 
@@ -204,7 +209,7 @@ define(['foo'],function (foo) {
 });
 ```
 
-No muss, no fuss.
+No muss, no fuss. Oh, and did I mention that it's an order of magnitude faster than the alternatives?
 
 
 ## Still to-do
