@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Esperanto demo</title>
+
+		<link rel='stylesheet' href='min.css'>
+	</head>
+
+	<body>
+		<a class='forkme' href='https://github.com/rich-harris/esperanto'>Fork me on GitHub</a>
+
+		<header>
+			<h1>Esperanto</h1>
+			<p class='subhead'>The fastest, easiest, smartest way to <br>convert ES6 modules to AMD and CommonJS.</p>
+		</header>
+
+		<main></main>
+
+		<footer>
+			<p><code>npm install esperanto</code> to get started. <a href='https://github.com/rich-harris/esperanto/wiki'>Docs on GitHub</a>. <br>Esperanto is free and open software released under the MIT License, copyright &copy; 2014 <a href='http://twitter.com/Rich_Harris'>Rich Harris</a>.</p> 
+		</footer>
+
+		<script src='bundle.js'></script>
+		<script src='app.js'></script>
+		<script>
+			var app = new App({ el: 'main' });
+
+			(function () {
+				// if CSS transforms aren't supported, don't show the 'fork me' button.
+				// Quick and dirty detect
+				var style = document.createElement( 'div' ).style;
+
+				if ( style.transform !== undefined ) {
+					document.body.className += 'transforms-enabled';
+				} else {
+					[ 'webkit', 'moz', 'ms', 'o' ].forEach( function ( vendor ) {
+						if ( style[ vendor + 'Transform' ] !== undefined ) {
+							document.body.className += 'transforms-enabled';
+						}
+					});
+				}
+			}());
+		</script>
+	</body>
+</html>
