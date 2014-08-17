@@ -1,3 +1,10 @@
 {
-	"esnext": true
+	"esnext": true,
+	"undef": true,
+	"unused": true,
+	"globals": {
+		"module": true,
+		"exports": true,
+		"require": true
+	}
 }
