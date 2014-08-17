@@ -3,3 +3,4 @@ node_modules
 sample/output
 .gobble
 out
+demo/dist
