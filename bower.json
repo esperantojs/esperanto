@@ -1,0 +1,28 @@
+{
+  "name": "esperanto",
+  "description": "Next-generation DOM manipulation",
+  "version": "0.3.0",
+  "homepage": "http://rich-harris.co.uk/esperanto",
+  "main": "dist/esperanto.js",
+  "licenses": [
+    {
+      "type": "MIT"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rich-harris/esperanto.git"
+  },
+  "ignore": [
+    ".*",
+	"*.json",
+	"demo",
+	"node_modules",
+	"out",
+	"sample",
+	"src",
+	"wrapper",
+	"gobblefile.js",
+	"test.js"
+  ]
+}
