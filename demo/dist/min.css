@@ -99,8 +99,10 @@ a.forkme {
 
 body, html {
   width: 100%;
-  height: 100%;
   margin: 0; }
+  @media (min-width: 40em) {
+    body, html {
+      height: 100%; } }
 
 body {
   position: relative;
@@ -124,7 +126,6 @@ header {
   box-sizing: border-box; }
 
 footer {
-  position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -133,6 +134,9 @@ footer {
   -webkit-box-sizing: border-box;
   -ms-box-sizing: border-box;
   box-sizing: border-box; }
+  @media (min-width: 40em) {
+    footer {
+      position: absolute; } }
 
 main {
   position: relative;
@@ -150,10 +154,13 @@ header {
     display: inline-block;
     margin: 0 0.5em 0 0; }
   header .subhead {
-    display: inline-block;
+    display: none;
     font-weight: 200;
     color: #999;
     line-height: 1.4em; }
+  @media (min-width: 40em) {
+    header .subhead {
+      display: inline-block; } }
 
 footer {
   text-align: center;
