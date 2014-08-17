@@ -1,4 +1,5 @@
-var path = require( 'path' ),
+var fs = require( 'fs' ),
+	path = require( 'path' ),
 	gobble = require( 'gobble' ),
 	esperanto;
 
@@ -37,6 +38,16 @@ module.exports = [
 			},
 			exclude: [ 'acorn' ],
 			optimize: 'none'
+		})
+		.map( 'amdclean', {
+			wrap: {
+				start: fs.readFileSync( 'wrapper/start.js' ).toString(),
+				end: fs.readFileSync( 'wrapper/end.js' ).toString()
+			}
+		})
+		.map( 'jsbeautify', {
+			indent_with_tabs: true,
+			preserve_newlines: true
 		})
 		.moveTo( 'dist' ),
 
