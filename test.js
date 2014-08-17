@@ -8,7 +8,7 @@ var fs = require( 'fs' ),
 	readFile = promo( fs.readFile ),
 	writeFile = promo( fs.writeFile ),
 
-	esperanto = require( './index' );
+	esperanto = require( './lib/esperanto' );
 
 var profiles = {
 	amd: {

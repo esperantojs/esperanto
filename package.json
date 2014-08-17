@@ -6,7 +6,7 @@
   "dependencies": {
     "acorn": "~0.7.0"
   },
-  "main": "lib/index.js",
+  "main": "lib/esperanto.js",
   "devDependencies": {
     "promo": "~0.1.1",
     "glob": "~4.0.5",
