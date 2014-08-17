@@ -16,10 +16,17 @@
     "gobble-requirejs": "~0.1.0",
     "gobble-amdclean": "~0.1.0",
     "gobble-jsbeautify": "~0.1.0",
-    "gobble-esperanto": "~0.1.0"
+    "gobble-esperanto": "~0.1.0",
+    "promise-map-series": "~0.2.0",
+    "colors": "~0.6.2"
   },
   "files": [
     "index.js",
     "lib"
-  ]
+  ],
+  "scripts": {
+    "build": "scripts/build.sh",
+    "test": "scripts/test.sh",
+    "update-gh-pages": "scripts/update-gh-pages.sh"
+  }
 }
