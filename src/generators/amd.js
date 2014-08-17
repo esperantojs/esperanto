@@ -29,7 +29,7 @@ export default function amd ( parsed, options ) {
 	intro = 'define(' + importPaths + 'function (' + importNames + ') {';
 
 	if ( options.addUseStrict !== false ) {
-		code = "'use strict';\n\n";
+		code = "'use" + " strict';\n\n";
 	}
 
 	if ( options.defaultOnly && !parsed.alreadyReturned && hasExports ) {

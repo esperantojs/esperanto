@@ -35,7 +35,7 @@ export default function ( source, options, isAmd ) {
 				// In defaultOnly mode, we don't need to bother replacing
 				// `import foo from 'foo'` - we just name the import foo
 				// in the first place
-				while ( nextNode.type === 'EmptyStatement' ) {
+				while ( nextNode && nextNode.type === 'EmptyStatement' ) {
 					nextNode = body[ i++ ];
 				}
 			} else {
