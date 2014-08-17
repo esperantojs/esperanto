@@ -44,7 +44,6 @@ export default function ( source, options, isAmd ) {
 		}
 
 		else {
-			console.log( 'ADD >> "%s"', source.slice( node.start, nextNode ? nextNode.start : source.length ).replace( '\n', '\\n' ) );
 			replaced += source.slice( node.start, nextNode ? nextNode.start : source.length );
 		}
 	}
