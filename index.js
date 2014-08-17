@@ -1,6 +1,4 @@
-var recast = require( 'recast' ),
-	parse = require( './lib/parse' ),
-	transform = require( './lib/transform' ),
+var transform = require( './lib/transform' ),
 	generators = require( './lib/generators' );
 
 module.exports = {
