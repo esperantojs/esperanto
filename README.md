@@ -24,7 +24,12 @@ fs.readFile( 'path/to/es6/modules/foo.js', function ( err, result ) {
 
 Esperanto exposes two methods - `esperanto.toAmd()` and `esperanto.toCjs()`. Both methods take a `source` argument, which is the source code of an ES6 module, and an optional second argument, `options`.
 
-The `options` argument can have a `defaultOnly` property, which defaults to `false`.
+The `options` argument can have a `defaultOnly` property, which defaults to `false`. See the next section for an explanation.
+
+If you're using `esperanto.toAmd()`, you have two additional options:
+
+* `indent` (string) specifies how to indent the contents of the module. By default, esperanto will guess the correct indentation from the code, and default to a single tab character if it's not sure.
+* `addUseStrict` (boolean) determines whether the 'use strict' pragma should be added to the top of the module. Defaults to `true`.
 
 
 ## When to use `defaultOnly`
