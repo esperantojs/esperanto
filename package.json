@@ -13,7 +13,10 @@
     "rimraf": "~2.2.8",
     "mkdirp": "~0.5.0",
     "gobble": "~0.1.2",
-    "gobble-requirejs": "~0.1.0"
+    "gobble-requirejs": "~0.1.0",
+    "gobble-amdclean": "~0.1.0",
+    "gobble-jsbeautify": "~0.1.0",
+    "gobble-esperanto": "~0.1.0"
   },
   "files": [
     "index.js",
