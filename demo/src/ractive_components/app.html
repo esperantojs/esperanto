@@ -1,0 +1,106 @@
+<link rel='ractive' href='codemirror.html'>
+
+<div class='app'>
+	<div class='left'>
+		<div class='info'>
+			<p>Type ES6 module code</p>
+		</div>
+
+		<div class='codemirror-outer'>
+			<codemirror theme='neo' height='100%' mode='javascript' value='{{input}}'/>
+		</div>
+	</div>
+
+	<div class='right'>
+		<div class='info'>
+			<label><input type='radio' name='{{type}}' value='amd'> AMD</label>
+			<label><input type='radio' name='{{type}}' value='cjs'> CommonJS</label>
+		</div>
+
+		<div class='codemirror-outer'>
+			<codemirror theme='neo' height='100%' mode='javascript' value='{{output}}' readonly='true'/>
+		</div>
+	</div>
+</div>
+
+
+<style>
+	.app {
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
+
+	.info {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 2em;
+		line-height: 1;
+		padding: 0.5em 1em;
+		border-bottom: 1px solid #eee;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.left, .right {
+		position: relative;
+		width: 50%;
+		height: 100%;
+		float: left;
+		padding: 2em 0 0 0;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.codemirror-outer {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		padding: 1em;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.left {
+		border-right: 1px solid #eee;
+	}
+
+	.right {
+		background-color: #f9f9f9;
+	}
+</style>
+
+
+<script>
+	component.exports = {
+		debug: true,
+
+		data: {
+			input: 'import foo from \'foo\';\nvar bar = foo.toUpperCase();\nexport default bar;',
+			type: 'amd'
+		},
+
+		computed: {
+			output: function () {
+				var input, output, method;
+
+				input = this.get( 'input' );
+				method = this.get( 'type' ) === 'cjs' ? 'toCjs' : 'toAmd';
+
+				try {
+					output = esperanto[ method ]( input, { defaultOnly: true, addUseStrict: true });
+				} catch ( err ) {
+					setTimeout( function () { throw err; });
+					output = esperanto[ method ]( input, { defaultOnly: false, addUseStrict: true });
+				}
+
+				return output;
+			}
+		}
+	};
+</script>
