@@ -1,7 +1,7 @@
 {
   "name": "esperanto",
   "description": "Next-generation DOM manipulation",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "http://rich-harris.co.uk/esperanto",
   "main": "dist/esperanto.js",
   "licenses": [
@@ -9,6 +9,10 @@
       "type": "MIT"
     }
   ],
+  "dependencies": {
+    "acorn": "~0.7.0"
+  },
+  "keywords": [ "es6", "esnext", "modules", "amd", "commonjs", "cjs", "harmony", "transpile" ],
   "repository": {
     "type": "git",
     "url": "https://github.com/rich-harris/esperanto.git"
