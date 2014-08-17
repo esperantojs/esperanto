@@ -62,13 +62,15 @@ On the other side of the fence, if someone were to require this ES6 module from 
 Esperanto's `defaultOnly` option solves this problem. As long as you're not using named imports or exports, it will cause modules to behave as you (as a seasoned user of AMD or CommonJS modules) would naturally expect:
 
 ```js
-define(['foo'], function (foo) {
+define(['foo'],function (foo) {
+
+  'use strict';
+
   var bar = foo.toUpperCase();
   return bar;
+
 });
 ```
-
-(This isn't real esperanto output, but a simplified illustration. See below for the genuine article.)
 
 
 ## Why not use existing module transpilers?
@@ -184,14 +186,12 @@ var transpiled = esperanto.toAmd( test, { defaultOnly: true });
 ```
 
 ```js
-define(['foo'], function (__imports_0) {
+define(['foo'],function (foo) {
 
-var __export;
+  'use strict';
 
-var foo = __imports_0;
-var bar = foo.toUpperCase();
-__export = bar;
-return __export;
+  var bar = foo.toUpperCase();
+  return bar;
 
 });
 ```
@@ -203,14 +203,13 @@ No muss, no fuss.
 
 * A proper test suite (if you want to test esperanto, clone this module, `cd` into this folder, `npm install` dependencies, and run `node test.js`. The generated code will be written to the `output` folder)
 * Renaming imports (e.g. `import { unlink as rm } from 'fs'`)
-* Source maps
-* Tidy up the result a bit further
+* Source maps?
 * Allow named modules, if you're into that
 
 
 ## Credits
 
-Many thanks to [Ben Newman](http://twitter.com/benjamn) for [recast](https://github.com/benjamn/recast), which does all the heavy lifting.
+Many thanks to [Marijn Haverbeke](http://marijnhaverbeke.nl/) for [Acorn](https://github.com/marijnh/acorn), which does all the heavy lifting.
 
 
 ## License
