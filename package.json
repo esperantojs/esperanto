@@ -1,7 +1,7 @@
 {
   "name": "esperanto",
   "description": "An easier way to convert ES6 modules to AMD and CommonJS",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Rich Harris",
   "dependencies": {
     "acorn": "~0.7.0"
