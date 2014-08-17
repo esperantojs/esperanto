@@ -28,7 +28,6 @@
 	.app {
 		position: relative;
 		width: 100%;
-		height: 100%;
 	}
 
 	.info {
@@ -47,9 +46,6 @@
 
 	.left, .right {
 		position: relative;
-		width: 50%;
-		height: 100%;
-		float: left;
 		padding: 2em 0 0 0;
 		-webkit-box-sizing: border-box;
 		-moz-box-sizing: border-box;
@@ -72,6 +68,18 @@
 
 	.right {
 		background-color: #f9f9f9;
+	}
+
+	@media (min-width: 40em) {
+		.app {
+			height: 100%;
+		}
+
+		.left, .right {
+			float: left;
+			width: 50%;
+			height: 100%;
+		}
 	}
 </style>
 
