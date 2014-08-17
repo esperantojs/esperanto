@@ -1,4 +1,4 @@
-module.exports = function ( parsed, options ) {
+export default function amd ( parsed, options ) {
 
 	var guessIndent = require( '../utils/guessIndent' ),
 		applyIndent = require( '../utils/applyIndent' ),
@@ -6,7 +6,7 @@ module.exports = function ( parsed, options ) {
 		outro,
 		code = '',
 		imports = parsed.imports,
-		exports = parsed.exports,
+		hasExports = parsed.hasExports,
 		importPaths = '',
 		importNames = '',
 		indent;
@@ -32,13 +32,13 @@ module.exports = function ( parsed, options ) {
 		code = "'use strict';\n\n";
 	}
 
-	if ( options.defaultOnly && !parsed.alreadyReturned && exports.length ) {
+	if ( options.defaultOnly && !parsed.alreadyReturned && hasExports ) {
 		code += 'var __export;\n\n';
 	}
 
 	code += parsed.body;
 
-	if ( options.defaultOnly && !parsed.alreadyReturned && exports.length ) {
+	if ( options.defaultOnly && !parsed.alreadyReturned && hasExports ) {
 		code += '\nreturn __export;';
 	}
 
@@ -46,8 +46,7 @@ module.exports = function ( parsed, options ) {
 
 	indent = options.indent || guessIndent( parsed.body );
 	return [ intro, applyIndent( code.trim(), indent ), outro ].join( '\n\n' );
-};
-
+}
 
 function quote ( str ) {
 	return "'" + str + "'";

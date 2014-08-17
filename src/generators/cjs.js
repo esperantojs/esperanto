@@ -1,9 +1,9 @@
-module.exports = function ( parsed, options ) {
+export default function ( parsed, options ) {
 
 	var result = [],
 		code = parsed.body.trim(),
 		imports = parsed.imports,
-		exports = parsed.exports;
+		hasExports = parsed.hasExports;
 
 	if ( imports.length ) {
 		result[0] = imports.map( function ( x ) {
@@ -11,15 +11,15 @@ module.exports = function ( parsed, options ) {
 		}).join( '\n' );
 	}
 
-	if ( options.defaultOnly && !parsed.alreadyReturned && exports.length ) {
+	if ( options.defaultOnly && !parsed.alreadyReturned && hasExports ) {
 		code = 'var __export;\n\n' + code;
 	}
 
 	result.push( code );
 
-	if ( options.defaultOnly && !parsed.alreadyReturned && exports.length ) {
+	if ( options.defaultOnly && !parsed.alreadyReturned && hasExports ) {
 		result.push( 'module.exports = __export;' );
 	}
 
 	return result.join( '\n' );
-};
+}

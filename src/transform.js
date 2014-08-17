@@ -1,12 +1,12 @@
-var acorn = require( 'acorn' );
+import acorn from 'acorn';
 
-module.exports = function ( source, options, isAmd ) {
+export default function ( source, options, isAmd ) {
 	var ast,
 		body,
 		node,
 		nextNode,
 		imports = [],
-		exports = [],
+		hasExports,
 		replaced = '',
 		alreadyReturned,
 		i, len,
@@ -39,18 +39,19 @@ module.exports = function ( source, options, isAmd ) {
 					nextNode = body[ i++ ];
 				}
 			} else {
-				replaced += code;
+				replaced += code + source.slice( node.end, nextNode ? nextNode.start : source.length );;
 			}
 		}
 
 		else {
+			console.log( 'ADD >> "%s"', source.slice( node.start, nextNode ? nextNode.start : source.length ).replace( '\n', '\\n' ) );
 			replaced += source.slice( node.start, nextNode ? nextNode.start : source.length );
 		}
 	}
 
 	return {
 		imports: imports,
-		exports: exports,
+		hasExports: hasExports,
 		body: replaced,
 		alreadyReturned: alreadyReturned
 	};
@@ -107,10 +108,12 @@ module.exports = function ( source, options, isAmd ) {
 	function replaceExport ( node, nodeIndex ) {
 		var indent, declarations = [], declaration, value;
 
+		hasExports = true;
+
 		indent = getIndent( node.start, source );
 
 		if ( node.declaration ) {
-			value = source.substr( node.declaration.start, node.declaration.end );
+			value = source.slice( node.declaration.start, node.declaration.end );
 
 
 			if ( options.defaultOnly ) {
@@ -147,7 +150,7 @@ module.exports = function ( source, options, isAmd ) {
 
 		return declarations.join( ';\n' + indent );
 	}
-};
+}
 
 function isImportDeclaration ( node ) {
 	return node.type === 'ImportDeclaration';
