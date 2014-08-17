@@ -5,7 +5,7 @@ module.exports = {
 	toAmd: function ( source, options ) {
 		options = options || {};
 
-		var transformed = transform( source, options );
+		var transformed = transform( source, options, true );
 		return generators.amd( transformed, options );
 	},
 
