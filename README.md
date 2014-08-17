@@ -4,7 +4,7 @@ A better way to transpile ES6 modules to AMD and CommonJS:
 
 * Easier - no laborious configuration
 * Simpler - doesn't make dangerous assumptions about your project setup
-* Smarter - no runtime Traceur dependency, no ES5-only features, and non-destructive source code transformation
+* Smarter - non-destructive source code transformation, no runtime Traceur dependency, and no ES5-only features
 * Faster - roughly 10x quicker than the alternatives
 
 ## Installation
