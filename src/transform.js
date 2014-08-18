@@ -81,7 +81,9 @@ export default function ( source, options, isAmd ) {
 			return SKIP;
 		}
 
-		if ( options.defaultOnly ) {
+		if ( options.defaultOnly && node.specifiers.length === 1 ) {
+			// This is only a first pass - mixed imports (`import asap, {later} from 'asap'`)
+			// are treated as default
 			if ( node.kind !== 'default' ) {
 				throw new Error( 'A named import was used in defaultOnly mode' );
 			}
@@ -104,13 +106,17 @@ export default function ( source, options, isAmd ) {
 		node.specifiers.forEach( function ( specifier ) {
 			var declaration, id, name;
 
+			if ( options.defaultOnly && !specifier.default ) {
+				throw new Error( 'A named import was used in defaultOnly mode' );
+			}
+
 			id = specifier.id.name;
 
 			if ( options.defaultOnly ) {
 				declaration = 'var ' + id + ' = ' + _import.name;
 			} else {
 				name = ( specifier.name && specifier.name.name ) || id;
-				declaration = 'var ' + name + ' = ' + _import.name + '.' + ( node.kind === 'default' ? 'default' : id );
+				declaration = 'var ' + name + ' = ' + _import.name + '.' + ( specifier.default ? 'default' : id );
 			}
 
 			result.push( declaration );
@@ -130,7 +136,7 @@ export default function ( source, options, isAmd ) {
 			value = source.slice( node.declaration.start, node.declaration.end );
 
 			// Special case - `export var foo = 'bar'`
-			if ( node.declaration.type === 'VariableDeclaration' ) {
+			if ( isVarDeclaration( node.declaration ) ) {
 				if ( options.defaultOnly ) {
 					throw new Error( 'A named export was used in defaultOnly mode' );
 				}
@@ -177,6 +183,11 @@ function isImportDeclaration ( node ) {
 
 function isExportDeclaration ( node ) {
 	return node.type === 'ExportDeclaration';
+}
+
+function isVarDeclaration ( node ) {
+	// TODO support let and class declarations, once Acorn supports them
+	return node.type === 'VariableDeclaration';
 }
 
 function getIndent ( index, source ) {
