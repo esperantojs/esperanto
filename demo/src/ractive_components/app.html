@@ -4,6 +4,13 @@
 	<div class='left'>
 		<div class='info'>
 			<p>Type ES6 module code</p>
+
+			<select value='{{selected}}'>
+				<option disabled>Examples from jsmodules.io</option>
+				{{#each samples}}
+					<option value='{{this}}'>{{name}}</option>
+				{{/each}}
+			</div>
 		</div>
 
 		<div class='codemirror-outer'>
@@ -72,6 +79,15 @@
 		background-color: #f9f9f9;
 	}
 
+	select {
+		position: absolute;
+		top: 0.2em;
+		right: 1em;
+		float: right;
+		font-size: inherit;
+		font-family: inherit;
+	}
+
  	.defaultOnly {
 		padding-left: 1em;
 	}
@@ -91,11 +107,20 @@
 
 
 <script>
+	var samples = require( 'data' ).samples;
+
 	component.exports = {
 		debug: true,
 
+		init: function () {
+			this.observe( 'selected', function ( sample ) {
+				this.set( 'input', sample.code );
+			});
+		},
+
 		data: {
-			input: require( 'data' ).sample,
+			samples: samples,
+			input: samples[0].code,
 			type: 'amd',
 			defaultOnly: true,
 			defaultOnlyDisabled: false
