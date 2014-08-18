@@ -64,15 +64,25 @@
 
 			function replaceImport(node) {
 				var _import, result = [],
-					indent;
+					indent, specifier0;
 				indent = getIndent(node.start, source);
+				// empty imports, e.g. `import 'polyfills'`
+				specifier0 = node.specifiers[0];
+				if (!specifier0) {
+					imports.push({
+						path: node.source.value,
+						name: '__imports_' + imports.length,
+						empty: true
+					});
+					return SKIP;
+				}
 				// batch imports, e.g. `import * as fs from 'fs';`
-				if (node.specifiers[0].type === 'ImportBatchSpecifier') {
+				if (specifier0 && specifier0.type === 'ImportBatchSpecifier') {
 					// this is (as far as AMD/CJS are concerned) functionally
 					// equivalent to `import fs from 'fs'`
 					imports.push({
 						path: node.source.value,
-						name: node.specifiers[0].name.name
+						name: specifier0.name.name
 					});
 					return SKIP;
 				}
@@ -219,6 +229,10 @@
 				indent;
 			if (imports.length || hasExports && !options.defaultOnly) {
 				importPaths = '[' + (options.defaultOnly || !hasExports ? imports.map(getPath) : imports.map(getPath).concat('exports')).map(quote).join(',') + '],';
+				// Remove empty imports from the end of the array
+				while (imports.length && imports[imports.length - 1].empty) {
+					imports.pop();
+				}
 				importNames = (options.defaultOnly || !hasExports ? imports.map(getImportName) : imports.map(getImportName).concat('exports')).join(', ');
 			}
 			intro = 'define(' + importPaths + 'function (' + importNames + ') {';
@@ -261,7 +275,7 @@
 			hasExports = parsed.hasExports;
 		if (imports.length) {
 			result[0] = imports.map(function(x) {
-				return 'var ' + x.name + ' = require(\'' + x.path + '\');';
+				return (!x.empty ? 'var ' + x.name + ' = ' : '') + 'require(\'' + x.path + '\');';
 			}).join('\n') + '\n';
 		}
 		if (options.defaultOnly && !parsed.alreadyReturned && hasExports) {
