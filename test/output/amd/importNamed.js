@@ -1,4 +1,4 @@
-define(['baz','exports'],function (__imports_0, exports) {
+define(['baz'],function (__imports_0) {
 
 	'use strict';
 	

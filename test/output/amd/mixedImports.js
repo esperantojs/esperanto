@@ -1,4 +1,4 @@
-define(['asap','exports'],function (__imports_0, exports) {
+define(['asap'],function (__imports_0) {
 
 	'use strict';
 	

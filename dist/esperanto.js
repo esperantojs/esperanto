@@ -218,8 +218,8 @@
 				importNames = '',
 				indent;
 			if (imports.length || hasExports && !options.defaultOnly) {
-				importPaths = '[' + (options.defaultOnly ? imports.map(getPath) : imports.map(getPath).concat('exports')).map(quote).join(',') + '],';
-				importNames = (options.defaultOnly ? imports.map(getImportName) : imports.map(getImportName).concat('exports')).join(', ');
+				importPaths = '[' + (options.defaultOnly || !hasExports ? imports.map(getPath) : imports.map(getPath).concat('exports')).map(quote).join(',') + '],';
+				importNames = (options.defaultOnly || !hasExports ? imports.map(getImportName) : imports.map(getImportName).concat('exports')).join(', ');
 			}
 			intro = 'define(' + importPaths + 'function (' + importNames + ') {';
 			if (options.addUseStrict !== false) {

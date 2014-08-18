@@ -1,4 +1,4 @@
-define(['fs','exports'],function (__imports_0, exports) {
+define(['fs'],function (__imports_0) {
 
 	'use strict';
 	
