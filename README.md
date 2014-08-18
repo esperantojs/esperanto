@@ -7,6 +7,8 @@ A better way to transpile ES6 modules to AMD and CommonJS:
 * Smarter - non-destructive source code transformation, no runtime Traceur dependency, and no ES5-only features
 * Faster - roughly 10x quicker than the alternatives
 
+Try it online here: [rich-harris.co.uk/esperanto](http://www.rich-harris.co.uk/esperanto/)
+
 ## Installation
 
 ```bash
@@ -119,7 +121,7 @@ define("test", ["foo", "exports"], function(foo$$, __exports__) {
 Better, certainly, and you get source maps which is really cool. Though as with [transpile](https://github.com/bitovi/transpile), you're stuck with named (as opposed to anonymous) AMD modules. Frankly, though, the external dependencies thing is a dealbreaker for me.
 
 
-### esperanto
+### [esperanto](http://www.rich-harris.co.uk/esperanto/)
 
 Here's the code to generate AMD output:
 
