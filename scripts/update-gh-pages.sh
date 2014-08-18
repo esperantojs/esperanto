@@ -1,6 +1,9 @@
 # build the library
 npm run build
 
+# pull gh-pages
+git subtree pull --squash --prefix demo/dist origin gh-pages
+
 # build the demo
 ( cd demo
 	gobble build dist -f
@@ -8,4 +11,4 @@ npm run build
 
 git add demo/dist -f
 git commit -m 'update demo'
-git subtree push --prefix demo/dist origin gh-pages
+git subtree push --squash --prefix demo/dist origin gh-pages

@@ -1,7 +1,7 @@
 {
   "name": "esperanto",
   "description": "An easier way to convert ES6 modules to AMD and CommonJS",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "author": "Rich Harris",
   "dependencies": {
     "acorn": "~0.7.0"
@@ -12,13 +12,14 @@
     "glob": "~4.0.5",
     "rimraf": "~2.2.8",
     "mkdirp": "~0.5.0",
-    "gobble": "~0.1.2",
+    "gobble": "~0.2.0",
     "gobble-requirejs": "~0.1.0",
     "gobble-amdclean": "~0.1.0",
     "gobble-jsbeautify": "~0.1.0",
     "gobble-esperanto": "~0.1.0",
     "promise-map-series": "~0.2.0",
-    "colors": "~0.6.2"
+    "colors": "~0.6.2",
+    "gobble-uglifyjs": "^0.1.0"
   },
   "files": [
     "index.js",

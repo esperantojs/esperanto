@@ -19,6 +19,11 @@ export default function amd ( parsed, options ) {
 			).map( quote ).join( ',' ) +
 		'],';
 
+		// Remove empty imports from the end of the array
+		while ( imports.length && imports[ imports.length - 1 ].empty ) {
+			imports.pop();
+		}
+
 		importNames = (
 			options.defaultOnly || !hasExports ?
 				imports.map( getImportName ) :

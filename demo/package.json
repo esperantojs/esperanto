@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "devDependencies": {
     "gobble-esperanto": "~0.1.0",
-    "gobble-ractive": "~0.1.0",
+    "gobble-ractive": "^0.1.0",
     "list-bower-paths": "~0.1.1",
     "gobble-sass": "~0.1.0",
-    "gobble-spelunk": "~0.1.0"
+    "gobble-spelunk": "^0.2.1",
+    "gobble-concat": "^0.1.1"
   }
 }
