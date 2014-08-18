@@ -120,7 +120,7 @@ export default function ( source, options, isAmd ) {
 	}
 
 	function replaceExport ( node, nodeIndex ) {
-		var indent, declarations = [], declaration = '', value;
+		var indent, declarations = [], declaration = '', name, value;
 
 		hasExports = true;
 
@@ -135,11 +135,13 @@ export default function ( source, options, isAmd ) {
 					throw new Error( 'A named export was used in defaultOnly mode' );
 				}
 
+				name = node.declaration.declarations[0].id.name;
+
 				declaration = value + '\n' + indent;
-				value = node.declaration.declarations[0].id.name;
+				declaration += 'exports.' + name + ' = ' + name;
 			}
 
-			if ( options.defaultOnly ) {
+			else if ( options.defaultOnly ) {
 				// If this is the final node, we can just return from here
 				if ( nodeIndex === body.length - 1 ) {
 					declaration += ( isAmd ? 'return ' : 'module.exports = ' ) + value;
