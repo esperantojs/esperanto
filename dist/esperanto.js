@@ -108,7 +108,7 @@
 			function replaceExport(node, nodeIndex) {
 				var indent, declarations = [],
 					declaration = '',
-					value;
+					name, value;
 				hasExports = true;
 				indent = getIndent(node.start, source);
 				if (node.declaration) {
@@ -118,10 +118,10 @@
 						if (options.defaultOnly) {
 							throw new Error('A named export was used in defaultOnly mode');
 						}
+						name = node.declaration.declarations[0].id.name;
 						declaration = value + '\n' + indent;
-						value = node.declaration.declarations[0].id.name;
-					}
-					if (options.defaultOnly) {
+						declaration += 'exports.' + name + ' = ' + name;
+					} else if (options.defaultOnly) {
 						// If this is the final node, we can just return from here
 						if (nodeIndex === body.length - 1) {
 							declaration += (isAmd ? 'return ' : 'module.exports = ') + value;
