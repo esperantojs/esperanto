@@ -132,9 +132,11 @@ And here's the output:
 ```js
 define(['foo','exports'], function (__imports_0,exports) {
 
-var foo = __imports_0.default;
-var bar = foo.toUpperCase();
-exports.default = bar;
+  'use strict';
+
+  var foo = __imports_0.default;
+  var bar = foo.toUpperCase();
+  exports.default = bar;
 
 });
 ```
