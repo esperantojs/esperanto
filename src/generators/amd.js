@@ -11,7 +11,7 @@ export default function amd ( parsed, options ) {
 		importNames = '',
 		indent;
 
-	if ( imports.length ) {
+	if ( imports.length || hasExports && !options.defaultOnly ) {
 		importPaths = '[' +
 			( options.defaultOnly ?
 				imports.map( getPath ) :
