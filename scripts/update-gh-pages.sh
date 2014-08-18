@@ -1,8 +1,8 @@
 # build the library
 npm run build
 
-# pull gh-pages
-git subtree pull --squash --prefix demo/dist origin gh-pages
+# destroy gh-pages on remote, to avoid futzing around
+git push origin :gh-pages
 
 # build the demo
 ( cd demo
