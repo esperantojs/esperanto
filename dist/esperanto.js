@@ -97,28 +97,29 @@
 
 			function replaceExport(node, nodeIndex) {
 				var indent, declarations = [],
-					declaration, value;
+					declaration = '',
+					value;
 				hasExports = true;
 				indent = getIndent(node.start, source);
 				if (node.declaration) {
 					value = source.slice(node.declaration.start, node.declaration.end);
+					// Special case - `export var foo = 'bar'`
+					if (node.declaration.type === 'VariableDeclaration') {
+						declaration = value + '\n' + indent;
+						value = node.declaration.declarations[0].id.name;
+					}
 					if (options.defaultOnly) {
 						// If this is the final node, we can just return from here
 						if (nodeIndex === body.length - 1) {
-							declaration = (isAmd ? 'return ' : 'module.exports = ') + value;
+							declaration += (isAmd ? 'return ' : 'module.exports = ') + value;
 							alreadyReturned = true;
 						} else {
-							declaration = '__export = ' + value;
+							declaration += '__export = ' + value;
 						}
 					} else {
-						declaration = 'exports.default = ' + value;
+						declaration += 'exports.default = ' + value;
 					}
-					if (node.declaration.type === 'FunctionExpression') {
-						// If the function expression was written correctly -
-						// without a semicolon - we need to add one
-						declaration = fixFunctionExpression(declaration);
-					}
-					declarations.push(declaration);
+					declarations.push(declaration + ';');
 				} else {
 					if (options.defaultOnly) {
 						throw new Error('A named export was used in defaultOnly mode');
@@ -152,19 +153,6 @@
 				return indent;
 			}
 			return '';
-		}
-
-		function fixFunctionExpression(declaration) {
-			var match, trailingWhitespace;
-			match = /\s+$/.exec(declaration);
-			trailingWhitespace = match ? match[0] : '';
-			if (trailingWhitespace) {
-				declaration = declaration.slice(0, -trailingWhitespace.length);
-			}
-			if (declaration.slice(-1) !== ';') {
-				declaration += ';';
-			}
-			return declaration + trailingWhitespace;
 		}
 		return __export;
 	}(acorn);
