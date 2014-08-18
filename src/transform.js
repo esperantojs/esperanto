@@ -21,7 +21,7 @@ export default function ( source, options, isAmd ) {
 	});
 	body = ast.body;
 
-	replaced = '';
+	replaced = source.slice( 0, body[0] ? body[0].start : 0 );
 
 	len = body.length;
 	for ( i = 0; i < len; i += 1 ) {
