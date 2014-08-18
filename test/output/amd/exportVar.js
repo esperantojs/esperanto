@@ -3,6 +3,6 @@ define(['exports'],function (exports) {
 	'use strict';
 	
 	var foo = 'bar';
-	exports.default = foo;
+	exports.foo = foo;
 
 });

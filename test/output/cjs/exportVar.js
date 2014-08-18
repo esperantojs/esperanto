@@ -1,2 +1,2 @@
 var foo = 'bar';
-exports.default = foo;
+exports.foo = foo;
