@@ -15,6 +15,8 @@
 		<div class='info'>
 			<label><input type='radio' name='{{type}}' value='amd'> AMD</label>
 			<label><input type='radio' name='{{type}}' value='cjs'> CommonJS</label>
+
+			<label class='defaultOnly'><input type='checkbox' checked='{{defaultOnly}}' disabled='{{defaultOnlyDisabled}}'> <a href='https://github.com/Rich-Harris/esperanto#when-to-use-defaultonly'>defaultOnly mode</a></label>
 		</div>
 
 		<div class='codemirror-outer'>
@@ -70,6 +72,10 @@
 		background-color: #f9f9f9;
 	}
 
+ 	.defaultOnly {
+		padding-left: 1em;
+	}
+
 	@media (min-width: 40em) {
 		.app {
 			height: 100%;
@@ -89,25 +95,45 @@
 		debug: true,
 
 		data: {
-			input: 'import foo from \'foo\';\nvar bar = foo.toUpperCase();\nexport default bar;',
-			type: 'amd'
+			input: require( 'data' ).sample,
+			type: 'amd',
+			defaultOnly: true,
+			defaultOnlyDisabled: false
 		},
 
 		computed: {
 			output: function () {
-				var input, output, method;
+				var self = this, input, defaultOnly, output, method, defaultOnlyOutput;
 
 				input = this.get( 'input' );
+				defaultOnly = this.get( 'defaultOnly' );
 				method = this.get( 'type' ) === 'cjs' ? 'toCjs' : 'toAmd';
 
 				try {
-					output = esperanto[ method ]( input, { defaultOnly: true, addUseStrict: true });
-				} catch ( err ) {
-					setTimeout( function () { throw err; });
-					output = esperanto[ method ]( input, { defaultOnly: false, addUseStrict: true });
-				}
+					// we want to know if defaultOnly is disabled, regardless of whether it's set
+					defaultOnlyOutput = esperanto[ method ]( input, { defaultOnly: true, addUseStrict: true });
 
-				return output;
+					// it should NOT be disabled
+					setTimeout( function () {
+						self.set( 'defaultOnlyDisabled', false );
+					});
+				} catch ( err ) {
+					// it SHOULD be disabled
+					setTimeout( function () {
+						self.set({
+							defaultOnlyDisabled: true,
+							defaultOnly: false
+						});
+					});
+
+					defaultOnly = false;
+				} finally {
+					if ( defaultOnly ) {
+						return defaultOnlyOutput;
+					}
+
+					return esperanto[ method ]( input, { defaultOnly: false, addUseStrict: true });
+				}
 			}
 		}
 	};

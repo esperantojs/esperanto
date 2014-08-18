@@ -1,5 +1,5 @@
 var gobble = require( 'gobble' ),
-	src, index, app, bundle, css, vendor;
+	src, index, app, bundle, css, data, vendor;
 
 src = gobble( 'src' );
 
@@ -12,8 +12,9 @@ bundle = gobble([
 css = src.transform( 'sass', { src: 'scss/main.scss', dest: 'min.css' });
 
 // Compile the app.html file
+data = gobble( 'src/data' ).transform( 'spelunk', { dest: 'data.js', type: 'amd' });
 vendor = gobble( 'src/vendor', { static: true });
-app = gobble([ app, vendor ]).transform( 'requirejs', {
+app = gobble([ app, data, vendor ]).transform( 'requirejs', {
 	name: 'app',
 	out: 'app.js',
 	paths: {
