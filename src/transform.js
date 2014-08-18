@@ -69,6 +69,18 @@ export default function ( source, options, isAmd ) {
 
 		indent = getIndent( node.start, source );
 
+		// batch imports, e.g. `import * as fs from 'fs';`
+		if ( node.specifiers[0].type === 'ImportBatchSpecifier' ) {
+			// this is (as far as AMD/CJS are concerned) functionally
+			// equivalent to `import fs from 'fs'`
+			imports.push({
+				path: node.source.value,
+				name: node.specifiers[0].name.name
+			});
+
+			return SKIP;
+		}
+
 		if ( options.defaultOnly ) {
 			if ( node.kind !== 'default' ) {
 				throw new Error( 'A named import was used in defaultOnly mode' );
@@ -90,10 +102,12 @@ export default function ( source, options, isAmd ) {
 		imports.push( _import );
 
 		node.specifiers.forEach( function ( specifier ) {
-			var declaration, id = specifier.id.name, name;
+			var declaration, id, name;
 
-			if ( options.defaultOnlt ) {
-				declaration = 'var ' + name + ' = ' + _import.name;
+			id = specifier.id.name;
+
+			if ( options.defaultOnly ) {
+				declaration = 'var ' + id + ' = ' + _import.name;
 			} else {
 				name = ( specifier.name && specifier.name.name ) || id;
 				declaration = 'var ' + name + ' = ' + _import.name + '.' + ( node.kind === 'default' ? 'default' : id );
