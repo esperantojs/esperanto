@@ -133,9 +133,7 @@ export default function ( source, options, isAmd ) {
 				declaration += 'exports.default = ' + value;
 			}
 
-			declaration = addSemiColon( declaration );
-
-			declarations.push( declaration );
+			declarations.push( declaration + ';' );
 		}
 
 		else {
@@ -175,21 +173,4 @@ function getIndent ( index, source ) {
 	}
 
 	return '';
-}
-
-function addSemiColon ( declaration ) {
-	var match, trailingWhitespace;
-
-	match = /\s+$/.exec( declaration );
-	trailingWhitespace = match ? match[0] : '';
-
-	if ( trailingWhitespace ) {
-		declaration = declaration.slice( 0, -trailingWhitespace.length );
-	}
-
-	if ( declaration.slice( -1 ) !== ';' ) {
-		declaration += ';';
-	}
-
-	return declaration + trailingWhitespace;
 }
