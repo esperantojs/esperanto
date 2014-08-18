@@ -115,6 +115,9 @@
 					value = source.slice(node.declaration.start, node.declaration.end);
 					// Special case - `export var foo = 'bar'`
 					if (node.declaration.type === 'VariableDeclaration') {
+						if (options.defaultOnly) {
+							throw new Error('A named export was used in defaultOnly mode');
+						}
 						declaration = value + '\n' + indent;
 						value = node.declaration.declarations[0].id.name;
 					}
