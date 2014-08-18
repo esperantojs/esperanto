@@ -21,5 +21,5 @@ export default function ( parsed, options ) {
 		result.push( 'module.exports = __export;' );
 	}
 
-	return result.join( '\n' );
+	return result.join( '\n' ).trim();
 }
