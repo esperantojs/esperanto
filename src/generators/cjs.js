@@ -7,7 +7,7 @@ export default function ( parsed, options ) {
 
 	if ( imports.length ) {
 		result[0] = imports.map( function ( x ) {
-			return 'var ' + x.name + ' = require(\'' + x.path + '\');';
+			return ( !x.empty ? 'var ' + x.name + ' = ' : '' ) + 'require(\'' + x.path + '\');';
 		}).join( '\n' ) + '\n';
 	}
 
