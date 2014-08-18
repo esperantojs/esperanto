@@ -271,7 +271,7 @@
 		if (options.defaultOnly && !parsed.alreadyReturned && hasExports) {
 			result.push('module.exports = __export;');
 		}
-		return result.join('\n');
+		return result.join('\n').trim();
 	};
 	esperanto = function(transform, amd, cjs) {
 		return {
