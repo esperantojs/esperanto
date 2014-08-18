@@ -106,7 +106,7 @@ export default function ( source, options, isAmd ) {
 	}
 
 	function replaceExport ( node, nodeIndex ) {
-		var indent, declarations = [], declaration, value;
+		var indent, declarations = [], declaration = '', value;
 
 		hasExports = true;
 
@@ -115,24 +115,25 @@ export default function ( source, options, isAmd ) {
 		if ( node.declaration ) {
 			value = source.slice( node.declaration.start, node.declaration.end );
 
+			// Special case - `export var foo = 'bar'`
+			if ( node.declaration.type === 'VariableDeclaration' ) {
+				declaration = value + '\n' + indent;
+				value = node.declaration.declarations[0].id.name;
+			}
 
 			if ( options.defaultOnly ) {
 				// If this is the final node, we can just return from here
 				if ( nodeIndex === body.length - 1 ) {
-					declaration = ( isAmd ? 'return ' : 'module.exports = ' ) + value;
+					declaration += ( isAmd ? 'return ' : 'module.exports = ' ) + value;
 					alreadyReturned = true;
 				} else {
-					declaration = '__export = ' + value;
+					declaration += '__export = ' + value;
 				}
 			} else {
-				declaration = 'exports.default = ' + value;
+				declaration += 'exports.default = ' + value;
 			}
 
-			if ( node.declaration.type === 'FunctionExpression' ) {
-				// If the function expression was written correctly -
-				// without a semicolon - we need to add one
-				declaration = fixFunctionExpression( declaration );
-			}
+			declaration = addSemiColon( declaration );
 
 			declarations.push( declaration );
 		}
@@ -176,7 +177,7 @@ function getIndent ( index, source ) {
 	return '';
 }
 
-function fixFunctionExpression ( declaration ) {
+function addSemiColon ( declaration ) {
 	var match, trailingWhitespace;
 
 	match = /\s+$/.exec( declaration );
