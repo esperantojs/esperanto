@@ -6,4 +6,4 @@ var bar = __imports_1.default;
 var baz = __imports_2.default;
 
 var qux = foo( bar( baz ) );
-exports.default = qux
+exports.default = qux;

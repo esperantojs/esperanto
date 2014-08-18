@@ -2,6 +2,7 @@ define(function () {
 
 	'use strict';
 	
-	return 'foo';
+	var foo = 'bar';
+	return foo;
 
 });

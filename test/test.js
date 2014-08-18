@@ -113,6 +113,7 @@ function run () {
 			process.exit( 1 );
 		}
 
-		throw err;
+		console.log( err.message || err );
+		process.exit( 1 );
 	});
 }

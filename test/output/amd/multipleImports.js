@@ -7,6 +7,6 @@ define(['foo','bar','baz','exports'],function (__imports_0, __imports_1, __impor
 	var baz = __imports_2.default;
 	
 	var qux = foo( bar( baz ) );
-	exports.default = qux
+	exports.default = qux;
 
 });
