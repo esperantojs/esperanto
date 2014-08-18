@@ -27,60 +27,7 @@ fs.readFile( 'path/to/es6/modules/foo.js', function ( err, result ) {
 });
 ```
 
-Esperanto exposes two methods - `esperanto.toAmd()` and `esperanto.toCjs()`. Both methods take a `source` argument, which is the source code of an ES6 module, and an optional second argument, `options`.
-
-The `options` argument can have a `defaultOnly` property, which defaults to `false`. See the next section for an explanation.
-
-If you're using `esperanto.toAmd()`, you have two additional options:
-
-* `indent` (string) specifies how to indent the contents of the module. By default, esperanto will guess the correct indentation from the code, and default to a single tab character if it's not sure.
-* `addUseStrict` (boolean) determines whether the 'use strict' pragma should be added to the top of the module. Defaults to `true`.
-
-
-## When to use `defaultOnly`
-
-ES6 modules support both *default* and *named* imports and exports:
-
-```js
-// default
-import foo from 'foo';
-var bar = foo.toUpperCase();
-export default bar;
-
-// named
-import { foo, bar } from 'baz';
-var bar = foo.toUpperCase();
-export { qux };
-```
-
-See [jsmodules.io](http://jsmodules.io/) for an explanation of the difference.
-
-This is a good design, but [it poses problems](https://gist.github.com/domenic/4748675) for developers who want to use ES6 modules with existing codebases. An AMD representation of the first example above might look like this:
-
-```js
-define(['foo','exports'], function (__import_1,exports) {
-  var foo = __import_1.default;
-  var bar = foo.toUpperCase();
-  exports.default = bar;
-});
-```
-
-As long as `foo` is also a transpiled ES6 module with a `default` property (or an AMD module that had a `default` property added by design), that's fine - as far as *this* module is concerned. But if `foo` is an external library, that almost certainly won't be the case.
-
-On the other side of the fence, if someone were to require this ES6 module from within an AMD module, they'd have the same problem in reverse.
-
-Esperanto's `defaultOnly` option solves this problem. As long as you're not using named imports or exports, it will cause modules to behave as you (as a seasoned user of AMD or CommonJS modules) would naturally expect:
-
-```js
-define(['foo'],function (foo) {
-
-  'use strict';
-
-  var bar = foo.toUpperCase();
-  return bar;
-
-});
-```
+See the [wiki](https://github.com/Rich-Harris/esperanto/wiki) for other options.
 
 
 ## Why not use existing module transpilers?
@@ -214,9 +161,8 @@ No muss, no fuss. Oh, and did I mention that it's an order of magnitude faster t
 
 ## Still to-do
 
-* A proper test suite (if you want to test esperanto, clone this module, `cd` into this folder, `npm install` dependencies, and run `node test.js`. The generated code will be written to the `output` folder)
-* Renaming imports (e.g. `import { unlink as rm } from 'fs'`)
-* Source maps?
+* Command line mode
+* Source maps... maybe
 * Allow named modules, if you're into that
 
 
