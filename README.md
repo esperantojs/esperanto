@@ -97,7 +97,7 @@ container.write('output/test.js');
 
 This time, rather than passing in a string, we have to point the transpiler to the files on disk. That's because it actually follows the dependency graph of your modules, so that it can (if you're not using the [AMD formatter](https://github.com/caridy/es6-module-transpiler-amd-formatter)) bundle up your source code into a single file. If it can't find a module, it errors out - so as far as I can tell, it's impossible to use es6-module-transpiler if you have external dependencies (e.g. in a `bower_components` folder) that aren't packaged as ES6 modules.
 
-Leaving aside that minor problem, what does the result look like?
+Leaving that aside, what does the result look like?
 
 ```js
 define("test", ["foo", "exports"], function(foo$$, __exports__) {
@@ -116,7 +116,7 @@ define("test", ["foo", "exports"], function(foo$$, __exports__) {
 //# sourceMappingURL=es6-module-transpiler.js.map
 ```
 
-Better, certainly, and you get source maps. Though as with [transpile](https://github.com/bitovi/transpile), you're stuck with named (as opposed to anonymous) AMD modules. Frankly, though, the external dependencies thing is a dealbreaker for me.
+Better, certainly, and you get source maps which is really cool. Though as with [transpile](https://github.com/bitovi/transpile), you're stuck with named (as opposed to anonymous) AMD modules. Frankly, though, the external dependencies thing is a dealbreaker for me.
 
 
 ### esperanto
