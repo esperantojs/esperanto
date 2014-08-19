@@ -1,0 +1,10 @@
+{
+  "name": "esperanto-benchmark",
+  "description": "quick and dirty script to illustrate esperanto speed advantage",
+  "version": "0.1.0",
+  "devDependencies": {
+    "traceur": "0.0.58",
+    "transpile": "~0.2.0",
+    "es6-module-transpiler": "~0.6.0"
+  }
+}
