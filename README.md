@@ -160,7 +160,7 @@ define(['foo'],function (foo) {
 });
 ```
 
-No muss, no fuss. Oh, and did I mention that it's an order of magnitude faster than the alternatives?
+No muss, no fuss. Oh, and did I mention that it's an order of magnitude faster than the alternatives? See [here](https://github.com/Rich-Harris/esperanto/tree/master/comparison) for more comparisons.
 
 
 ## Still to-do
