@@ -15,7 +15,7 @@ export default function amd ( parsed, options ) {
 		importPaths = '[' +
 			( options.defaultOnly || !hasExports ?
 				imports.map( getPath ) :
-				imports.map( getPath ).concat( 'exports' )
+				[ 'exports' ].concat( imports.map( getPath ) )
 			).map( quote ).join( ',' ) +
 		'],';
 
@@ -27,7 +27,7 @@ export default function amd ( parsed, options ) {
 		importNames = (
 			options.defaultOnly || !hasExports ?
 				imports.map( getImportName ) :
-				imports.map( getImportName ).concat( 'exports' )
+				[ 'exports' ].concat( imports.map( getImportName ) )
 		).join( ', ' );
 	}
 
