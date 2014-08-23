@@ -1,0 +1,165 @@
+<link rel='ractive' href='codemirror.html'>
+
+<div class='app'>
+	<div class='left'>
+		<div class='info'>
+			<p>Type ES6 module code</p>
+
+			<select value='{{selected}}'>
+				<option disabled>Examples from jsmodules.io</option>
+				{{#each samples}}
+					<option value='{{this}}'>{{name}}</option>
+				{{/each}}
+			</div>
+		</div>
+
+		<div class='codemirror-outer'>
+			<codemirror theme='neo' height='100%' mode='javascript' value='{{input}}'/>
+		</div>
+	</div>
+
+	<div class='right'>
+		<div class='info'>
+			<label><input type='radio' name='{{type}}' value='amd'> AMD</label>
+			<label><input type='radio' name='{{type}}' value='cjs'> CommonJS</label>
+
+			<label class='defaultOnly'><input type='checkbox' checked='{{defaultOnly}}' disabled='{{defaultOnlyDisabled}}'> <a href='https://github.com/Rich-Harris/esperanto/wiki/defaultOnly'>defaultOnly mode</a></label>
+		</div>
+
+		<div class='codemirror-outer'>
+			<codemirror theme='neo' height='100%' mode='javascript' value='{{output}}' readonly='true'/>
+		</div>
+	</div>
+</div>
+
+
+<style>
+	.app {
+		position: relative;
+		width: 100%;
+	}
+
+	.info {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 2em;
+		line-height: 1;
+		padding: 0.5em 1em;
+		border-bottom: 1px solid #eee;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.left, .right {
+		position: relative;
+		padding: 2em 0 0 0;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.codemirror-outer {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		padding: 1em;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	.left {
+		border-right: 1px solid #eee;
+	}
+
+	.right {
+		background-color: #f9f9f9;
+	}
+
+	select {
+		position: absolute;
+		top: 0.2em;
+		right: 1em;
+		float: right;
+		font-size: inherit;
+		font-family: inherit;
+	}
+
+ 	.defaultOnly {
+		padding-left: 1em;
+	}
+
+	@media (min-width: 40em) {
+		.app {
+			height: 100%;
+		}
+
+		.left, .right {
+			float: left;
+			width: 50%;
+			height: 100%;
+		}
+	}
+</style>
+
+
+<script>
+	var samples = require( 'data' ).samples;
+
+	component.exports = {
+		debug: true,
+
+		init: function () {
+			this.observe( 'selected', function ( sample ) {
+				this.set( 'input', sample.code );
+			});
+		},
+
+		data: {
+			samples: samples,
+			input: samples[0].code,
+			type: 'amd',
+			defaultOnly: true,
+			defaultOnlyDisabled: false
+		},
+
+		computed: {
+			output: function () {
+				var self = this, input, defaultOnly, output, method, defaultOnlyOutput;
+
+				input = this.get( 'input' );
+				defaultOnly = this.get( 'defaultOnly' );
+				method = this.get( 'type' ) === 'cjs' ? 'toCjs' : 'toAmd';
+
+				try {
+					// we want to know if defaultOnly is disabled, regardless of whether it's set
+					defaultOnlyOutput = esperanto[ method ]( input, { defaultOnly: true, addUseStrict: true });
+
+					// it should NOT be disabled
+					setTimeout( function () {
+						self.set( 'defaultOnlyDisabled', false );
+					});
+				} catch ( err ) {
+					// it SHOULD be disabled
+					setTimeout( function () {
+						self.set({
+							defaultOnlyDisabled: true,
+							defaultOnly: false
+						});
+					});
+
+					defaultOnly = false;
+				} finally {
+					if ( defaultOnly ) {
+						return defaultOnlyOutput;
+					}
+
+					return esperanto[ method ]( input, { defaultOnly: false, addUseStrict: true });
+				}
+			}
+		}
+	};
+</script>

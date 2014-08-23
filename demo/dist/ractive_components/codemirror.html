@@ -1,0 +1,72 @@
+<div class='codemirror-container' style='{{#height}}height: {{height}};{{/height}}'>
+	<textarea></textarea>
+</div>
+
+<script>
+	keyNames = {
+		'13': 'enter'
+	};
+
+	component.exports = {
+		init: function () {
+			var component = this, mode, editor, doc, updating;
+
+			mode = this.get( 'mode' );
+
+			if ( mode === 'json' ) {
+				mode = {
+					name: 'javascript',
+					json: true
+				};
+			}
+
+			editor = CodeMirror.fromTextArea( this.find( 'textarea' ), {
+				mode: mode,
+				theme: this.get( 'theme' ) || 'neo',
+				lineWrapping: this.get( 'wrap' ),
+				readOnly: this.get( 'readonly' )
+			});
+			doc = editor.getDoc();
+
+			editor.on( 'change', function () {
+				if ( updating ) {
+					return;
+				}
+
+				updating = true;
+				component.set( 'value', editor.getValue() );
+				updating = false;
+			});
+
+			editor.on( 'keydown', function ( editor, event ) {
+				var name = CodeMirror.keyNames[ event.which ];
+
+				return;
+
+				if ( name ) {
+					component.fire( name.toLowerCase(), {
+						component: component,
+						shift: event.shiftKey,
+						original: event
+					});
+				}
+			});
+
+			this.observe( 'value', function ( value ) {
+				if ( updating ) {
+					return;
+				}
+
+				updating = true;
+				editor.setValue( value || '' );
+				updating = false;
+			});
+
+			this.on( 'teardown', function () {
+				editor.toTextArea();
+			});
+		},
+
+		isolated: true
+	};
+</script>

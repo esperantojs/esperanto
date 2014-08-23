@@ -1,0 +1,82 @@
+@font-face{
+	font-family: 'Voltaire';
+	src: url('fonts/Voltaire/Voltaire.eot');
+	src: url('fonts/Voltaire/Voltaire.eot?#iefix') format('embedded-opentype'),
+	     url('fonts/Voltaire/Voltaire.woff') format('woff'),
+	     url('fonts/Voltaire/Voltaire.ttf') format('truetype'),
+	     url('fonts/Voltaire/Voltaire.svg#webfont') format('svg');
+}
+
+@font-face{
+	font-family: 'Source Sans Pro';
+	src: url('fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf') format('truetype');
+}
+
+@font-face{
+	font-family: 'Source Sans Pro';
+	src: url('fonts/Source_Sans_Pro/SourceSansPro-Light.ttf') format('truetype');
+	font-weight: 200;
+}
+
+@font-face{
+	font-family: 'Source Sans Pro';
+	src: url('fonts/Source_Sans_Pro/SourceSansPro-Semibold.ttf') format('truetype');
+	font-weight: 500;
+}
+
+@font-face{
+	font-family: 'Inconsolata';
+	src: url('fonts/Inconsolata/Inconsolata-Regular.ttf') format('truetype');
+}
+
+@font-face{
+	font-family: 'Inconsolata';
+	src: url('fonts/Inconsolata/Inconsolata-Bold.ttf') format('truetype');
+	font-weight: 500;
+}
+
+body {
+	font-family: 'Source Sans Pro';
+	color: #555;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1, h2 {
+	font-family: 'Voltaire';
+	margin: 0;
+	font-weight: normal;
+	color: #222;
+}
+
+h3, h4, h5, h6 {
+	font-family: 'Source Sans Pro';
+	font-weight: 500;
+	margin: 0 0 0.5em 0;
+	color: #222;
+}
+
+p {
+	margin: 0 0 1em 0;
+}
+
+a {
+	color: rgb(200,60,60);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+pre, code {
+	font-family: Inconsolata;
+}
+
+strong, b {
+	font-weight: 500;
+}
+
+li {
+	margin: 0 0 0.5em 0;
+}
