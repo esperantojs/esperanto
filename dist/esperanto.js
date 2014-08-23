@@ -228,12 +228,12 @@
 				importNames = '',
 				indent;
 			if (imports.length || hasExports && !options.defaultOnly) {
-				importPaths = '[' + (options.defaultOnly || !hasExports ? imports.map(getPath) : imports.map(getPath).concat('exports')).map(quote).join(',') + '],';
+				importPaths = '[' + (options.defaultOnly || !hasExports ? imports.map(getPath) : ['exports'].concat(imports.map(getPath))).map(quote).join(',') + '],';
 				// Remove empty imports from the end of the array
 				while (imports.length && imports[imports.length - 1].empty) {
 					imports.pop();
 				}
-				importNames = (options.defaultOnly || !hasExports ? imports.map(getImportName) : imports.map(getImportName).concat('exports')).join(', ');
+				importNames = (options.defaultOnly || !hasExports ? imports.map(getImportName) : ['exports'].concat(imports.map(getImportName))).join(', ');
 			}
 			intro = 'define(' + importPaths + 'function (' + importNames + ') {';
 			if (options.addUseStrict !== false) {
