@@ -148,12 +148,10 @@ export default function ( source, options, isAmd ) {
 			value = source.slice( node.declaration.start, node.declaration.end );
 
 			// Special case - `export var foo = 'bar'`
-			if ( isVarDeclaration( node.declaration ) ) {
+			if ( name = getDeclarationName( node.declaration ) ) {
 				if ( options.defaultOnly ) {
 					throw new Error( 'A named export was used in defaultOnly mode' );
 				}
-
-				name = node.declaration.declarations[0].id.name;
 
 				declaration = value + '\n' + indent;
 				declaration += 'exports.' + name + ' = ' + name;
@@ -197,9 +195,14 @@ function isExportDeclaration ( node ) {
 	return node.type === 'ExportDeclaration';
 }
 
-function isVarDeclaration ( node ) {
-	// TODO support let and class declarations, once Acorn supports them
-	return node.type === 'VariableDeclaration';
+function getDeclarationName ( declaration ) {
+	if ( declaration.type === 'VariableDeclaration' ) {
+		return declaration.declarations[0].id.name;
+	}
+
+	if ( declaration.type === 'FunctionDeclaration' ) {
+		return declaration.id.name;
+	}
 }
 
 function getIndent ( index, source ) {
