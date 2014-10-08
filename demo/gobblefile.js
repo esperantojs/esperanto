@@ -36,4 +36,4 @@ if ( gobble.isBuild ) {
 	bundle = bundle.map( 'uglifyjs' );
 }
 
-module.exports = [ index, app, bundle, css, 'src/files' ];
+module.exports = gobble([ index, app, bundle, css, 'src/files' ]);

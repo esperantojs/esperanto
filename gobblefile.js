@@ -1,8 +1,6 @@
 var fs = require( 'fs' ),
-	path = require( 'path' ),
 	gobble = require( 'gobble' ),
-
-	dist, lib;
+	dist;
 
 // Compile a UMD version, via RequireJS and AMDClean
 dist = gobble( 'src' ).map( 'esperanto', { defaultOnly: true, addUseStrict: false })
@@ -27,10 +25,10 @@ dist = gobble( 'src' ).map( 'esperanto', { defaultOnly: true, addUseStrict: fals
 	})
 	.moveTo( 'dist' );
 
-module.exports = [
+module.exports = gobble([
 	dist,
 	dist.map( 'uglifyjs', { ext: '.min.js' }),
 
 	// Compile a node.js version
 	gobble( 'src' ).map( 'esperanto', { type: 'cjs', defaultOnly: true }).moveTo( 'lib' )
-];
+]);
