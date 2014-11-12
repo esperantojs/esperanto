@@ -111,7 +111,7 @@ body {
   margin: 0;
   padding: 6em 0 4.4em 0;
   -webkit-box-sizing: border-box;
-  -ms-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box; }
 
 header {
@@ -120,10 +120,27 @@ header {
   left: 0;
   width: 100%;
   height: 6em;
-  padding: 1em;
+  padding: 1em 1em 1em 15em;
   -webkit-box-sizing: border-box;
-  -ms-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box; }
+  header .head {
+    position: absolute;
+    left: 1em; }
+  header .subhead {
+    position: relative;
+    width: 100%;
+    height: 100%; }
+  header p {
+    position: absolute;
+    width: 100%;
+    max-width: 40em;
+    bottom: 0.2em;
+    margin: 0;
+    padding-right: 4em;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box; }
 
 footer {
   bottom: 0;
@@ -132,7 +149,7 @@ footer {
   height: 4.4em;
   padding: 1em;
   -webkit-box-sizing: border-box;
-  -ms-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box; }
   @media (min-width: 40em) {
     footer {
@@ -144,7 +161,7 @@ main {
   height: 100%;
   padding: 0;
   -webkit-box-sizing: border-box;
-  -ms-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box; }
 
 header {
@@ -158,9 +175,20 @@ header {
     font-weight: 200;
     color: #999;
     line-height: 1.4em; }
-  @media (min-width: 40em) {
+  header .optional {
+    display: none; }
+  header strong {
+    display: block; }
+  @media (min-width: 36em) {
     header .subhead {
       display: inline-block; } }
+  @media (min-width: 52em) {
+    header .optional {
+      display: inline; }
+    header p {
+      padding-right: 4em; }
+    header strong {
+      display: inline; } }
 
 footer {
   text-align: center;

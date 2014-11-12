@@ -12619,8 +12619,8 @@ _data_ = {
       name: 'Default import\n'
     },
     {
-      name: 'Named exports\n',
-      code: '// example from http://jsmodules.io\nvar asap;\nvar isNode = typeof process !== "undefined" &&\n             {}.toString.call(process) === "[object process]";\n\nif (isNode) {\n  asap = process.nextTick;\n} else if (typeof setImmediate !== "undefined") {\n  asap = setImmediate;\n} else {\n  asap = setTimeout;\n}\n\nexport default asap;\nexport var later = isNode ? process.setImmediate : asap;\n'
+      code: '// example from http://jsmodules.io\nvar asap;\nvar isNode = typeof process !== "undefined" &&\n             {}.toString.call(process) === "[object process]";\n\nif (isNode) {\n  asap = process.nextTick;\n} else if (typeof setImmediate !== "undefined") {\n  asap = setImmediate;\n} else {\n  asap = setTimeout;\n}\n\nexport default asap;\nexport var later = isNode ? process.setImmediate : asap;\n',
+      name: 'Named exports\n'
     },
     {
       code: '// example from http://jsmodules.io\nimport { later } from "asap";\n\nlater(function() {\n  console.log("Running after other network events");\n});\n',
@@ -12631,8 +12631,8 @@ _data_ = {
       name: 'Mixed imports\n'
     },
     {
-      code: '// example from http://jsmodules.io\nimport { unlink as rm } from "fs";\n\nrm(filename, function(err) { /* check errors */ });\n',
-      name: 'Renaming imports\n'
+      name: 'Renaming imports\n',
+      code: '// example from http://jsmodules.io\nimport { unlink as rm } from "fs";\n\nrm(filename, function(err) { /* check errors */ });\n'
     },
     {
       code: '// example from http://jsmodules.io\nimport * as fs from "fs";\n\nfs.unlink(filename, function(err) { /* check errors */ });\n',
@@ -12756,9 +12756,9 @@ app = function (__import0__, __import1__, require, Ractive) {
                               type: 'radio',
                               name: [{
                                   t: 2,
-                                  r: 'type'
+                                  r: 'method'
                                 }],
-                              value: 'amd'
+                              value: 'toAmd'
                             }
                           },
                           ' AMD'
@@ -12776,9 +12776,9 @@ app = function (__import0__, __import1__, require, Ractive) {
                               type: 'radio',
                               name: [{
                                   t: 2,
-                                  r: 'type'
+                                  r: 'method'
                                 }],
-                              value: 'cjs'
+                              value: 'toCjs'
                             }
                           },
                           ' CommonJS'
@@ -12788,7 +12788,27 @@ app = function (__import0__, __import1__, require, Ractive) {
                       {
                         t: 7,
                         e: 'label',
-                        a: { 'class': 'defaultOnly' },
+                        f: [
+                          {
+                            t: 7,
+                            e: 'input',
+                            a: {
+                              type: 'radio',
+                              name: [{
+                                  t: 2,
+                                  r: 'method'
+                                }],
+                              value: 'toUmd'
+                            }
+                          },
+                          ' UMD'
+                        ]
+                      },
+                      ' ',
+                      {
+                        t: 7,
+                        e: 'label',
+                        a: { 'class': 'strictMode' },
                         f: [
                           {
                             t: 7,
@@ -12797,11 +12817,11 @@ app = function (__import0__, __import1__, require, Ractive) {
                               type: 'checkbox',
                               checked: [{
                                   t: 2,
-                                  r: 'defaultOnly'
+                                  r: 'strictMode'
                                 }],
                               disabled: [{
                                   t: 2,
-                                  r: 'defaultOnlyDisabled'
+                                  r: 'forceStrictMode'
                                 }]
                             }
                           },
@@ -12809,8 +12829,8 @@ app = function (__import0__, __import1__, require, Ractive) {
                           {
                             t: 7,
                             e: 'a',
-                            a: { href: 'https://github.com/Rich-Harris/esperanto/wiki/defaultOnly' },
-                            f: ['defaultOnly mode']
+                            a: { href: 'https://github.com/Rich-Harris/esperanto/wiki/strictMode' },
+                            f: ['strict mode']
                           }
                         ]
                       }
@@ -12841,7 +12861,7 @@ app = function (__import0__, __import1__, require, Ractive) {
             ]
           }]
       },
-      css: '.app{position:relative;width:100%}.info{position:absolute;top:0;left:0;width:100%;height:2em;line-height:1;padding:.5em 1em;border-bottom:1px solid #eee;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.left,.right{position:relative;padding:2em 0 0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.codemirror-outer{position:relative;width:100%;height:100%;padding:1em;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.left{border-right:1px solid #eee}.right{background-color:#f9f9f9}select{position:absolute;top:.2em;right:1em;float:right;font-size:inherit;font-family:inherit}.defaultOnly{padding-left:1em}@media (min-width:40em){.app{height:100%}.left,.right{float:left;width:50%;height:100%}}',
+      css: '.app{position:relative;width:100%}.info{position:absolute;top:0;left:0;width:100%;height:2em;line-height:1;padding:.5em 1em;border-bottom:1px solid #eee;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.left,.right{position:relative;padding:2em 0 0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.codemirror-outer{position:relative;width:100%;height:100%;padding:1em;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}.left{border-right:1px solid #eee}.right{background-color:#f9f9f9}select{position:absolute;top:.2em;right:1em;float:right;font-size:inherit;font-family:inherit}.strictMode{padding-left:1em}@media (min-width:40em){.app{height:100%}.left,.right{float:left;width:50%;height:100%}}',
       components: { codemirror: __import0__ }
     }, component = {}, __prop__, __export__;
   var samples = _data_.samples;
@@ -12855,42 +12875,44 @@ app = function (__import0__, __import1__, require, Ractive) {
     data: {
       samples: samples,
       input: samples[0].code,
-      type: 'amd',
-      defaultOnly: true,
-      defaultOnlyDisabled: false
+      method: 'toAmd',
+      moduleName: 'myModule',
+      strict: false,
+      forceStrictMode: false
     },
     computed: {
       output: function () {
-        var self = this, input, defaultOnly, output, method, defaultOnlyOutput;
+        var self = this, input, strictMode, output, method, moduleName, defaultOnlyOutput;
         input = this.get('input');
-        defaultOnly = this.get('defaultOnly');
-        method = this.get('type') === 'cjs' ? 'toCjs' : 'toAmd';
+        strictMode = this.get('strictMode');
+        method = this.get('method');
+        moduleName = this.get('moduleName');
         try {
-          // we want to know if defaultOnly is disabled, regardless of whether it's set
+          // we want to know if strict mode is forced, regardless of whether it's set
           defaultOnlyOutput = esperanto[method](input, {
-            defaultOnly: true,
-            addUseStrict: true
+            strict: false,
+            name: moduleName
           });
-          // it should NOT be disabled
+          // it should NOT be forced, as `strict: false` succeeded
           setTimeout(function () {
-            self.set('defaultOnlyDisabled', false);
+            self.set('forceStrictMode', false);
           });
         } catch (err) {
-          // it SHOULD be disabled
+          // it SHOULD be forced, as `strict: false` failed
           setTimeout(function () {
             self.set({
-              defaultOnlyDisabled: true,
-              defaultOnly: false
+              forceStrictMode: true,
+              strictMode: true
             });
           });
-          defaultOnly = false;
+          strictMode = true;
         } finally {
-          if (defaultOnly) {
+          if (!strictMode) {
             return defaultOnlyOutput;
           }
           return esperanto[method](input, {
-            defaultOnly: false,
-            addUseStrict: true
+            strict: true,
+            name: moduleName
           });
         }
       }
