@@ -1,34 +1,12 @@
-var fs = require( 'fs' ),
-	gobble = require( 'gobble' ),
-	dist;
-
-// Compile a UMD version, via RequireJS and AMDClean
-dist = gobble( 'src' ).map( 'esperanto', { defaultOnly: true, addUseStrict: false })
-	.transform( 'requirejs', {
-		out: 'esperanto.js',
-		name: 'esperanto',
-		paths: {
-			acorn: 'empty:'
-		},
-		exclude: [ 'acorn' ],
-		optimize: 'none'
-	})
-	.map( 'amdclean', {
-		wrap: {
-			start: fs.readFileSync( 'wrapper/start.js' ).toString(),
-			end: fs.readFileSync( 'wrapper/end.js' ).toString()
-		}
-	})
-	.map( 'jsbeautify', {
-		indent_with_tabs: true,
-		preserve_newlines: true
-	})
-	.moveTo( 'dist' );
+var gobble = require( 'gobble' ),
+	lib = {
+		node: require( './gobble/lib' ).moveTo( 'lib' ),
+		browser: require( './gobble/browser' ).moveTo( 'dist' )
+	};
 
 module.exports = gobble([
-	dist,
-	dist.map( 'uglifyjs', { ext: '.min.js' }),
+	lib.node,
 
-	// Compile a node.js version
-	gobble( 'src' ).map( 'esperanto', { type: 'cjs', defaultOnly: true }).moveTo( 'lib' )
+	lib.browser,
+	lib.browser.transform( 'uglifyjs', { ext: '.min.js' })
 ]);

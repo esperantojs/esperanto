@@ -1,16 +1,22 @@
-// example from http://jsmodules.io
-exports.getJSON = getJSON;
-exports.postJSON = postJSON;
-exports.animate = animate;
+(function () {
 
-function getJSON() {
-  // implementation
-}
+  'use strict';
 
-function postJSON() {
-  // implementation
-}
+  // example from http://jsmodules.io
+  function getJSON() {
+    // implementation
+  }
+  
+  function postJSON() {
+    // implementation
+  }
+  
+  function animate() {
+    // implementation
+  }
+  
+  exports.getJSON = getJSON;
+  exports.postJSON = postJSON;
+  exports.animate = animate;
 
-function animate() {
-  // implementation
-}
+}).call(global);

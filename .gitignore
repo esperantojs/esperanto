@@ -4,3 +4,6 @@ sample/output
 .gobble
 out
 demo/dist
+test/lib
+lib
+.*

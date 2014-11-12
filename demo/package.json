@@ -2,11 +2,11 @@
   "name": "esperanto-demo",
   "version": "0.1.0",
   "devDependencies": {
+    "gobble-concat": "^0.3.0",
     "gobble-esperanto": "~0.1.0",
     "gobble-ractive": "^0.1.0",
-    "list-bower-paths": "~0.1.1",
     "gobble-sass": "~0.1.0",
-    "gobble-spelunk": "^0.2.1",
-    "gobble-concat": "^0.1.1"
+    "gobble-spelunk": "^0.4.0",
+    "list-bower-paths": "~0.1.1"
   }
 }

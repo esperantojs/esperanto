@@ -11,18 +11,46 @@
 	<body>
 		<a class='forkme' href='https://github.com/rich-harris/esperanto'>Fork me on GitHub</a>
 
-		<header>
-			<h1>Esperanto</h1>
-			<p class='subhead'>The fastest, easiest, smartest way to <br>convert <a href='http://jsmodules.io'>ES6 modules</a> to AMD and CommonJS.</p>
-		</header>
+		<!-- <div class='editor'> -->
+			<header>
+				<div class='head'>
+					<h1>Esperanto</h1>
+				</div>
 
-		<main></main>
+				<div class='subhead'>
+					<p><strong>ES6 modules for the rest of us.</strong> <span class='optional'>Supports bundling and one-to-one conversions, works with your existing codebase.</span> <a href='https://github.com/rich-harris/esperanto/wiki'>Visit the wiki to get started</a></p>
+				</div>
+			</header>
+
+			<main></main>
+		<!-- </div> -->
+
+		<!-- <section class='sales-pitch'>
+			<section class='block'>
+				<h2>Lightning fast</h2>
+				<p>Esperanto is much faster than other ES6 module transpilers (benchmarks coming soon!). Rather than transforming and reprinting an abstract syntax tree, it uses string manipulation to get the same results with a tiny fraction of the work.</p>
+			</section>
+
+			<section class='block'>
+				<h2>Interoperable</h2>
+				<p>Other ES6 module transpilers pay lip service, at best, to interoperability with existing codebases and libraries - for example, forcing all your dependencies to be present at the time of bundling, or exporting modules in such a way that other people have to write nonsense like...</p>
+				<pre><code>var foo = require('foo').default;</code></pre>
+				<p>...in order to use your library. (Some of the brightest minds in the industry have suggested some frankly <a href='https://gist.github.com/domenic/4748675'>rather</a> <a href='https://github.com/esnext/es6-module-transpiler/issues/85'>convoluted</a> solutions to this problem, most of which are rather painful.)</p>
+				<p>For one-to-one transformations to AMD, CommonJS or UMD formats, Esperanto takes the simple route of treating <code>export default foo</code> in ES6 the same as <code>module.exports = foo</code> in CommonJS, but allows you to use <a href='https://github.com/Rich-Harris/esperanto/wiki/strictMode'>strict mode</a> to control this behaviour. When bundling modules, you can use named imports and exports alongside defaults.</p>
+			</section>
+
+			<section class='block'>
+				<h2>Future-proof</h2>
+				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Culpa nostrum deserunt, quibusdam, nemo aliquam itaque quam quidem animi temporibus odio quae assumenda iste magni tempore, perspiciatis eaque dolor nam ipsum.</p>
+			</section>
+		</section> -->
 
 		<footer>
-			<p><code>npm install esperanto</code> to get started. <a href='https://github.com/rich-harris/esperanto/wiki'>Docs on GitHub</a>. <br>Esperanto is free and open software released under the MIT License, copyright &copy; 2014 <a href='http://twitter.com/Rich_Harris'>Rich Harris</a>.</p>
+			<p><a href='https://github.com/rich-harris/esperanto/wiki'>Visit the wiki to get started</a>. <br>Esperanto is free and open software released under the MIT License, copyright &copy; 2014 <a href='http://twitter.com/Rich_Harris'>Rich Harris</a>.</p>
 		</footer>
 
 		<script src='bundle.js'></script>
+		<script src='esperanto.js'></script>
 		<script src='app.js'></script>
 		<script>
 			var app = new App({ el: 'main' });

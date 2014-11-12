@@ -15,7 +15,7 @@ tests = [
 	{
 		name: 'esperanto',
 		fn: function ( code, filename, type ) {
-			code = esperanto[ type === 'amd' ? 'toAmd' : 'toCjs' ]( code );
+			code = esperanto[ type === 'amd' ? 'toAmd' : 'toCjs' ]( code, { strict: true });
 			return code;
 		}
 	},

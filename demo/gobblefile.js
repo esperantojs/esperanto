@@ -1,15 +1,14 @@
 var gobble = require( 'gobble' ),
+	lib = require( '../gobble/browser' ),
 	src, index, app, bundle, css, data, vendor;
 
+gobble.cwd( __dirname );
 src = gobble( 'src' );
 
 index = src.include( 'index.html' );
 app = gobble( 'src/ractive_components' ).map( 'ractive' );
-bundle = gobble([
-	'src/bundle',
-	gobble( '../dist' ).include( 'esperanto.js' )
-]).transform( 'concat', { files: '**/*.js', dest: 'bundle.js' });
-css = src.transform( 'sass', { src: 'scss/main.scss', dest: 'min.css' });
+bundle = gobble( 'src/bundle' ).transform( 'concat', { files: '**/*.js', dest: 'bundle.js' });
+css = gobble( 'src/scss' ).transform( 'sass', { src: 'main.scss', dest: 'min.css' });
 
 // Compile the app.html file
 data = gobble( 'src/data' ).transform( 'spelunk', { dest: 'data.js', type: 'amd' });
@@ -36,4 +35,4 @@ if ( gobble.isBuild ) {
 	bundle = bundle.map( 'uglifyjs' );
 }
 
-module.exports = gobble([ index, app, bundle, css, 'src/files' ]);
+module.exports = gobble([ index, app, bundle, css, lib, 'src/files' ]);

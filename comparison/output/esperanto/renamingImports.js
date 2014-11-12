@@ -1,6 +1,10 @@
-var __imports_0 = require('fs');
+(function () {
 
-// example from http://jsmodules.io
-var rm = __imports_0.unlink;
+	'use strict';
 
-rm(filename, function(err) { /* check errors */ });
+	var fs = require('fs');
+	
+	// example from http://jsmodules.io
+	fs.unlink(filename, function(err) { /* check errors */ });
+
+}).call(global);

@@ -1,0 +1,1 @@
+import ExplicitlyNamed from 'external';

@@ -4,14 +4,18 @@
   "version": "0.3.12",
   "author": "Rich Harris",
   "dependencies": {
-    "acorn": "~0.7.0"
+    "acorn": "^0.9.0",
+    "estraverse": "^1.7.0",
+    "magic-string": "^0.1.6",
+    "sander": "^0.2.0"
   },
   "main": "lib/esperanto.js",
   "devDependencies": {
     "colors": "~0.6.2",
     "glob": "~4.0.5",
-    "gobble": "^0.5.11",
+    "gobble": "^0.6.10",
     "gobble-amdclean": "~0.1.0",
+    "gobble-es6-transpiler": "^0.1.0",
     "gobble-esperanto": "~0.1.0",
     "gobble-jsbeautify": "~0.1.0",
     "gobble-requirejs": "~0.1.0",
@@ -19,7 +23,8 @@
     "mkdirp": "~0.5.0",
     "promise-map-series": "~0.2.0",
     "promo": "~0.1.1",
-    "rimraf": "~2.2.8"
+    "rimraf": "~2.2.8",
+    "sander": "^0.2.0"
   },
   "files": [
     "index.js",

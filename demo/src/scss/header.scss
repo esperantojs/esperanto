@@ -13,11 +13,33 @@ header {
 		line-height: 1.4em;
 	}
 
+	.optional {
+		display: none;
+	}
+
+	strong {
+		display: block;
+	}
+
 	border-bottom: 1px solid #eee;
 
-	@media (min-width: 40em) {
+	@media (min-width: 36em) {
 		.subhead {
 			display: inline-block;
+		}
+	}
+
+	@media (min-width: 52em) {
+		.optional {
+			display: inline;
+		}
+
+		p {
+			padding-right: 4em;
+		}
+
+		strong {
+			display: inline;
 		}
 	}
 }

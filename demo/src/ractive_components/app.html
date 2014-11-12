@@ -20,10 +20,11 @@
 
 	<div class='right'>
 		<div class='info'>
-			<label><input type='radio' name='{{type}}' value='amd'> AMD</label>
-			<label><input type='radio' name='{{type}}' value='cjs'> CommonJS</label>
+			<label><input type='radio' name='{{method}}' value='toAmd'> AMD</label>
+			<label><input type='radio' name='{{method}}' value='toCjs'> CommonJS</label>
+			<label><input type='radio' name='{{method}}' value='toUmd'> UMD</label>
 
-			<label class='defaultOnly'><input type='checkbox' checked='{{defaultOnly}}' disabled='{{defaultOnlyDisabled}}'> <a href='https://github.com/Rich-Harris/esperanto/wiki/defaultOnly'>defaultOnly mode</a></label>
+			<label class='strictMode'><input type='checkbox' checked='{{strictMode}}' disabled='{{forceStrictMode}}'> <a href='https://github.com/Rich-Harris/esperanto/wiki/strictMode'>strict mode</a></label>
 		</div>
 
 		<div class='codemirror-outer'>
@@ -88,7 +89,7 @@
 		font-family: inherit;
 	}
 
- 	.defaultOnly {
+ 	.strictMode {
 		padding-left: 1em;
 	}
 
@@ -121,43 +122,45 @@
 		data: {
 			samples: samples,
 			input: samples[0].code,
-			type: 'amd',
-			defaultOnly: true,
-			defaultOnlyDisabled: false
+			method: 'toAmd',
+			moduleName: 'myModule',
+			strict: false,
+			forceStrictMode: false
 		},
 
 		computed: {
 			output: function () {
-				var self = this, input, defaultOnly, output, method, defaultOnlyOutput;
+				var self = this, input, strictMode, output, method, moduleName, defaultOnlyOutput;
 
 				input = this.get( 'input' );
-				defaultOnly = this.get( 'defaultOnly' );
-				method = this.get( 'type' ) === 'cjs' ? 'toCjs' : 'toAmd';
+				strictMode = this.get( 'strictMode' );
+				method = this.get( 'method' );
+				moduleName = this.get( 'moduleName' );
 
 				try {
-					// we want to know if defaultOnly is disabled, regardless of whether it's set
-					defaultOnlyOutput = esperanto[ method ]( input, { defaultOnly: true, addUseStrict: true });
+					// we want to know if strict mode is forced, regardless of whether it's set
+					defaultOnlyOutput = esperanto[ method ]( input, { strict: false, name: moduleName });
 
-					// it should NOT be disabled
+					// it should NOT be forced, as `strict: false` succeeded
 					setTimeout( function () {
-						self.set( 'defaultOnlyDisabled', false );
+						self.set( 'forceStrictMode', false );
 					});
 				} catch ( err ) {
-					// it SHOULD be disabled
+					// it SHOULD be forced, as `strict: false` failed
 					setTimeout( function () {
 						self.set({
-							defaultOnlyDisabled: true,
-							defaultOnly: false
+							forceStrictMode: true,
+							strictMode: true
 						});
 					});
 
-					defaultOnly = false;
+					strictMode = true;
 				} finally {
-					if ( defaultOnly ) {
+					if ( !strictMode ) {
 						return defaultOnlyOutput;
 					}
 
-					return esperanto[ method ]( input, { defaultOnly: false, addUseStrict: true });
+					return esperanto[ method ]( input, { strict: true, name: moduleName });
 				}
 			}
 		}

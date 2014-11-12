@@ -1,0 +1,3 @@
+These tests are taken from the [esnext/es6-module-transpiler](https://github.com/esnext/es6-module-transpiler/tree/master/test/examples) test suite. Unlike the other tests in this project, which ensure that converted modules have the correct *form*, these tests ensure that the *semantics* of ES6 modules are faithfully represented.
+
+I'm grateful to the es6-module-transpiler project for producing these test cases and making them available under an [Apache 2.0 license](https://github.com/esnext/es6-module-transpiler/blob/master/LICENSE), and in particular to [Thomas Boyt](https://github.com/thomasboyt) for [pointing me towards them](https://news.ycombinator.com/item?id=8198649).

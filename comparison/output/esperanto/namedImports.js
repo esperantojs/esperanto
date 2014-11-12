@@ -1,8 +1,12 @@
-var __imports_0 = require('asap');
+(function () {
 
-// example from http://jsmodules.io
-var later = __imports_0.later;
+  'use strict';
 
-later(function() {
-  console.log("Running after other network events");
-});
+  var asap = require('asap');
+  
+  // example from http://jsmodules.io
+  asap.later(function() {
+    console.log("Running after other network events");
+  });
+
+}).call(global);

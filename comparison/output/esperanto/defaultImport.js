@@ -1,8 +1,12 @@
-var __imports_0 = require('asap');
+(function () {
 
-// example from http://jsmodules.io
-var asap = __imports_0.default;
+  'use strict';
 
-asap(function() {
-  console.log("hello async world!");
-});
+  var asap = require('asap');
+  
+  // example from http://jsmodules.io
+  asap.default(function() {
+    console.log("hello async world!");
+  });
+
+}).call(global);
