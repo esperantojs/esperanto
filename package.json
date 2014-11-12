@@ -27,8 +27,8 @@
     "sander": "^0.2.0"
   },
   "files": [
-    "index.js",
-    "lib"
+    "esperanto.js",
+    "README.md"
   ],
   "scripts": {
     "build": "scripts/build.sh",
