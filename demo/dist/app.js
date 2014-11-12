@@ -12631,8 +12631,8 @@ _data_ = {
       name: 'Mixed imports\n'
     },
     {
-      name: 'Renaming imports\n',
-      code: '// example from http://jsmodules.io\nimport { unlink as rm } from "fs";\n\nrm(filename, function(err) { /* check errors */ });\n'
+      code: '// example from http://jsmodules.io\nimport { unlink as rm } from "fs";\n\nrm(filename, function(err) { /* check errors */ });\n',
+      name: 'Renaming imports\n'
     },
     {
       code: '// example from http://jsmodules.io\nimport * as fs from "fs";\n\nfs.unlink(filename, function(err) { /* check errors */ });\n',
@@ -12829,7 +12829,7 @@ app = function (__import0__, __import1__, require, Ractive) {
                           {
                             t: 7,
                             e: 'a',
-                            a: { href: 'https://github.com/Rich-Harris/esperanto/wiki/strictMode' },
+                            a: { href: 'https://github.com/Rich-Harris/esperanto/wiki/Strict-mode' },
                             f: ['strict mode']
                           }
                         ]
