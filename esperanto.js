@@ -1,21 +1,12 @@
-(function (global, factory) {
+(function () {
 
 	'use strict';
 
-	if (typeof define === 'function' && define.amd) {
-		// export as AMD
-		define(['acorn', 'magic-string', 'path', 'sander', 'estraverse'], factory);
-	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-		// node/browserify
-		module.exports = factory(require('acorn'), require('magic-string'), require('path'), require('sander'), require('estraverse'));
-	} else {
-		// browser global
-		global.esperanto = factory(global.acorn, global.MagicString, global.path, global.sander, global.estraverse);
-	}
-
-}(typeof window !== 'undefined' ? window : this, function (acorn__default, MagicString__default, path__default, sander__default, estraverse__default) {
-
-	'use strict';
+	var acorn__default = require('acorn');
+	var MagicString__default = require('magic-string');
+	var path__default = require('path');
+	var sander__default = require('sander');
+	var estraverse__default = require('estraverse');
 
 	function findImportsAndExports__findImportsAndExports ( mod, source, ast, imports, exports ) {
 		var previousDeclaration;
@@ -192,7 +183,7 @@
 			}
 	
 			else {
-				parts = moduleId.split( path__default.sep );
+				parts = moduleId.split( '/' );
 				i = parts.length;
 	
 				while ( i-- ) {
@@ -236,12 +227,25 @@
 	var getStandaloneModule__default = getStandaloneModule__getStandaloneModule;
 
 	function resolve__resolve ( importPath, importerPath ) {
-		var resolved;
+		var resolved, importerParts, importParts;
 	
 		if ( importPath[0] !== '.' ) {
 			resolved = importPath;
 		} else {
-			resolved = path__default.join( path__default.dirname( importerPath ), importPath );
+			importerParts = importerPath.split( '/' );
+			importParts = importPath.split( '/' );
+	
+			importerParts.pop(); // get dirname
+			while ( importParts[0] === '..' ) {
+				importParts.shift();
+				importerParts.pop();
+			}
+	
+			while ( importParts[0] === '.' ) {
+				importParts.shift();
+			}
+	
+			resolved = importerParts.concat( importParts ).join( '/' );
 		}
 	
 		return resolved.replace( /\.js$/, '' );
@@ -1008,10 +1012,10 @@
 	
 			if ( !specifier ) {
 				// empty import
-				replacement = (("require('" + (x.path)) + "');");
+				replacement = (("require('" + (x.path)) + "')");
 			} else {
 				name = specifier.batch ? specifier.name : specifier.as;
-				replacement = (("var " + name) + (" = require('" + (x.path)) + "');");
+				replacement = (("var " + name) + (" = require('" + (x.path)) + "')");
 			}
 	
 			body.replace( x.start, x.end, replacement );
@@ -1947,32 +1951,42 @@
 		strictMode: builders_strictMode__default
 	};
 
-	var disallowNames__importMessage = 'Named imports used in defaultOnly mode',
-		disallowNames__exportMessage = 'Named exports used in defaultOnly mode';
+	function hasNamedImports__hasNamedImports ( mod ) {
+		var i, x;
 	
-	function disallowNames__disallowNames ( mod ) {
-		mod.imports.forEach( function(x ) {
+		i = mod.imports.length;
+		while ( i-- ) {
+			x = mod.imports[i];
+	
 			if ( !x.specifiers.length ) {
-				return; // ok
+				continue; // ok
 			}
 	
 			if ( x.specifiers.length > 1 ) {
-				throw new Error( disallowNames__importMessage );
+				return true;
 			}
 	
 			if ( !x.specifiers[0].default && !x.specifiers[0].batch ) {
-				throw new Error( disallowNames__importMessage );
+				return true;
 			}
-		});
-	
-		mod.exports.forEach( function(x ) {
-			if ( !x.default ) {
-				throw new Error( disallowNames__exportMessage );
-			}
-		});
+		}
 	}
-	var disallowNames__default = disallowNames__disallowNames;
+	var hasNamedImports__default = hasNamedImports__hasNamedImports;
 
+	function hasNamedExports__hasNamedExports ( mod ) {
+		var i;
+	
+		i = mod.exports.length;
+		while ( i-- ) {
+			if ( !mod.exports[i].default ) {
+				return true;
+			}
+		}
+	}
+	var hasNamedExports__default = hasNamedExports__hasNamedExports;
+
+	var esperanto__deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
+	
 	function esperanto__transpileMethod ( format ) {
 		return function ( source, options ) {
 			var module,
@@ -1983,9 +1997,17 @@
 			module = getStandaloneModule__default({ source: source, getModuleName: options.getModuleName });
 			body = module.body.clone();
 	
-			if ( options.defaultOnly ) {
-				// ensure there are no named imports/exports
-				disallowNames__default( module );
+			if ( 'defaultOnly' in options ) {
+				// TODO link to a wiki page explaining this, or something
+				console.log( esperanto__deprecateMessage );
+			}
+	
+			if ( !options.strict ) {
+				// ensure there are no named imports/exports. TODO link to a wiki page...
+				if ( hasNamedImports__default( module ) || hasNamedExports__default( module ) ) {
+					throw new Error( 'You must be in strict mode (pass `strict: true`) to use named imports or exports' );
+				}
+	
 				builder = moduleBuilders__default.defaultsMode[ format ];
 			} else {
 				// annotate AST with scope info
@@ -2011,18 +2033,20 @@
 				};
 	
 				function transpile ( format, options ) {
-					var entry, builder;
+					var builder;
 	
 					options = options || {};
 	
-					if ( options.defaultOnly ) {
+					if ( 'defaultOnly' in options ) {
+						// TODO link to a wiki page explaining this, or something
+						console.log( esperanto__deprecateMessage );
+					}
+	
+					if ( !options.strict ) {
 						// ensure there are no named imports/exports
-						entry = bundle.entryModule;
-						entry.exports.forEach( function(x ) {
-							if ( !x.default ) {
-								throw new Error( 'Entry module cannot have named exports in defaultOnly mode' );
-							}
-						});
+						if ( hasNamedExports__default( bundle.entryModule ) ) {
+							throw new Error( 'Entry module can only have named exports in strict mode (pass `strict: true`)' );
+						}
 	
 						builder = bundleBuilders__default.defaultsMode[ format ];
 					} else {
@@ -2035,6 +2059,6 @@
 		}
 	};
 
-	return esperanto__default;
+	module.exports = esperanto__default;
 
-}));
+}).call(global);

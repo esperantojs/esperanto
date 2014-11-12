@@ -9,7 +9,7 @@
     "magic-string": "^0.1.6",
     "sander": "^0.2.0"
   },
-  "main": "lib/esperanto.js",
+  "main": "esperanto.js",
   "devDependencies": {
     "colors": "~0.6.2",
     "glob": "~4.0.5",
@@ -33,6 +33,7 @@
   "scripts": {
     "build": "scripts/build.sh",
     "test": "scripts/test.sh",
-    "update-gh-pages": "scripts/update-gh-pages.sh"
+    "update-gh-pages": "scripts/update-gh-pages.sh",
+    "prepublish": "npm run build"
   }
 }

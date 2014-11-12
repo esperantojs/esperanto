@@ -1,16 +1,10 @@
-# run tests
+# If the tests fail, abort (errexit)
+set -e
+
+# This command builds the library from source, and
+# runs all the tests
 mocha
 
-# build the library
-gobble build out -f
-
-# empty the dist folder and copy the build
-rm -rf dist
-mv out/dist dist
-
-# ditto for lib
-rm -rf lib
-mv out/lib lib
-
-# remove temporary out folder
-rm -rf out
+# If the tests pass, we just need to copy
+# test/lib/esperanto.js to the root
+cp test/lib/esperanto.js esperanto.js
