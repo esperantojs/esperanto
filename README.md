@@ -21,8 +21,8 @@ npm install esperanto
 
 You can use Esperanto in one of two modes:
 
-* [[Converting a single module]]
-* [[Bundling multiple ES6 modules]]
+* [Converting a single module](https://github.com/Rich-Harris/esperanto/wiki/Converting-a-single-module)
+* [Bundling multiple ES6 modules](https://github.com/Rich-Harris/esperanto/wiki/Bundling-multiple-ES6-modules)
 
 
 ## Why not use existing module transpilers?
