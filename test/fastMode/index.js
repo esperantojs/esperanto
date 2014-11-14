@@ -12,6 +12,7 @@ module.exports = function () {
 			{ file: 'emptyImportWithDefaultExport', description: 'transpiles empty imports with default exports' },
 			{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
 			{ file: 'exportDefault', description: 'transpiles default exports' },
+			{ file: 'exportFunction', description: 'transpiles named default function exports' },
 			{ file: 'importAll', description: 'transpiles `import * as foo from "foo"`' },
 			{ file: 'importDefault', description: 'transpiles default imports' },
 			{ file: 'multipleImports', description: 'transpiles multiple imports' },

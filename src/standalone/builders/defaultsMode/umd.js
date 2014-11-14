@@ -52,20 +52,24 @@ export default function umd ( mod, body, options ) {
 	exportDeclaration = mod.exports[0];
 
 	if ( exportDeclaration ) {
-		if ( isFunctionDeclaration( exportDeclaration ) ) {
-			// special case - we have a situation like
-			//
-			//     export default function foo () {...}
-			//
-			// which needs to be rewritten
-			//
-			//     function foo () {...}
-			//     export default foo
+		switch ( exportDeclaration.type ) {
+			case 'namedFunction':
 			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-			exportedValue = exportDeclaration.node.declaration.id.name;
-		} else {
+			exportedValue = exportDeclaration.name;
+			break;
+
+			case 'anonFunction':
+			body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'var __export = ' );
+			exportedValue = '__export';
+			break;
+
+			case 'expression':
 			body.remove( exportDeclaration.start, exportDeclaration.next );
 			exportedValue = exportDeclaration.value;
+			break;
+
+			default:
+			throw new Error( 'Unexpected export type' );
 		}
 
 		body.append( '\nreturn ' + exportedValue + ';' );

@@ -20,19 +20,19 @@ export default function cjs ( mod, body, options ) {
 	exportDeclaration = mod.exports[0];
 
 	if ( exportDeclaration ) {
-		if ( isFunctionDeclaration( exportDeclaration ) ) {
-			// special case - we have a situation like
-			//
-			//     export default function foo () {...}
-			//
-			// which needs to be rewritten
-			//
-			//     function foo () {...}
-			//     export default foo
+		switch ( exportDeclaration.type ) {
+			case 'namedFunction':
 			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
 			body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
-		} else {
-			body.replace( exportDeclaration.start, exportDeclaration.end, `module.exports = ${exportDeclaration.value};` );
+			break;
+
+			case 'anonFunction':
+			case 'expression':
+			body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
+			break;
+
+			default:
+			throw new Error( 'Unexpected export type' );
 		}
 	}
 
