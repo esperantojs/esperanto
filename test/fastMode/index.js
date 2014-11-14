@@ -7,10 +7,11 @@ module.exports = function () {
 		var tests;
 
 		tests = [
-			{ file: 'exportDefault', description: 'transpiles default exports' },
 			{ file: 'earlyExport', description: 'transpiles exports that are not the final statement' },
 			{ file: 'emptyImport', description: 'transpiles empty imports with no exports' },
 			{ file: 'emptyImportWithDefaultExport', description: 'transpiles empty imports with default exports' },
+			{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
+			{ file: 'exportDefault', description: 'transpiles default exports' },
 			{ file: 'importAll', description: 'transpiles `import * as foo from "foo"`' },
 			{ file: 'importDefault', description: 'transpiles default imports' },
 			{ file: 'multipleImports', description: 'transpiles multiple imports' },

@@ -15,14 +15,15 @@ module.exports = function () {
 		}
 
 		tests = [
-			{ file: 'exportDefault', description: 'transpiles default exports' },
-			{ file: 'exportNamed', description: 'transpiles named exports' },
 			{ file: 'earlyExport', description: 'transpiles exports that are not the final statement' },
 			{ file: 'emptyImport', description: 'transpiles empty imports with no exports' },
 			{ file: 'emptyImportWithDefaultExport', description: 'transpiles empty imports with default exports' },
+			{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
+			{ file: 'exportDefault', description: 'transpiles default exports' },
 			{ file: 'exportInlineFunction', description: 'transpiles named inline function exports' },
-			{ file: 'exportVar', description: 'transpiles named inline variable exports' },
 			{ file: 'exportLet', description: 'transpiles named inline let exports' },
+			{ file: 'exportNamed', description: 'transpiles named exports' },
+			{ file: 'exportVar', description: 'transpiles named inline variable exports' },
 			{ file: 'importAll', description: 'transpiles import * as foo from "foo"' },
 			{ file: 'importDefault', description: 'transpiles default imports' },
 			{ file: 'importNamed', description: 'transpiles named imports' },
