@@ -1,30 +1,11 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import template from '../../../utils/template';
 
-var introTemplate = template( `(function (global, factory) {
-
-	'use strict';
-
-	if (typeof define === 'function' && define.amd) {
-		// export as AMD
-		define(<%= AMD_DEPS %>factory);
-	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-		// node/browserify
-		module.exports = factory(<%= CJS_DEPS %>);
-	} else {
-		// browser global
-		global.<%= NAME %> = factory(<%= GLOBAL_DEPS %>);
-	}
-
-}(typeof window !== 'undefined' ? window : this, function (<%= IMPORT_NAMES %>) {
-
-` );
+var introTemplate;
 
 export default function umd ( mod, body, options ) {
 	var importNames = [],
 		importPaths = [],
-		exportDeclaration,
-		exportedValue,
 		intro,
 		i;
 
@@ -54,9 +35,7 @@ export default function umd ( mod, body, options ) {
 
 	body.trim();
 
-	if ( options.addUseStrict !== 'false' ) {
-		body.prepend( "'use strict';\n\n" ).trim();
-	}
+	body.prepend( "'use strict';\n\n" ).trim();
 
 	intro = introTemplate({
 		AMD_DEPS: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
@@ -71,10 +50,6 @@ export default function umd ( mod, body, options ) {
 	return body.toString();
 }
 
-function isFunctionDeclaration ( x ) {
-	return x.node.declaration && x.node.declaration.type === 'FunctionExpression';
-}
-
 function quote ( str ) {
 	return "'" + str + "'";
 }
@@ -86,3 +61,22 @@ function req ( path ) {
 function globalify ( name ) {
 	return `global.${name}`;
 }
+
+introTemplate = template( `(function (global, factory) {
+
+	'use strict';
+
+	if (typeof define === 'function' && define.amd) {
+		// export as AMD
+		define(<%= AMD_DEPS %>factory);
+	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+		// node/browserify
+		module.exports = factory(<%= CJS_DEPS %>);
+	} else {
+		// browser global
+		global.<%= NAME %> = factory(<%= GLOBAL_DEPS %>);
+	}
+
+}(typeof window !== 'undefined' ? window : this, function (<%= IMPORT_NAMES %>) {
+
+` );

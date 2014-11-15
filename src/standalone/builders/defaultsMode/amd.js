@@ -2,7 +2,7 @@ import transformExportDeclaration from './utils/transformExportDeclaration';
 
 var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 
-export default function amd ( mod, body, options ) {
+export default function amd ( mod, body ) {
 	var importNames = [],
 		importPaths = [],
 		intro,
@@ -34,9 +34,7 @@ export default function amd ( mod, body, options ) {
 
 	body.trim();
 
-	if ( options.addUseStrict !== 'false' ) {
-		body.prepend( "'use strict';\n\n" ).trim();
-	}
+	body.prepend( "'use strict';\n\n" ).trim();
 
 	intro = template
 		.replace( '__IMPORT_PATHS__', importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '' )

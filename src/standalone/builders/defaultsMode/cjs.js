@@ -1,4 +1,4 @@
-export default function cjs ( mod, body, options ) {
+export default function cjs ( mod, body ) {
 	var replacement, exportDeclaration;
 
 	mod.imports.forEach( x => {
@@ -38,13 +38,7 @@ export default function cjs ( mod, body, options ) {
 
 	body.trim();
 
-	if ( options.addUseStrict !== 'false' ) {
-		body.prepend( "'use strict';\n\n" ).indent().prepend( '(function () {\n\n' ).append( '\n\n}).call(global);' );
-	}
+	body.prepend( "'use strict';\n\n" ).indent().prepend( '(function () {\n\n' ).append( '\n\n}).call(global);' );
 
 	return body.toString();
-}
-
-function isFunctionDeclaration ( x ) {
-	return x.node.declaration && x.node.declaration.type === 'FunctionExpression';
 }
