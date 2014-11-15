@@ -35,25 +35,37 @@ export default function amd ( mod, body, options ) {
 	if ( exportDeclaration ) {
 		switch ( exportDeclaration.type ) {
 			case 'namedFunction':
-			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-			exportedValue = exportDeclaration.name;
-			break;
+				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
+				exportedValue = exportDeclaration.name;
+				break;
 
 			case 'anonFunction':
-			body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'var __export = ' );
-			exportedValue = '__export';
-			break;
+				if ( exportDeclaration.isFinal ) {
+					body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'return ' );
+				} else {
+					body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'var __export = ' );
+					exportedValue = '__export';
+				}
+
+				// add semi-colon, if necessary
+				if ( exportDeclaration.value.slice( -1 ) !== ';' ) {
+					body.insert( exportDeclaration.end, ';' );
+				}
+
+				break;
 
 			case 'expression':
-			body.remove( exportDeclaration.start, exportDeclaration.next );
-			exportedValue = exportDeclaration.value;
-			break;
+				body.remove( exportDeclaration.start, exportDeclaration.next );
+				exportedValue = exportDeclaration.value;
+				break;
 
 			default:
-			throw new Error( 'Unexpected export type' );
+				throw new Error( 'Unexpected export type' );
 		}
 
-		body.append( '\nreturn ' + exportedValue + ';' );
+		if ( exportedValue ) {
+			body.append( '\nreturn ' + exportedValue + ';' );
+		}
 	}
 
 	body.trim();

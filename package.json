@@ -8,7 +8,7 @@
   "dependencies": {
     "acorn": "^0.9.0",
     "estraverse": "^1.7.0",
-    "magic-string": "^0.1.6",
+    "magic-string": "^0.1.7",
     "sander": "^0.2.1"
   },
   "main": "esperanto.js",

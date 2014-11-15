@@ -46,6 +46,7 @@ export default function findImportsAndExports ( mod, source, ast, imports, expor
 	// catch any trailing semicolons
 	if ( previousDeclaration ) {
 		previousDeclaration.next = source.length;
+		previousDeclaration.isFinal = true;
 	}
 }
 
