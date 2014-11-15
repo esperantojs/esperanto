@@ -1,3 +1,4 @@
+import transformExportDeclaration from './utils/transformExportDeclaration';
 import template from '../../../utils/template';
 
 var introTemplate = template( `(function (global, factory) {
@@ -49,27 +50,7 @@ export default function umd ( mod, body, options ) {
 		body.remove( x.start, x.next );
 	});
 
-	exportDeclaration = mod.exports[0];
-
-	if ( exportDeclaration ) {
-		if ( isFunctionDeclaration( exportDeclaration ) ) {
-			// special case - we have a situation like
-			//
-			//     export default function foo () {...}
-			//
-			// which needs to be rewritten
-			//
-			//     function foo () {...}
-			//     export default foo
-			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-			exportedValue = exportDeclaration.node.declaration.id.name;
-		} else {
-			body.remove( exportDeclaration.start, exportDeclaration.next );
-			exportedValue = exportDeclaration.value;
-		}
-
-		body.append( '\nreturn ' + exportedValue + ';' );
-	}
+	transformExportDeclaration( mod.exports[0], body );
 
 	body.trim();
 

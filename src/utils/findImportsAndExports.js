@@ -46,6 +46,7 @@ export default function findImportsAndExports ( mod, source, ast, imports, expor
 	// catch any trailing semicolons
 	if ( previousDeclaration ) {
 		previousDeclaration.next = source.length;
+		previousDeclaration.isFinal = true;
 	}
 }
 
@@ -100,28 +101,47 @@ function processExport ( node, source ) {
 		result.value = source.slice( d.start, d.end );
 		result.valueStart = d.start;
 
-		if ( /Declaration/.test( d.type ) ) {
-			// inline declarations, e.g
-			//
-			//     export var foo = 'bar';
-			//     export function baz () {...}
+		// Case 1: `export var foo = 'bar'`
+		if ( d.type === 'VariableDeclaration' ) {
 			result.declaration = true; // TODO remove in favour of result.type
-			result.type = 'declaration';
-			result.default = !!node.default;
-			result.name = node.default ? 'default' : getDeclarationName( d );
-
+			result.type = 'varDeclaration';
+			result.name = d.declarations[0].id.name;
 		}
 
+		// Case 2: `export function foo () {...}`
+		else if ( d.type === 'FunctionDeclaration' ) {
+			result.declaration = true; // TODO remove in favour of result.type
+			result.type = 'namedFunction';
+			result.default = !!node.default;
+			result.name = d.id.name;
+		}
+
+		else if ( d.type === 'FunctionExpression' ) {
+			result.declaration = true; // TODO remove in favour of result.type
+			result.default = true;
+
+			// Case 3: `export default function foo () {...}`
+			if ( d.id ) {
+				result.type = 'namedFunction';
+				result.name = d.id.name;
+			}
+
+			// Case 4: `export default function () {...}`
+			else {
+				result.type = 'anonFunction';
+			}
+		}
+
+		// Case 5: `export default 1 + 2`
 		else {
-			// literals, e.g. `export default 42`
-			result.type = 'literal';
+			result.type = 'expression';
 			result.default = true;
 			result.name = 'default';
 		}
 	}
 
+	// Case 6: `export { foo, bar };`
 	else {
-		// named exports, e.g. `export { foo, bar };`
 		result.type = 'named';
 		result.specifiers = node.specifiers.map( s => ({ name: s.id.name }) ) // TODO as?
 	}

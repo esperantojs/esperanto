@@ -1,10 +1,10 @@
+import transformExportDeclaration from './utils/transformExportDeclaration';
+
 var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 
 export default function amd ( mod, body, options ) {
 	var importNames = [],
 		importPaths = [],
-		exportDeclaration,
-		exportedValue,
 		intro,
 		i;
 
@@ -30,27 +30,7 @@ export default function amd ( mod, body, options ) {
 		body.remove( x.start, x.next );
 	});
 
-	exportDeclaration = mod.exports[0];
-
-	if ( exportDeclaration ) {
-		if ( isFunctionDeclaration( exportDeclaration ) ) {
-			// special case - we have a situation like
-			//
-			//     export default function foo () {...}
-			//
-			// which needs to be rewritten
-			//
-			//     function foo () {...}
-			//     export default foo
-			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-			exportedValue = exportDeclaration.node.declaration.id.name;
-		} else {
-			body.remove( exportDeclaration.start, exportDeclaration.next );
-			exportedValue = exportDeclaration.value;
-		}
-
-		body.append( '\nreturn ' + exportedValue + ';' );
-	}
+	transformExportDeclaration( mod.exports[0], body );
 
 	body.trim();
 
@@ -65,10 +45,6 @@ export default function amd ( mod, body, options ) {
 	body.indent().prepend( intro ).append( '\n\n});' );
 
 	return body.toString();
-}
-
-function isFunctionDeclaration ( x ) {
-	return x.node.declaration && x.node.declaration.type === 'FunctionExpression';
 }
 
 function quote ( str ) {
