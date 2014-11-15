@@ -1,3 +1,4 @@
+import transformExportDeclaration from './utils/transformExportDeclaration';
 import template from '../../../utils/template';
 
 var introTemplate = template( `(function (global, factory) {
@@ -49,31 +50,7 @@ export default function umd ( mod, body, options ) {
 		body.remove( x.start, x.next );
 	});
 
-	exportDeclaration = mod.exports[0];
-
-	if ( exportDeclaration ) {
-		switch ( exportDeclaration.type ) {
-			case 'namedFunction':
-			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-			exportedValue = exportDeclaration.name;
-			break;
-
-			case 'anonFunction':
-			body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'var __export = ' );
-			exportedValue = '__export';
-			break;
-
-			case 'expression':
-			body.remove( exportDeclaration.start, exportDeclaration.next );
-			exportedValue = exportDeclaration.value;
-			break;
-
-			default:
-			throw new Error( 'Unexpected export type' );
-		}
-
-		body.append( '\nreturn ' + exportedValue + ';' );
-	}
+	transformExportDeclaration( mod.exports[0], body );
 
 	body.trim();
 
