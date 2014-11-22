@@ -7,3 +7,4 @@ demo/dist
 test/lib
 lib
 .*
+cli-test
