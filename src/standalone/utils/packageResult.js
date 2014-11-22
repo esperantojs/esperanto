@@ -18,7 +18,7 @@ export default function packageResult ( body, options, methodName ) {
 		});
 
 		if ( options.sourceMap === 'inline' ) {
-			code += '\n//#sourceMappingURL=' + map.toUrl();
+			code += '\n//# sourceMappingURL=' + map.toUrl();
 			map = null;
 		} else {
 			code += '\n//# sourceMappingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
