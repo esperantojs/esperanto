@@ -8,10 +8,14 @@
   "dependencies": {
     "acorn": "^0.9.0",
     "estraverse": "^1.7.0",
-    "magic-string": "^0.1.7",
+    "magic-string": "^0.1.8",
+    "minimist": "^1.1.0",
     "sander": "^0.2.1"
   },
   "main": "esperanto.js",
+  "bin": {
+    "esperanto": "./bin/index.js"
+  },
   "devDependencies": {
     "gobble": "^0.6.10",
     "gobble-amdclean": "~0.1.0",
@@ -19,7 +23,8 @@
     "gobble-jsbeautify": "~0.1.0",
     "gobble-requirejs": "~0.1.0",
     "gobble-uglifyjs": "^0.1.0",
-    "sander": "^0.2.1"
+    "sander": "^0.2.1",
+    "source-map": "^0.1.40"
   },
   "files": [
     "esperanto.js",
