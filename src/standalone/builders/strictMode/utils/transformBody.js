@@ -89,37 +89,40 @@ export default function transformBody ( mod, body, options ) {
 
 	// Remove export statements (but keep declarations)
 	mod.exports.forEach( x => {
-		var name;
+		switch ( x.type ) {
+			case 'varDeclaration': // export var answer = 42;
+				body.remove( x.start, x.valueStart );
+				return;
 
-		if ( x.default ) {
-			defaultValue = body.slice( x.valueStart, x.end );
-			if ( x.node.declaration && x.node.declaration.id && ( name = x.node.declaration.id.name ) ) {
-				// if you have a default export like
-				//
-				//     export default function foo () {...}
-				//
-				// you need to rewrite it as
-				//
-				//     function foo () {...}
-				//     exports.default = foo;
-				//
-				// as the `foo` reference may be used elsewhere
-				body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + name + ';' );
-			} else {
-				body.replace( x.start, x.end, 'exports.default = ' + defaultValue );
-			}
+			case 'namedFunction':
+				if ( x.default ) {
+					// export default function answer () { return 42; }
+					defaultValue = body.slice( x.valueStart, x.end );
+					body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + x.name + ';' );
+				} else {
+					// export function answer () { return 42; }
+					shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
+					body.remove( x.start, x.valueStart );
+				}
+				return;
 
-			return;
-		}
+			case 'anonFunction':
+				// export default function () {}
+				body.replace( x.start, x.valueStart, 'exports.default = ' );
+				return;
 
-		if ( x.declaration ) {
-			if ( x.node.declaration.type === 'FunctionDeclaration' ) {
-				shouldExportEarly[ x.node.declaration.id.name ] = true; // TODO what about `function foo () {}; export { foo }`?
-			}
+			case 'expression':
+				// export default 40 + 2;
+				body.replace( x.start, x.valueStart, 'exports.default = ' );
+				return;
 
-			body.remove( x.start, x.valueStart );
-		} else {
-			body.remove( x.start, x.next );
+			case 'named':
+				// export { foo, bar };
+				body.remove( x.start, x.next );
+				break;
+
+			default:
+				throw new Error( 'Unknown export type: ' + x.type );
 		}
 	});
 
