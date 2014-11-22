@@ -139,7 +139,7 @@
 
 				try {
 					// we want to know if strict mode is forced, regardless of whether it's set
-					defaultOnlyOutput = esperanto[ method ]( input, { strict: false, name: moduleName });
+					defaultOnlyOutput = esperanto[ method ]( input, { strict: false, name: moduleName }).code;
 
 					// it should NOT be forced, as `strict: false` succeeded
 					setTimeout( function () {
@@ -160,7 +160,7 @@
 						return defaultOnlyOutput;
 					}
 
-					return esperanto[ method ]( input, { strict: true, name: moduleName });
+					return esperanto[ method ]( input, { strict: true, name: moduleName }).code;
 				}
 			}
 		}
