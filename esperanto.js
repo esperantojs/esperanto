@@ -56,6 +56,7 @@
 		// catch any trailing semicolons
 		if ( previousDeclaration ) {
 			previousDeclaration.next = source.length;
+			previousDeclaration.isFinal = true;
 		}
 	}
 	var findImportsAndExports__default = findImportsAndExports__findImportsAndExports;
@@ -111,28 +112,47 @@
 			result.value = source.slice( d.start, d.end );
 			result.valueStart = d.start;
 	
-			if ( /Declaration/.test( d.type ) ) {
-				// inline declarations, e.g
-				//
-				//     export var foo = 'bar';
-				//     export function baz () {...}
+			// Case 1: `export var foo = 'bar'`
+			if ( d.type === 'VariableDeclaration' ) {
 				result.declaration = true; // TODO remove in favour of result.type
-				result.type = 'declaration';
-				result.default = !!node.default;
-				result.name = node.default ? 'default' : findImportsAndExports__getDeclarationName( d );
-	
+				result.type = 'varDeclaration';
+				result.name = d.declarations[0].id.name;
 			}
 	
+			// Case 2: `export function foo () {...}`
+			else if ( d.type === 'FunctionDeclaration' ) {
+				result.declaration = true; // TODO remove in favour of result.type
+				result.type = 'namedFunction';
+				result.default = !!node.default;
+				result.name = d.id.name;
+			}
+	
+			else if ( d.type === 'FunctionExpression' ) {
+				result.declaration = true; // TODO remove in favour of result.type
+				result.default = true;
+	
+				// Case 3: `export default function foo () {...}`
+				if ( d.id ) {
+					result.type = 'namedFunction';
+					result.name = d.id.name;
+				}
+	
+				// Case 4: `export default function () {...}`
+				else {
+					result.type = 'anonFunction';
+				}
+			}
+	
+			// Case 5: `export default 1 + 2`
 			else {
-				// literals, e.g. `export default 42`
-				result.type = 'literal';
+				result.type = 'expression';
 				result.default = true;
 				result.name = 'default';
 			}
 		}
 	
+		// Case 6: `export { foo, bar };`
 		else {
-			// named exports, e.g. `export { foo, bar };`
 			result.type = 'named';
 			result.specifiers = node.specifiers.map( function(s ) {return { name: s.id.name }}  ) // TODO as?
 		}
@@ -924,13 +944,120 @@
 	}
 	var getBundle__default = getBundle__getBundle;
 
+	function transformExportDeclaration__transformExportDeclaration ( declaration, body ) {
+		var exportedValue;
+	
+		if ( declaration ) {
+			switch ( declaration.type ) {
+				case 'namedFunction':
+					body.remove( declaration.start, declaration.valueStart );
+					exportedValue = declaration.name;
+					break;
+	
+				case 'anonFunction':
+					if ( declaration.isFinal ) {
+						body.replace( declaration.start, declaration.valueStart, 'return ' );
+					} else {
+						body.replace( declaration.start, declaration.valueStart, 'var __export = ' );
+						exportedValue = '__export';
+					}
+	
+					// add semi-colon, if necessary
+					if ( declaration.value.slice( -1 ) !== ';' ) {
+						body.insert( declaration.end, ';' );
+					}
+	
+					break;
+	
+				case 'expression':
+					body.remove( declaration.start, declaration.next );
+					exportedValue = declaration.value;
+					break;
+	
+				default:
+					throw new Error( 'Unexpected export type' );
+			}
+	
+			if ( exportedValue ) {
+				body.append( '\nreturn ' + exportedValue + ';' );
+			}
+		}
+	}
+	var transformExportDeclaration__default = transformExportDeclaration__transformExportDeclaration;
+
+	var packageResult__warned = {};
+	
+	function packageResult__packageResult ( body, options, methodName ) {
+		var code, map;
+	
+		code = body.toString();
+	
+		if ( !!options.sourceMap ) {
+			if ( !options.sourceMapSource || !options.sourceMapFile ) {
+				throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
+			}
+	
+			map = body.generateMap({
+				includeContent: true,
+				hires: true,
+				file: './' + options.sourceMapFile.split( '/' ).pop(),
+				source: packageResult__getRelativePath( options.sourceMapFile, options.sourceMapSource )
+			});
+	
+			if ( options.sourceMap === 'inline' ) {
+				code += '\n//#sourceMappingURL=' + map.toUrl();
+				map = null;
+			} else {
+				code += '\n//# sourceMappingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
+			}
+		} else {
+			map = null;
+		}
+	
+		return {
+			code: code,
+			map: map,
+			toString: function () {
+				if ( !packageResult__warned[ methodName ] ) {
+					console.log( 'Warning: esperanto.' + methodName + '() returns an object with a \'code\' property. You should use this instead of using the returned value directly' );
+					packageResult__warned[ methodName ] = true;
+				}
+	
+				return code;
+			}
+		};
+	}
+	var packageResult__default = packageResult__packageResult;
+	
+	function packageResult__getRelativePath ( from, to ) {
+		var fromParts, toParts, i;
+	
+		fromParts = from.split( '/' );
+		toParts = to.split( '/' );
+	
+		fromParts.pop(); // get dirname
+	
+		while ( fromParts[0] === toParts[0] ) {
+			fromParts.shift();
+			toParts.shift();
+		}
+	
+		if ( fromParts.length ) {
+			i = fromParts.length;
+			while ( i-- ) fromParts[i] = '..';
+	
+			return fromParts.concat( toParts ).join( '/' );
+		} else {
+			toParts.unshift( '.' );
+			return toParts.join( '/' );
+		}
+	}
+
 	var amd__template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 	
 	function amd__amd ( mod, body, options ) {
 		var importNames = [],
 			importPaths = [],
-			exportDeclaration,
-			exportedValue,
 			intro,
 			i;
 	
@@ -956,33 +1083,11 @@
 			body.remove( x.start, x.next );
 		});
 	
-		exportDeclaration = mod.exports[0];
-	
-		if ( exportDeclaration ) {
-			if ( amd__isFunctionDeclaration( exportDeclaration ) ) {
-				// special case - we have a situation like
-				//
-				//     export default function foo () {...}
-				//
-				// which needs to be rewritten
-				//
-				//     function foo () {...}
-				//     export default foo
-				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-				exportedValue = exportDeclaration.node.declaration.id.name;
-			} else {
-				body.remove( exportDeclaration.start, exportDeclaration.next );
-				exportedValue = exportDeclaration.value;
-			}
-	
-			body.append( '\nreturn ' + exportedValue + ';' );
-		}
+		transformExportDeclaration__default( mod.exports[0], body );
 	
 		body.trim();
 	
-		if ( options.addUseStrict !== 'false' ) {
-			body.prepend( "'use strict';\n\n" ).trim();
-		}
+		body.prepend( "'use strict';\n\n" ).trim();
 	
 		intro = amd__template
 			.replace( '__IMPORT_PATHS__', importPaths.length ? '[' + importPaths.map( amd__quote ).join( ', ' ) + '], ' : '' )
@@ -990,13 +1095,9 @@
 	
 		body.indent().prepend( intro ).append( '\n\n});' );
 	
-		return body.toString();
+		return packageResult__default( body, options, 'toAmd' );
 	}
 	var amd__default = amd__amd;
-	
-	function amd__isFunctionDeclaration ( x ) {
-		return x.node.declaration && x.node.declaration.type === 'FunctionExpression';
-	}
 	
 	function amd__quote ( str ) {
 		return "'" + str + "'";
@@ -1024,35 +1125,29 @@
 		exportDeclaration = mod.exports[0];
 	
 		if ( exportDeclaration ) {
-			if ( cjs__isFunctionDeclaration( exportDeclaration ) ) {
-				// special case - we have a situation like
-				//
-				//     export default function foo () {...}
-				//
-				// which needs to be rewritten
-				//
-				//     function foo () {...}
-				//     export default foo
+			switch ( exportDeclaration.type ) {
+				case 'namedFunction':
 				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
 				body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
-			} else {
-				body.replace( exportDeclaration.start, exportDeclaration.end, (("module.exports = " + (exportDeclaration.value)) + ";") );
+				break;
+	
+				case 'anonFunction':
+				case 'expression':
+				body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
+				break;
+	
+				default:
+				throw new Error( 'Unexpected export type' );
 			}
 		}
 	
 		body.trim();
 	
-		if ( options.addUseStrict !== 'false' ) {
-			body.prepend( "'use strict';\n\n" ).indent().prepend( '(function () {\n\n' ).append( '\n\n}).call(global);' );
-		}
+		body.prepend( "'use strict';\n\n" ).indent().prepend( '(function () {\n\n' ).append( '\n\n}).call(global);' );
 	
-		return body.toString();
+		return packageResult__default( body, options, 'toCjs' );
 	}
 	var cjs__default = cjs__cjs;
-	
-	function cjs__isFunctionDeclaration ( x ) {
-		return x.node.declaration && x.node.declaration.type === 'FunctionExpression';
-	}
 
 	function template__template ( str ) {
 		return function ( data ) {
@@ -1063,32 +1158,17 @@
 	}
 	var template__default = template__template;
 
-	var umd__introTemplate = template__default( ("(function (global, factory) {\
-\n\
-\n	'use strict';\
-\n\
-\n	if (typeof define === 'function' && define.amd) {\
-\n		// export as AMD\
-\n		define(<%= AMD_DEPS %>factory);\
-\n	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {\
-\n		// node/browserify\
-\n		module.exports = factory(<%= CJS_DEPS %>);\
-\n	} else {\
-\n		// browser global\
-\n		global.<%= NAME %> = factory(<%= GLOBAL_DEPS %>);\
-\n	}\
-\n\
-\n}(typeof window !== 'undefined' ? window : this, function (<%= IMPORT_NAMES %>) {\
-\n\
-\n") );
+	var umd__introTemplate;
 	
 	function umd__umd ( mod, body, options ) {
 		var importNames = [],
 			importPaths = [],
-			exportDeclaration,
-			exportedValue,
 			intro,
 			i;
+	
+		if ( !options.name ) {
+			throw new Error( 'You must supply a `name` option for UMD modules' );
+		}
 	
 		// ensure empty imports are at the end
 		i = mod.imports.length;
@@ -1112,33 +1192,11 @@
 			body.remove( x.start, x.next );
 		});
 	
-		exportDeclaration = mod.exports[0];
-	
-		if ( exportDeclaration ) {
-			if ( umd__isFunctionDeclaration( exportDeclaration ) ) {
-				// special case - we have a situation like
-				//
-				//     export default function foo () {...}
-				//
-				// which needs to be rewritten
-				//
-				//     function foo () {...}
-				//     export default foo
-				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-				exportedValue = exportDeclaration.node.declaration.id.name;
-			} else {
-				body.remove( exportDeclaration.start, exportDeclaration.next );
-				exportedValue = exportDeclaration.value;
-			}
-	
-			body.append( '\nreturn ' + exportedValue + ';' );
-		}
+		transformExportDeclaration__default( mod.exports[0], body );
 	
 		body.trim();
 	
-		if ( options.addUseStrict !== 'false' ) {
-			body.prepend( "'use strict';\n\n" ).trim();
-		}
+		body.prepend( "'use strict';\n\n" ).trim();
 	
 		intro = umd__introTemplate({
 			AMD_DEPS: importPaths.length ? '[' + importPaths.map( umd__quote ).join( ', ' ) + '], ' : '',
@@ -1150,13 +1208,9 @@
 	
 		body.indent().prepend( intro ).append( '\n\n}));' );
 	
-		return body.toString();
+		return packageResult__default( body, options, 'toUmd' );
 	}
 	var umd__default = umd__umd;
-	
-	function umd__isFunctionDeclaration ( x ) {
-		return x.node.declaration && x.node.declaration.type === 'FunctionExpression';
-	}
 	
 	function umd__quote ( str ) {
 		return "'" + str + "'";
@@ -1169,6 +1223,25 @@
 	function umd__globalify ( name ) {
 		return ("global." + name);
 	}
+	
+	umd__introTemplate = template__default( ("(function (global, factory) {\
+\n\
+\n	'use strict';\
+\n\
+\n	if (typeof define === 'function' && define.amd) {\
+\n		// export as AMD\
+\n		define(<%= AMD_DEPS %>factory);\
+\n	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {\
+\n		// node/browserify\
+\n		module.exports = factory(<%= CJS_DEPS %>);\
+\n	} else {\
+\n		// browser global\
+\n		global.<%= NAME %> = factory(<%= GLOBAL_DEPS %>);\
+\n	}\
+\n\
+\n}(typeof window !== 'undefined' ? window : this, function (<%= IMPORT_NAMES %>) {\
+\n\
+\n") );
 
 	var defaultsMode__default = {
 		amd: amd__default,
@@ -1317,37 +1390,40 @@
 	
 		// Remove export statements (but keep declarations)
 		mod.exports.forEach( function(x ) {
-			var name;
+			switch ( x.type ) {
+				case 'varDeclaration': // export var answer = 42;
+					body.remove( x.start, x.valueStart );
+					return;
 	
-			if ( x.default ) {
-				defaultValue = body.slice( x.valueStart, x.end );
-				if ( x.node.declaration && x.node.declaration.id && ( name = x.node.declaration.id.name ) ) {
-					// if you have a default export like
-					//
-					//     export default function foo () {...}
-					//
-					// you need to rewrite it as
-					//
-					//     function foo () {...}
-					//     exports.default = foo;
-					//
-					// as the `foo` reference may be used elsewhere
-					body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + name + ';' );
-				} else {
-					body.replace( x.start, x.end, 'exports.default = ' + defaultValue );
-				}
+				case 'namedFunction':
+					if ( x.default ) {
+						// export default function answer () { return 42; }
+						defaultValue = body.slice( x.valueStart, x.end );
+						body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + x.name + ';' );
+					} else {
+						// export function answer () { return 42; }
+						shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
+						body.remove( x.start, x.valueStart );
+					}
+					return;
 	
-				return;
-			}
+				case 'anonFunction':
+					// export default function () {}
+					body.replace( x.start, x.valueStart, 'exports.default = ' );
+					return;
 	
-			if ( x.declaration ) {
-				if ( x.node.declaration.type === 'FunctionDeclaration' ) {
-					shouldExportEarly[ x.node.declaration.id.name ] = true; // TODO what about `function foo () {}; export { foo }`?
-				}
+				case 'expression':
+					// export default 40 + 2;
+					body.replace( x.start, x.valueStart, 'exports.default = ' );
+					return;
 	
-				body.remove( x.start, x.valueStart );
-			} else {
-				body.remove( x.start, x.next );
+				case 'named':
+					// export { foo, bar };
+					body.remove( x.start, x.next );
+					break;
+	
+				default:
+					throw new Error( 'Unknown export type: ' + x.type );
 			}
 		});
 	
@@ -1429,7 +1505,7 @@
 	
 	strictMode_amd__introTemplate = template__default( 'define(<%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 	
-	function strictMode_amd__amd ( mod, body ) {
+	function strictMode_amd__amd ( mod, body, options ) {
 		var importPaths = [],
 			importNames = [],
 			intro,
@@ -1462,7 +1538,7 @@
 			outro: '\n\n});'
 		});
 	
-		return body.toString();
+		return packageResult__default( body, options, 'toAmd' );
 	}
 	var strictMode_amd__default = strictMode_amd__amd;
 	
@@ -1473,7 +1549,7 @@
 	var strictMode_cjs__intro = '(function () {\n\n\t\'use strict\';\n\n';
 	var strictMode_cjs__outro = '\n\n}).call(global);';
 	
-	function strictMode_cjs__cjs ( mod, body ) {
+	function strictMode_cjs__cjs ( mod, body, options ) {
 		var importBlock;
 	
 		// Create block of require statements
@@ -1499,7 +1575,7 @@
 			outro: strictMode_cjs__outro
 		});
 	
-		return body.toString();
+		return packageResult__default( body, options, 'toCjs' );
 	}
 	var strictMode_cjs__default = strictMode_cjs__cjs;
 
@@ -1510,6 +1586,10 @@
 			importNames = [],
 			intro,
 			i;
+	
+		if ( !options.name ) {
+			throw new Error( 'You must supply a `name` option for UMD modules' );
+		}
 	
 		reorderImports__default( mod.imports );
 	
@@ -1535,7 +1615,7 @@
 			outro: '\n\n}));'
 		});
 	
-		return body.toString();
+		return packageResult__default( body, options, 'toUmd' );
 	}
 	var strictMode_umd__default = strictMode_umd__umd;
 	

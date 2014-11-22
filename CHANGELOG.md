@@ -1,5 +1,12 @@
 # changelog
 
+## 0.4.1
+
+* Command line interface
+* Sourcemap support for one-to-one conversions
+* Neater UMD exports
+* Remove `addUseStrict` option (ES6 modules are always in strict mode)
+
 ## 0.4.0
 
 * Started maintaining a changelog
