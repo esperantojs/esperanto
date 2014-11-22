@@ -1,4 +1,5 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
+import packageResult from '../../utils/packageResult';
 import template from '../../../utils/template';
 
 var introTemplate;
@@ -8,6 +9,10 @@ export default function umd ( mod, body, options ) {
 		importPaths = [],
 		intro,
 		i;
+
+	if ( !options.name ) {
+		throw new Error( 'You must supply a `name` option for UMD modules' );
+	}
 
 	// ensure empty imports are at the end
 	i = mod.imports.length;
@@ -47,7 +52,7 @@ export default function umd ( mod, body, options ) {
 
 	body.indent().prepend( intro ).append( '\n\n}));' );
 
-	return body.toString();
+	return packageResult( body, options, 'toUmd' );
 }
 
 function quote ( str ) {

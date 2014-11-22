@@ -35,7 +35,7 @@ module.exports = function () {
 				it( t.description, function () {
 					return sander.readFile( 'fastMode/output/amd', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toAmd( t.source );
-						assert.equal( actual, expected, 'AMD: Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+						assert.equal( actual.code, expected, 'AMD: Expected\n>\n' + actual.code + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
 					});
 				});
 			});
@@ -46,7 +46,7 @@ module.exports = function () {
 				it( t.description, function () {
 					return sander.readFile( 'fastMode/output/cjs', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toCjs( t.source );
-						assert.equal( actual, expected, 'CJS: Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+						assert.equal( actual.code, expected, 'CJS: Expected\n>\n' + actual.code + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
 					});
 				});
 			});
@@ -60,7 +60,7 @@ module.exports = function () {
 							name: 'myModule'
 						});
 
-						assert.equal( actual, expected, 'UMD: Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+						assert.equal( actual.code, expected, 'UMD: Expected\n>\n' + actual.code + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
 					});
 				});
 			});

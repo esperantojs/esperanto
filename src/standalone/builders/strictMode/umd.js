@@ -1,3 +1,4 @@
+import packageResult from '../../utils/packageResult';
 import template from '../../../utils/template';
 import reorderImports from './utils/reorderImports';
 import transformBody from './utils/transformBody';
@@ -9,6 +10,10 @@ export default function umd ( mod, body, options ) {
 		importNames = [],
 		intro,
 		i;
+
+	if ( !options.name ) {
+		throw new Error( 'You must supply a `name` option for UMD modules' );
+	}
 
 	reorderImports( mod.imports );
 
@@ -34,7 +39,7 @@ export default function umd ( mod, body, options ) {
 		outro: '\n\n}));'
 	});
 
-	return body.toString();
+	return packageResult( body, options, 'toUmd' );
 }
 
 function quote ( str ) {

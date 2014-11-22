@@ -55,7 +55,7 @@ module.exports = function () {
 						var actual = esperanto.toAmd( t.source, {
 							strict: true,
 							getModuleName: getModuleName
-						});
+						}).code;
 
 						assert.equal( actual, expected, 'AMD: Expected\n>\n' +
 							makeWhitespaceVisible( actual ) +
@@ -74,7 +74,7 @@ module.exports = function () {
 						var actual = esperanto.toCjs( t.source, {
 							strict: true,
 							getModuleName: getModuleName
-						});
+						}).code;
 
 						assert.equal( actual, expected, 'CJS: Expected\n>\n' +
 							makeWhitespaceVisible( actual ) +
@@ -94,7 +94,7 @@ module.exports = function () {
 							name: 'myModule',
 							strict: true,
 							getModuleName: getModuleName
-						});
+						}).code;
 
 						assert.equal( actual, expected, 'UMD: Expected\n>\n' +
 							makeWhitespaceVisible( actual ) +

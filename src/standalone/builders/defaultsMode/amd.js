@@ -1,8 +1,9 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
+import packageResult from '../../utils/packageResult';
 
 var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 
-export default function amd ( mod, body ) {
+export default function amd ( mod, body, options ) {
 	var importNames = [],
 		importPaths = [],
 		intro,
@@ -42,7 +43,7 @@ export default function amd ( mod, body ) {
 
 	body.indent().prepend( intro ).append( '\n\n});' );
 
-	return body.toString();
+	return packageResult( body, options, 'toAmd' );
 }
 
 function quote ( str ) {

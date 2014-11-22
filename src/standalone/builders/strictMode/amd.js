@@ -1,4 +1,5 @@
 import template from '../../../utils/template';
+import packageResult from '../../utils/packageResult';
 import reorderImports from './utils/reorderImports';
 import transformBody from './utils/transformBody';
 
@@ -6,7 +7,7 @@ var introTemplate;
 
 introTemplate = template( 'define(<%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-export default function amd ( mod, body ) {
+export default function amd ( mod, body, options ) {
 	var importPaths = [],
 		importNames = [],
 		intro,
@@ -39,7 +40,7 @@ export default function amd ( mod, body ) {
 		outro: '\n\n});'
 	});
 
-	return body.toString();
+	return packageResult( body, options, 'toAmd' );
 }
 
 function quote ( str ) {

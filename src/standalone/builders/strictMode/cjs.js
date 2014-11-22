@@ -1,9 +1,10 @@
+import packageResult from '../../utils/packageResult';
 import transformBody from './utils/transformBody';
 
 var intro = '(function () {\n\n\t\'use strict\';\n\n';
 var outro = '\n\n}).call(global);';
 
-export default function cjs ( mod, body ) {
+export default function cjs ( mod, body, options ) {
 	var importBlock;
 
 	// Create block of require statements
@@ -29,5 +30,5 @@ export default function cjs ( mod, body ) {
 		outro: outro
 	});
 
-	return body.toString();
+	return packageResult( body, options, 'toCjs' );
 }

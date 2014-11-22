@@ -1,4 +1,6 @@
-export default function cjs ( mod, body ) {
+import packageResult from '../../utils/packageResult';
+
+export default function cjs ( mod, body, options ) {
 	var replacement, exportDeclaration;
 
 	mod.imports.forEach( x => {
@@ -40,5 +42,5 @@ export default function cjs ( mod, body ) {
 
 	body.prepend( "'use strict';\n\n" ).indent().prepend( '(function () {\n\n' ).append( '\n\n}).call(global);' );
 
-	return body.toString();
+	return packageResult( body, options, 'toCjs' );
 }
