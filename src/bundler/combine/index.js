@@ -1,3 +1,4 @@
+import path from 'path';
 import MagicString from 'magic-string';
 import transformBody from './transformBody';
 import annotateAst from '../../utils/annotateAst';
@@ -15,7 +16,7 @@ export default function combine ( bundle ) {
 		transformBody( bundle, mod, modBody, prefix );
 
 		body.addSource({
-			filename: ( mod.id + '.js' ),
+			filename: path.resolve( bundle.base, mod.file ),
 			content: modBody
 		});
 	});

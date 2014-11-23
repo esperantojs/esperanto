@@ -13,7 +13,7 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 		map = body.generateMap({
 			includeContent: true,
 			hires: true,
-			file: './' + options.sourceMapFile.split( '/' ).pop(),
+			file: options.sourceMapFile,
 			source: !isBundle ? getRelativePath( options.sourceMapFile, options.sourceMapSource ) : null
 		});
 
