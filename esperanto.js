@@ -154,20 +154,10 @@
 		// Case 6: `export { foo, bar };`
 		else {
 			result.type = 'named';
-			result.specifiers = node.specifiers.map( function(s ) {return { name: s.id.name }}  ) // TODO as?
+			result.specifiers = node.specifiers.map( function(s ) {return { name: s.id.name }}  ); // TODO as?
 		}
 	
 		return result;
-	}
-	
-	function findImportsAndExports__getDeclarationName ( declaration ) {
-		if ( declaration.type === 'VariableDeclaration' ) {
-			return declaration.declarations[0].id.name;
-		}
-	
-		if ( declaration.type === 'FunctionDeclaration' ) {
-			return declaration.id.name;
-		}
 	}
 
 	var sanitize__reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
@@ -342,7 +332,7 @@
 	var resolveChains__default = resolveChains__resolveChains;
 
 	function getUniqueNames__getUniqueNames ( modules, userNames ) {
-		var keys, names = {}, used = {};
+		var names = {}, used = {};
 	
 		// copy user-specified names
 		if ( userNames ) {
@@ -784,22 +774,27 @@
 		return false; // TODO
 	}
 
-	function combine__Bundle$_combine ( bundle ) {
-		var getModuleName = bundle.getName;
+	function combine__combine ( bundle ) {
+		var body = new MagicString__default.Bundle({
+			separator: '\n\n'
+		});
 	
-		var body = bundle.modules.map( function(mod ) {
+		bundle.modules.forEach( function(mod ) {
 			var modBody = mod.body.clone(),
 				prefix = bundle.uniqueNames[ mod.id ];
 	
 			annotateAst__default( mod.ast );
 			transformBody__default( bundle, mod, modBody, prefix );
 	
-			return modBody.toString();
-		}).join( '\n\n' );
+			body.addSource({
+				filename: path__default.resolve( bundle.base, mod.file ),
+				content: modBody
+			});
+		});
 	
-		bundle.body = new MagicString__default( body );
+		bundle.body = body;
 	}
-	var combine__default = combine__Bundle$_combine;
+	var combine__default = combine__combine;
 
 	function getModule__getStandaloneModule ( options ) {
 		var mod;
@@ -834,10 +829,13 @@
 			promiseById = {},
 			skip = options.skip,
 			names = options.names,
-			//getName = moduleNameHelper( options.getModuleName ),
-			base = options.base ? path__default.resolve( options.base ) : process.cwd(),
+			base = ( options.base ? path__default.resolve( options.base ) : process.cwd() ) + '/',
 			externalModules = [],
 			externalModuleLookup = {};
+	
+		if ( !entry.indexOf( base ) ) {
+			entry = entry.substring( base.length );
+		}
 	
 		return fetchModule( entry )
 			.then( function()  {
@@ -850,7 +848,6 @@
 					entry: entry,
 					entryModule: entryModule,
 					base: base,
-					//getName: getName,
 					modules: modules,
 					moduleLookup: moduleLookup,
 					externalModules: externalModules,
@@ -867,12 +864,13 @@
 			});
 	
 		function fetchModule ( modulePath ) {
-			var moduleId, moduleName;
+			var moduleId = modulePath.replace( /\.js$/, '' );
 	
-			moduleId = modulePath.replace( /\.js$/, '' );
+			if ( !moduleId.indexOf( base ) ) {
+				moduleId = moduleId.substring( base.length );
+			}
+	
 			modulePath = moduleId + '.js';
-	
-			//moduleName = getName( moduleId );
 	
 			if ( !promiseById[ moduleId ] ) {
 				promiseById[ moduleId ] = sander__default.readFile( base, modulePath ).catch( function ( err ) {
@@ -888,9 +886,7 @@
 					module = getModule__default({
 						source: source,
 						id: moduleId,
-						file: modulePath,
-						//name: moduleName,
-						//getModuleName: getName
+						file: modulePath
 					});
 	
 					modules.push( module );
@@ -926,7 +922,6 @@
 						// Most likely an external module
 						if ( !externalModuleLookup[ moduleId ] ) {
 							externalModule = {
-								//name: getName( moduleId ),
 								id: moduleId
 							};
 	
@@ -987,25 +982,25 @@
 
 	var packageResult__warned = {};
 	
-	function packageResult__packageResult ( body, options, methodName ) {
+	function packageResult__packageResult ( body, options, methodName, isBundle ) {
 		var code, map;
 	
 		code = body.toString();
 	
 		if ( !!options.sourceMap ) {
-			if ( !options.sourceMapSource || !options.sourceMapFile ) {
+			if ( !options.sourceMapFile || ( !isBundle && !options.sourceMapSource )  ) {
 				throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
 			}
 	
 			map = body.generateMap({
 				includeContent: true,
 				hires: true,
-				file: './' + options.sourceMapFile.split( '/' ).pop(),
-				source: packageResult__getRelativePath( options.sourceMapFile, options.sourceMapSource )
+				file: options.sourceMapFile,
+				source: !isBundle ? packageResult__getRelativePath( options.sourceMapFile, options.sourceMapSource ) : null
 			});
 	
 			if ( options.sourceMap === 'inline' ) {
-				code += '\n//#sourceMappingURL=' + map.toUrl();
+				code += '\n//# sourceMappingURL=' + map.toUrl();
 				map = null;
 			} else {
 				code += '\n//# sourceMappingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
@@ -1151,7 +1146,7 @@
 
 	function template__template ( str ) {
 		return function ( data ) {
-			return str.replace( /\<%=\s*([^\s]+)\s*%\>/g, function ( match, $1 ) {
+			return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
 				return $1 in data ? data[ $1 ] : match;
 			});
 		};
@@ -1519,7 +1514,7 @@
 			importPaths[i] = x.path;
 	
 			if ( x.specifiers.length ) { // don't add empty imports
-				importNames[i] = mod.getName( x.path );// '__imports_' + i;//x.name;
+				importNames[i] = mod.getName( x.path );
 			}
 		});
 	
@@ -1598,7 +1593,7 @@
 			importPaths[i] = x.path;
 	
 			if ( x.specifiers.length ) {
-				importNames[i] = mod.getName( x.path );// '__imports_' + i;//x.name;
+				importNames[i] = mod.getName( x.path );
 			}
 		});
 	
@@ -1667,24 +1662,27 @@
 
 	var defaultsMode_amd__introTemplate = template__default( 'define(<%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 	
-	function defaultsMode_amd__amd ( bundle, body ) {
+	function defaultsMode_amd__amd ( bundle, body, options ) {
 		var entry = bundle.entryModule,
 			x,
 			exportStatement,
-			intro;
+			intro,
+			indentStr;
+	
+		indentStr = body.getIndentString();
 	
 		if ( x = entry.exports[0] ) {
-			exportStatement = body.indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+			exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
 			body.append( '\n\n' + exportStatement );
 		}
 	
 		intro = defaultsMode_amd__introTemplate({
 			amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( defaultsMode_amd__quoteId ).join( ', ' ) + '], ' : '',
 			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} ).join( ', ' )
-		}).replace( /\t/g, body.indentStr );
+		}).replace( /\t/g, indentStr );
 	
 		body.prepend( intro ).trim().append( '\n\n});' );
-		return body.toString();
+		return packageResult__default( body, options, 'toAmd', true );
 	}
 	var defaultsMode_amd__default = defaultsMode_amd__amd;
 	
@@ -1692,16 +1690,19 @@
 		return "'" + m.id + "'";
 	}
 
-	function defaultsMode_cjs__cjs ( bundle, body ) {
+	function defaultsMode_cjs__cjs ( bundle, body, options ) {
 		var importBlock,
 			entry = bundle.entryModule,
 			x,
 			exportStatement,
-			intro;
+			intro,
+			indentStr;
+	
+		indentStr = body.getIndentString();
 	
 		importBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return body.indentStr + (("var " + name) + ("__default = require('" + (x.id)) + "');");
+			return indentStr + (("var " + name) + ("__default = require('" + (x.id)) + "');");
 		}).join( '\n' );
 	
 		if ( importBlock ) {
@@ -1709,14 +1710,14 @@
 		}
 	
 		if ( x = entry.exports[0] ) {
-			exportStatement = body.indentStr + 'module.exports = ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+			exportStatement = indentStr + 'module.exports = ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
 			body.append( '\n\n' + exportStatement );
 		}
 	
-		intro = '(function () {\n\n' + body.indentStr + "'use strict';\n\n";
+		intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";
 	
 		body.prepend( intro ).trim().append( '\n\n}).call(global);' );
-		return body.toString();
+		return packageResult__default( body, options, 'toCjs', true );
 	}
 	var defaultsMode_cjs__default = defaultsMode_cjs__cjs;
 
@@ -1729,14 +1730,17 @@
 			amdDeps,
 			cjsDeps,
 			globals,
-			intro;
+			intro,
+			indentStr;
+	
+		indentStr = body.getIndentString();
 	
 		if ( !options || !options.name ) {
 			throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
 		}
 	
 		if ( x = entry.exports[0] ) {
-			exportStatement = body.indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+			exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
 			body.append( '\n\n' + exportStatement );
 		}
 	
@@ -1750,10 +1754,10 @@
 			globals: globals,
 			name: options.name,
 			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ] + '__default'} ).join( ', ' )
-		}).replace( /\t/g, body.indentStr );
+		}).replace( /\t/g, indentStr );
 	
 		body.prepend( intro ).trim().append( '\n\n}));' );
-		return body.toString();
+		return packageResult__default( body, options, 'toUmd', true );
 	}
 	var defaultsMode_umd__default = defaultsMode_umd__umd;
 	
@@ -1849,18 +1853,21 @@
 
 	var builders_strictMode_amd__introTemplate;
 	
-	function builders_strictMode_amd__amd ( bundle, body ) {
+	function builders_strictMode_amd__amd ( bundle, body, options ) {
 		var defaultsBlock,
 			entry = bundle.entryModule,
 			exportBlock,
 			externalModules = bundle.externalModules,
 			importPaths,
 			importNames,
-			intro;
+			intro,
+			indentStr;
+	
+		indentStr = body.getIndentString();
 	
 		defaultsBlock = externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return body.indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
 		}).join( '\n' );
 	
 		if ( defaultsBlock ) {
@@ -1871,7 +1878,7 @@
 			importPaths = [ 'exports' ].concat( externalModules.map( builders_strictMode_amd__getPath ) );
 			importNames = [ 'exports' ].concat( externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} ) );
 	
-			exportBlock = getExportBlock__default( bundle, entry, body.indentStr );
+			exportBlock = getExportBlock__default( bundle, entry, indentStr );
 			body.append( '\n\n' + exportBlock );
 		} else {
 			importPaths = externalModules.map( builders_strictMode_amd__getPath );
@@ -1881,10 +1888,10 @@
 		intro = builders_strictMode_amd__introTemplate({
 			amdDeps: importPaths.length ? '[' + importPaths.map( builders_strictMode_amd__quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
-		}).replace( /\t/g, body.indentStr );
+		}).replace( /\t/g, indentStr );
 	
 		body.prepend( intro ).trim().append( '\n\n});' );
-		return body.toString();
+		return packageResult__default( body, options, 'toAmd', true );
 	}
 	var builders_strictMode_amd__default = builders_strictMode_amd__amd;
 	
@@ -1896,17 +1903,20 @@
 	
 	builders_strictMode_amd__introTemplate = template__default( 'define(<%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-	function builders_strictMode_cjs__cjs ( bundle, body ) {
+	function builders_strictMode_cjs__cjs ( bundle, body, options ) {
 		var importBlock,
 			entry = bundle.entryModule,
 			exportBlock,
-			intro;
+			intro,
+			indentStr;
+	
+		indentStr = body.getIndentString();
 	
 		importBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
 	
-			return body.indentStr + (("var " + name) + (" = require('" + (x.id)) + "');\n") +
-			       body.indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + (" = require('" + (x.id)) + "');\n") +
+			       indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
 		}).join( '\n' );
 	
 		if ( importBlock ) {
@@ -1914,14 +1924,14 @@
 		}
 	
 		if ( entry.exports.length ) {
-			exportBlock = getExportBlock__default( bundle, entry, body.indentStr );
+			exportBlock = getExportBlock__default( bundle, entry, indentStr );
 			body.append( '\n\n' + exportBlock );
 		}
 	
-		intro = '(function () {\n\n' + body.indentStr + "'use strict';\n\n";
+		intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";
 	
 		body.prepend( intro ).trim().append( '\n\n}).call(global);' );
-		return body.toString();
+		return packageResult__default( body, options, 'toCjs', true );
 	}
 	var builders_strictMode_cjs__default = builders_strictMode_cjs__cjs;
 
@@ -1937,7 +1947,10 @@
 			cjsDeps,
 			globals,
 			names,
-			intro;
+			intro,
+			indentStr;
+	
+		indentStr = body.getIndentString();
 	
 		if ( !options || !options.name ) {
 			throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
@@ -1945,7 +1958,7 @@
 	
 		defaultsBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return body.indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
 		}).join( '\n' );
 	
 		if ( defaultsBlock ) {
@@ -1961,7 +1974,7 @@
 			globals = [ options.name ].concat( importNames ).map( builders_strictMode_umd__globalify ).join( ', ' );
 			names   = [ 'exports' ].concat( importNames ).join( ', ' );
 	
-			exportBlock = getExportBlock__default( bundle, entry, body.indentStr );
+			exportBlock = getExportBlock__default( bundle, entry, indentStr );
 			body.append( '\n\n' + exportBlock );
 		} else {
 			amdDeps = importPaths.map( builders_strictMode_umd__quote ).join( ', ' );
@@ -1976,10 +1989,10 @@
 			globals: globals,
 			names: names,
 			name: options.name
-		}).replace( /\t/g, body.indentStr );
+		}).replace( /\t/g, indentStr );
 	
 		body.prepend( intro ).trim().append( '\n\n});' );
-		return body.toString();
+		return packageResult__default( body, options, 'toUmd', true );
 	}
 	var builders_strictMode_umd__default = builders_strictMode_umd__umd;
 	

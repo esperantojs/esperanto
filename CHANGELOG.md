@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.2
+
+* Sourcemap support for bundles
+
 ## 0.4.1
 
 * Command line interface
