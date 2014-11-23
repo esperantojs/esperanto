@@ -143,18 +143,8 @@ function processExport ( node, source ) {
 	// Case 6: `export { foo, bar };`
 	else {
 		result.type = 'named';
-		result.specifiers = node.specifiers.map( s => ({ name: s.id.name }) ) // TODO as?
+		result.specifiers = node.specifiers.map( s => ({ name: s.id.name }) ); // TODO as?
 	}
 
 	return result;
-}
-
-function getDeclarationName ( declaration ) {
-	if ( declaration.type === 'VariableDeclaration' ) {
-		return declaration.declarations[0].id.name;
-	}
-
-	if ( declaration.type === 'FunctionDeclaration' ) {
-		return declaration.id.name;
-	}
 }

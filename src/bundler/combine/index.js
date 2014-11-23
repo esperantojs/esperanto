@@ -2,9 +2,7 @@ import MagicString from 'magic-string';
 import transformBody from './transformBody';
 import annotateAst from '../../utils/annotateAst';
 
-export default function Bundle$_combine ( bundle ) {
-	var getModuleName = bundle.getName;
-
+export default function Bundle$combine ( bundle ) {
 	var body = bundle.modules.map( mod => {
 		var modBody = mod.body.clone(),
 			prefix = bundle.uniqueNames[ mod.id ];

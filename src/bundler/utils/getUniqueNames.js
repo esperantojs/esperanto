@@ -3,7 +3,7 @@ import sanitize from '../../utils/sanitize';
 
 // TODO use sensible names, inferring from defaults where poss
 export default function getUniqueNames ( modules, userNames ) {
-	var keys, names = {}, used = {};
+	var names = {}, used = {};
 
 	// copy user-specified names
 	if ( userNames ) {
