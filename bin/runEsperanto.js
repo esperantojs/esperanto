@@ -45,25 +45,35 @@ function bundle ( options, method ) {
 	}
 
 	// entry should be relative to base
-	if ( options.base && !sander.existsSync( path.join( bundleOptions.base, options.input ) ) ) {
+	if ( options.basedir && !sander.existsSync( path.join( bundleOptions.base, options.input ) ) ) {
 		// file doesn't exist relative to base...
 		file = path.resolve( options.input ).replace( bundleOptions.base + '/', '' );
 	} else {
-		file = path.resolve( options.input );
+		file = path.resolve( bundleOptions.base, options.input );
 	}
 
 	bundleOptions.entry = file;
 
 	return esperanto.bundle( bundleOptions ).then( function ( bundle ) {
-		var result = bundle[ method ]({
+		var transpiled, promises;
+
+		transpiled = bundle[ method ]({
 			name: options.name,
-			strict: options.strict
+			strict: options.strict,
+			sourceMap: options.sourcemap,
+			sourceMapFile: path.resolve( options.output )
 		});
 
 		if ( options.output ) {
-			return sander.writeFile( options.output, result );
+			promises = [ sander.writeFile( options.output, transpiled.code ) ];
+
+			if ( options.sourcemap === true ) {
+				promises.push( sander.writeFile( options.output + '.map', transpiled.map ) );
+			}
+
+			return Promise.all( promises );
 		} else {
-			process.stdout.write( result );
+			process.stdout.write( transpiled );
 		}
 	});
 }
