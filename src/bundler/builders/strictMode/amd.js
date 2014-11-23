@@ -1,20 +1,24 @@
 import template from '../../../utils/template';
 import getExportBlock from './utils/getExportBlock';
+import packageResult from '../../../utils/packageResult';
 
 var introTemplate;
 
-export default function amd ( bundle, body ) {
+export default function amd ( bundle, body, options ) {
 	var defaultsBlock,
 		entry = bundle.entryModule,
 		exportBlock,
 		externalModules = bundle.externalModules,
 		importPaths,
 		importNames,
-		intro;
+		intro,
+		indentStr;
+
+	indentStr = body.getIndentString();
 
 	defaultsBlock = externalModules.map( x => {
 		var name = bundle.uniqueNames[ x.id ];
-		return body.indentStr + `var ${name}__default = ('default' in ${name} ? ${name}.default : ${name});`;
+		return indentStr + `var ${name}__default = ('default' in ${name} ? ${name}.default : ${name});`;
 	}).join( '\n' );
 
 	if ( defaultsBlock ) {
@@ -25,7 +29,7 @@ export default function amd ( bundle, body ) {
 		importPaths = [ 'exports' ].concat( externalModules.map( getPath ) );
 		importNames = [ 'exports' ].concat( externalModules.map( m => bundle.uniqueNames[ m.id ] ) );
 
-		exportBlock = getExportBlock( bundle, entry, body.indentStr );
+		exportBlock = getExportBlock( bundle, entry, indentStr );
 		body.append( '\n\n' + exportBlock );
 	} else {
 		importPaths = externalModules.map( getPath );
@@ -35,10 +39,10 @@ export default function amd ( bundle, body ) {
 	intro = introTemplate({
 		amdDeps: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
-	}).replace( /\t/g, body.indentStr );
+	}).replace( /\t/g, indentStr );
 
 	body.prepend( intro ).trim().append( '\n\n});' );
-	return body.toString();
+	return packageResult( body, options, 'toAmd', true );
 }
 
 function quote ( str ) {

@@ -16,9 +16,13 @@ export default function getBundle ( options ) {
 		promiseById = {},
 		skip = options.skip,
 		names = options.names,
-		base = options.base ? path.resolve( options.base ) : process.cwd(),
+		base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/',
 		externalModules = [],
 		externalModuleLookup = {};
+
+	if ( !entry.indexOf( base ) ) {
+		entry = entry.substring( base.length );
+	}
 
 	return fetchModule( entry )
 		.then( () => {
@@ -47,9 +51,12 @@ export default function getBundle ( options ) {
 		});
 
 	function fetchModule ( modulePath ) {
-		var moduleId;
+		var moduleId = modulePath.replace( /\.js$/, '' );
 
-		moduleId = modulePath.replace( /\.js$/, '' );
+		if ( !moduleId.indexOf( base ) ) {
+			moduleId = moduleId.substring( base.length );
+		}
+
 		modulePath = moduleId + '.js';
 
 		if ( !promiseById[ moduleId ] ) {

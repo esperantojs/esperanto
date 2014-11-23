@@ -1,4 +1,4 @@
-import packageResult from '../../utils/packageResult';
+import packageResult from '../../../utils/packageResult';
 
 export default function cjs ( mod, body, options ) {
 	var replacement, exportDeclaration;

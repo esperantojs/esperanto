@@ -1,12 +1,12 @@
 var warned = {};
 
-export default function packageResult ( body, options, methodName ) {
+export default function packageResult ( body, options, methodName, isBundle ) {
 	var code, map;
 
 	code = body.toString();
 
 	if ( !!options.sourceMap ) {
-		if ( !options.sourceMapSource || !options.sourceMapFile ) {
+		if ( !options.sourceMapFile || ( !isBundle && !options.sourceMapSource )  ) {
 			throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
 		}
 
@@ -14,7 +14,7 @@ export default function packageResult ( body, options, methodName ) {
 			includeContent: true,
 			hires: true,
 			file: './' + options.sourceMapFile.split( '/' ).pop(),
-			source: getRelativePath( options.sourceMapFile, options.sourceMapSource )
+			source: !isBundle ? getRelativePath( options.sourceMapFile, options.sourceMapSource ) : null
 		});
 
 		if ( options.sourceMap === 'inline' ) {

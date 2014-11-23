@@ -1,5 +1,5 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
-import packageResult from '../../utils/packageResult';
+import packageResult from '../../../utils/packageResult';
 import template from '../../../utils/template';
 
 var introTemplate;

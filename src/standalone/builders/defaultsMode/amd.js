@@ -1,5 +1,5 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
-import packageResult from '../../utils/packageResult';
+import packageResult from '../../../utils/packageResult';
 
 var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 

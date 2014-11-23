@@ -1,4 +1,4 @@
-import packageResult from '../../utils/packageResult';
+import packageResult from '../../../utils/packageResult';
 import template from '../../../utils/template';
 import reorderImports from './utils/reorderImports';
 import transformBody from './utils/transformBody';

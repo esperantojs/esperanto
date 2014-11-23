@@ -1,5 +1,6 @@
 import template from '../../../utils/template';
 import getExportBlock from './utils/getExportBlock';
+import packageResult from '../../../utils/packageResult';
 
 var introTemplate;
 
@@ -13,7 +14,10 @@ export default function umd ( bundle, body, options ) {
 		cjsDeps,
 		globals,
 		names,
-		intro;
+		intro,
+		indentStr;
+
+	indentStr = body.getIndentString();
 
 	if ( !options || !options.name ) {
 		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
@@ -21,7 +25,7 @@ export default function umd ( bundle, body, options ) {
 
 	defaultsBlock = bundle.externalModules.map( x => {
 		var name = bundle.uniqueNames[ x.id ];
-		return body.indentStr + `var ${name}__default = ('default' in ${name} ? ${name}.default : ${name});`;
+		return indentStr + `var ${name}__default = ('default' in ${name} ? ${name}.default : ${name});`;
 	}).join( '\n' );
 
 	if ( defaultsBlock ) {
@@ -37,7 +41,7 @@ export default function umd ( bundle, body, options ) {
 		globals = [ options.name ].concat( importNames ).map( globalify ).join( ', ' );
 		names   = [ 'exports' ].concat( importNames ).join( ', ' );
 
-		exportBlock = getExportBlock( bundle, entry, body.indentStr );
+		exportBlock = getExportBlock( bundle, entry, indentStr );
 		body.append( '\n\n' + exportBlock );
 	} else {
 		amdDeps = importPaths.map( quote ).join( ', ' );
@@ -52,10 +56,10 @@ export default function umd ( bundle, body, options ) {
 		globals: globals,
 		names: names,
 		name: options.name
-	}).replace( /\t/g, body.indentStr );
+	}).replace( /\t/g, indentStr );
 
 	body.prepend( intro ).trim().append( '\n\n});' );
-	return body.toString();
+	return packageResult( body, options, 'toUmd', true );
 }
 
 function getId ( m ) { return m.id; }

@@ -1,4 +1,5 @@
 import template from '../../../utils/template';
+import packageResult from '../../../utils/packageResult';
 
 var introTemplate;
 
@@ -9,14 +10,17 @@ export default function umd ( bundle, body, options ) {
 		amdDeps,
 		cjsDeps,
 		globals,
-		intro;
+		intro,
+		indentStr;
+
+	indentStr = body.getIndentString();
 
 	if ( !options || !options.name ) {
 		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
 	}
 
 	if ( x = entry.exports[0] ) {
-		exportStatement = body.indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+		exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
 		body.append( '\n\n' + exportStatement );
 	}
 
@@ -30,10 +34,10 @@ export default function umd ( bundle, body, options ) {
 		globals: globals,
 		name: options.name,
 		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] + '__default' ).join( ', ' )
-	}).replace( /\t/g, body.indentStr );
+	}).replace( /\t/g, indentStr );
 
 	body.prepend( intro ).trim().append( '\n\n}));' );
-	return body.toString();
+	return packageResult( body, options, 'toUmd', true );
 }
 
 function quoteId ( m ) {

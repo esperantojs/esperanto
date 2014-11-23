@@ -1,13 +1,18 @@
-export default function cjs ( bundle, body ) {
+import packageResult from '../../../utils/packageResult';
+
+export default function cjs ( bundle, body, options ) {
 	var importBlock,
 		entry = bundle.entryModule,
 		x,
 		exportStatement,
-		intro;
+		intro,
+		indentStr;
+
+	indentStr = body.getIndentString();
 
 	importBlock = bundle.externalModules.map( x => {
 		var name = bundle.uniqueNames[ x.id ];
-		return body.indentStr + `var ${name}__default = require('${x.id}');`;
+		return indentStr + `var ${name}__default = require('${x.id}');`;
 	}).join( '\n' );
 
 	if ( importBlock ) {
@@ -15,12 +20,12 @@ export default function cjs ( bundle, body ) {
 	}
 
 	if ( x = entry.exports[0] ) {
-		exportStatement = body.indentStr + 'module.exports = ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+		exportStatement = indentStr + 'module.exports = ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
 		body.append( '\n\n' + exportStatement );
 	}
 
-	intro = '(function () {\n\n' + body.indentStr + "'use strict';\n\n";
+	intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";
 
 	body.prepend( intro ).trim().append( '\n\n}).call(global);' );
-	return body.toString();
+	return packageResult( body, options, 'toCjs', true );
 }
