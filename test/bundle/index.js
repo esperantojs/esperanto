@@ -65,7 +65,7 @@ module.exports = function () {
 						entry: t.entry
 					})
 					.then( function ( bundle ) {
-						cjs = bundle.toCjs({ strict: true });
+						cjs = bundle.toCjs({ strict: true }).code;
 						return sander.writeFile( 'es6-module-transpiler-tests/bundled-output', t.dir + '.js', cjs );
 					})
 					.then( function () {
@@ -147,7 +147,7 @@ module.exports = function () {
 							actual = bundle[ profile.method ]({
 								strict: options.strict,
 								name: options.name
-							});
+							}).code;
 
 							return sander.readFile( 'bundle/output/', profile.outputdir, t.dir + '.js' ).then( String ).then( function ( expected ) {
 								assert.equal( actual, expected, 'Expected\n>\n' +

@@ -1,6 +1,6 @@
 (function () {
 
-  'use strict';
+	'use strict';
 
 	var exporter__a = 1;
 

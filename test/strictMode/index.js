@@ -151,7 +151,7 @@ module.exports = function () {
 									strict: true
 								});
 
-								return sander.writeFile( 'es6-module-transpiler-tests/output', t.dir, file, transpiled );
+								return sander.writeFile( 'es6-module-transpiler-tests/output', t.dir, file, transpiled.code );
 							});
 						});
 
