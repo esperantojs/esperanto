@@ -10,9 +10,7 @@ module.exports = gobble( 'src' )
 			base: inputdir,
 			entry: 'esperanto'
 		}).then( function ( bundle ) {
-			return sander.writeFile( outputdir, 'esperanto.js', bundle.toCjs({
-				defaultOnly: true
-			}) );
+			return sander.writeFile( outputdir, 'esperanto.js', bundle.toCjs().code );
 		});
 	})
 	.transform( 'es6-transpiler' );
