@@ -161,6 +161,20 @@ module.exports = function () {
 				});
 			});
 		});
+
+		describe( 'parse error', function () {
+			it( 'contains file and location info', function () {
+				return esperanto.bundle({
+					base: path.resolve( 'bundle/error-sample' ),
+					entry: 'main'
+				}).then( function () {
+					assert.ok( false );
+				}).catch( function ( err ) {
+					assert.equal( err.file, path.resolve( 'bundle/error-sample/main.js' ) );
+					assert.deepEqual( err.loc, { line: 1, column: 4 });
+				});
+			});
+		});
 	});
 };
 

@@ -50,20 +50,16 @@ export default function getBundle ( options ) {
 			return bundle;
 		});
 
-	function fetchModule ( modulePath ) {
-		var moduleId = modulePath.replace( /\.js$/, '' );
+	function fetchModule ( moduleId ) {
+		var modulePath;
 
-		if ( !moduleId.indexOf( base ) ) {
-			moduleId = moduleId.substring( base.length );
-		}
-
-		modulePath = moduleId + '.js';
+		modulePath = path.resolve( base, moduleId + '.js' );
 
 		if ( !promiseById[ moduleId ] ) {
-			promiseById[ moduleId ] = sander.readFile( base, modulePath ).catch( function ( err ) {
+			promiseById[ moduleId ] = sander.readFile( modulePath ).catch( function ( err ) {
 				if ( err.code === 'ENOENT' ) {
 					modulePath = modulePath.replace( /\.js$/, '/index.js' );
-					return sander.readFile( base, modulePath );
+					return sander.readFile( modulePath );
 				}
 
 				throw err;
@@ -73,7 +69,8 @@ export default function getBundle ( options ) {
 				module = getModule({
 					source: source,
 					id: moduleId,
-					file: modulePath
+					file: modulePath.substring( base.length ),
+					path: modulePath
 				});
 
 				modules.push( module );
@@ -82,7 +79,7 @@ export default function getBundle ( options ) {
 				promises = module.imports.map( x => {
 					var importId;
 
-					importId = resolve( x.path, modulePath );
+					importId = resolve( x.path, module.file );
 
 					// Some modules can be skipped
 					if ( skip && ~skip.indexOf( importId ) ) {

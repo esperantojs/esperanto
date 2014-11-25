@@ -796,25 +796,26 @@
 	}
 	var combine__default = combine__combine;
 
-	function getModule__getStandaloneModule ( options ) {
-		var mod;
+	function getModule__getStandaloneModule ( mod ) {
+		mod.body = new MagicString__default( mod.source );
+		mod.imports = [];
+		mod.exports = [];
 	
-		mod = {
-			id: options.id,
-			file: options.file,
-			//name: options.name, // TODO we shouldn't know this yet
-			source: options.source,
-			body: new MagicString__default( options.source ),
-			ast: acorn__default.parse( options.source, {
+		try {
+			mod.ast = acorn__default.parse( mod.source, {
 				ecmaVersion: 6,
 				locations: true
-			}),
-			imports: [],
-			exports: [],
-			getName: getModuleNameHelper__default( options.getModuleName )
-		};
+			});
+		} catch ( err ) {
+			// If there's a parse error, attach file info
+			if ( err.loc ) {
+				err.file = mod.path;
+			}
 	
-		findImportsAndExports__default( mod, mod.source, mod.ast, mod.imports, mod.exports, options.getModuleName );
+			throw err;
+		}
+	
+		findImportsAndExports__default( mod, mod.source, mod.ast, mod.imports, mod.exports );
 	
 		return mod;
 	}
@@ -863,20 +864,16 @@
 				return bundle;
 			});
 	
-		function fetchModule ( modulePath ) {
-			var moduleId = modulePath.replace( /\.js$/, '' );
+		function fetchModule ( moduleId ) {
+			var modulePath;
 	
-			if ( !moduleId.indexOf( base ) ) {
-				moduleId = moduleId.substring( base.length );
-			}
-	
-			modulePath = moduleId + '.js';
+			modulePath = path__default.resolve( base, moduleId + '.js' );
 	
 			if ( !promiseById[ moduleId ] ) {
-				promiseById[ moduleId ] = sander__default.readFile( base, modulePath ).catch( function ( err ) {
+				promiseById[ moduleId ] = sander__default.readFile( modulePath ).catch( function ( err ) {
 					if ( err.code === 'ENOENT' ) {
 						modulePath = modulePath.replace( /\.js$/, '/index.js' );
-						return sander__default.readFile( base, modulePath );
+						return sander__default.readFile( modulePath );
 					}
 	
 					throw err;
@@ -886,7 +883,8 @@
 					module = getModule__default({
 						source: source,
 						id: moduleId,
-						file: modulePath
+						file: modulePath.substring( base.length ),
+						path: modulePath
 					});
 	
 					modules.push( module );
@@ -895,7 +893,7 @@
 					promises = module.imports.map( function(x ) {
 						var importId;
 	
-						importId = resolve__default( x.path, modulePath );
+						importId = resolve__default( x.path, module.file );
 	
 						// Some modules can be skipped
 						if ( skip && ~skip.indexOf( importId ) ) {
