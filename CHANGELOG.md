@@ -1,5 +1,13 @@
 # changelog
 
+## 0.4.4
+
+* Parse errors (from acorn) are augmented with file info when bundling
+
+## 0.4.3
+
+* Added CLI files to npm package (oops!)
+
 ## 0.4.2
 
 * Sourcemap support for bundles
