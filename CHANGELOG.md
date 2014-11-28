@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.5
+
+* Only print `defaultOnly` deprecation warning once, rather than flooding the console
+
 ## 0.4.4
 
 * Parse errors (from acorn) are augmented with file info when bundling
