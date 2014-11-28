@@ -9,6 +9,7 @@
 		"__dirname": true,
 		"module": true,
 		"exports": true,
-		"require": true
+		"require": true,
+		"console": true
 	}
 }

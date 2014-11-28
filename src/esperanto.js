@@ -6,7 +6,8 @@ import hasNamedImports from './utils/hasNamedImports';
 import hasNamedExports from './utils/hasNamedExports';
 import annotateAst from './utils/annotateAst';
 
-var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
+var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
+	alreadyWarned = false;
 
 function transpileMethod ( format ) {
 	return function ( source, options ) {
@@ -18,9 +19,10 @@ function transpileMethod ( format ) {
 		module = getStandaloneModule({ source: source, getModuleName: options.getModuleName });
 		body = module.body.clone();
 
-		if ( 'defaultOnly' in options ) {
+		if ( 'defaultOnly' in options && !alreadyWarned ) {
 			// TODO link to a wiki page explaining this, or something
 			console.log( deprecateMessage );
+			alreadyWarned = true;
 		}
 
 		if ( !options.strict ) {
@@ -58,9 +60,10 @@ export default {
 
 				options = options || {};
 
-				if ( 'defaultOnly' in options ) {
+				if ( 'defaultOnly' in options && !alreadyWarned ) {
 					// TODO link to a wiki page explaining this, or something
 					console.log( deprecateMessage );
+					alreadyWarned = true;
 				}
 
 				if ( !options.strict ) {
