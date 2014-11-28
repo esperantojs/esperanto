@@ -18,10 +18,10 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 		});
 
 		if ( options.sourceMap === 'inline' ) {
-			code += '\n//# sourceMappingURL=' + map.toUrl();
+			code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 			map = null;
 		} else {
-			code += '\n//# sourceMappingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
+			code += '\n//# sourceMa' + 'ppingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
 		}
 	} else {
 		map = null;
