@@ -998,10 +998,10 @@
 			});
 	
 			if ( options.sourceMap === 'inline' ) {
-				code += '\n//# sourceMappingURL=' + map.toUrl();
+				code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 				map = null;
 			} else {
-				code += '\n//# sourceMappingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
+				code += '\n//# sourceMa' + 'ppingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
 			}
 		} else {
 			map = null;
@@ -1989,7 +1989,7 @@
 			name: options.name
 		}).replace( /\t/g, indentStr );
 	
-		body.prepend( intro ).trim().append( '\n\n});' );
+		body.prepend( intro ).trim().append( '\n\n}));' );
 		return packageResult__default( body, options, 'toUmd', true );
 	}
 	var builders_strictMode_umd__default = builders_strictMode_umd__umd;
@@ -2076,7 +2076,8 @@
 	}
 	var hasNamedExports__default = hasNamedExports__hasNamedExports;
 
-	var esperanto__deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
+	var esperanto__deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
+		esperanto__alreadyWarned = false;
 	
 	function esperanto__transpileMethod ( format ) {
 		return function ( source, options ) {
@@ -2088,9 +2089,10 @@
 			module = getStandaloneModule__default({ source: source, getModuleName: options.getModuleName });
 			body = module.body.clone();
 	
-			if ( 'defaultOnly' in options ) {
+			if ( 'defaultOnly' in options && !esperanto__alreadyWarned ) {
 				// TODO link to a wiki page explaining this, or something
 				console.log( esperanto__deprecateMessage );
+				esperanto__alreadyWarned = true;
 			}
 	
 			if ( !options.strict ) {
@@ -2128,9 +2130,10 @@
 	
 					options = options || {};
 	
-					if ( 'defaultOnly' in options ) {
+					if ( 'defaultOnly' in options && !esperanto__alreadyWarned ) {
 						// TODO link to a wiki page explaining this, or something
 						console.log( esperanto__deprecateMessage );
+						esperanto__alreadyWarned = true;
 					}
 	
 					if ( !options.strict ) {
@@ -2153,3 +2156,4 @@
 	module.exports = esperanto__default;
 
 }).call(global);
+//# sourceMappingURL=./esperanto.js.map

@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.6
+
+* Fix missing closing parenthesis on strict mode UMD output
+
 ## 0.4.5
 
 * Only print `defaultOnly` deprecation warning once, rather than flooding the console
