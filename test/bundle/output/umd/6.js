@@ -24,4 +24,4 @@
 
 	console.log( message__default );
 
-});
+}));

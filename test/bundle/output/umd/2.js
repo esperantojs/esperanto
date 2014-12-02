@@ -23,4 +23,4 @@
 
 	console.log( foo__default );
 
-});
+}));

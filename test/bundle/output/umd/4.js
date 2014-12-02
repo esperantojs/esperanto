@@ -24,4 +24,4 @@
 
 	exports.default = main__default;
 
-});
+}));

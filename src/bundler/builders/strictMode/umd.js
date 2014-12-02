@@ -58,7 +58,7 @@ export default function umd ( bundle, body, options ) {
 		name: options.name
 	}).replace( /\t/g, indentStr );
 
-	body.prepend( intro ).trim().append( '\n\n});' );
+	body.prepend( intro ).trim().append( '\n\n}));' );
 	return packageResult( body, options, 'toUmd', true );
 }
 
