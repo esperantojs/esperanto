@@ -25,4 +25,4 @@
 
 	console.log( external__default( foo__default ) );
 
-});
+}));

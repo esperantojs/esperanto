@@ -28,4 +28,4 @@
 		console.log( bar__default );
 	}
 
-});
+}));
