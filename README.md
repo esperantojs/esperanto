@@ -30,12 +30,6 @@ You can use Esperanto in one of two modes:
 See [comparisons with other tools](https://github.com/Rich-Harris/esperanto/wiki/Comparisons-with-other-tools) for some of the reasons to use Esperanto.
 
 
-## Still to-do
-
-* Command line mode
-* Source maps
-
-
 ## Credits
 
 Many thanks to [Marijn Haverbeke](http://marijnhaverbeke.nl/) for [Acorn](https://github.com/marijnh/acorn), which does all the heavy lifting.
