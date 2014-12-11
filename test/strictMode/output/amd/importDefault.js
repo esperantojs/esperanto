@@ -1,7 +1,7 @@
-define(['foo'], function (__foo) {
+define(['foo'], function (foo) {
 
 	'use strict';
 
-	console.log( __foo.default );
+	console.log( foo.default );
 
 });

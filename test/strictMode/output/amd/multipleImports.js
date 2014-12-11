@@ -1,8 +1,8 @@
-define(['exports', 'foo', 'bar', 'baz'], function (exports, __foo, __bar, __baz) {
+define(['exports', 'foo', 'bar', 'baz'], function (exports, foo, bar, baz) {
 
 	'use strict';
 
-	var qux = __foo.default( __bar.default( __baz.default ) );
+	var qux = foo.default( bar.default( baz.default ) );
 	exports.default = qux;
 
 });

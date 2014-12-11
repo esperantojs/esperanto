@@ -2,6 +2,6 @@
 
 	'use strict';
 
-	var __baz = require('baz');
+	var baz = require('baz');
 
 }).call(global);

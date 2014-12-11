@@ -10,10 +10,6 @@ module.exports = function () {
 	describe( 'strict mode', function () {
 		var tests;
 
-		function getModuleName ( path ) {
-			return '__' + path.split( '/' ).pop().replace( /\.js$/, '' );
-		}
-
 		tests = [
 			{ file: 'earlyExport', description: 'transpiles exports that are not the final statement' },
 			{ file: 'emptyImport', description: 'transpiles empty imports with no exports' },
@@ -53,8 +49,7 @@ module.exports = function () {
 				it( t.description, function () {
 					return sander.readFile( 'strictMode/output/amd', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toAmd( t.source, {
-							strict: true,
-							getModuleName: getModuleName
+							strict: true
 						}).code;
 
 						assert.equal( actual, expected, 'AMD: Expected\n>\n' +
@@ -72,8 +67,7 @@ module.exports = function () {
 				it( t.description, function () {
 					return sander.readFile( 'strictMode/output/cjs', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toCjs( t.source, {
-							strict: true,
-							getModuleName: getModuleName
+							strict: true
 						}).code;
 
 						assert.equal( actual, expected, 'CJS: Expected\n>\n' +
@@ -92,8 +86,7 @@ module.exports = function () {
 					return sander.readFile( 'strictMode/output/umd', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toUmd( t.source, {
 							name: 'myModule',
-							strict: true,
-							getModuleName: getModuleName
+							strict: true
 						}).code;
 
 						assert.equal( actual, expected, 'UMD: Expected\n>\n' +

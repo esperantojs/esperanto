@@ -2,8 +2,8 @@
 
 	'use strict';
 
-	var __foo = require('foo');
+	var foo = require('foo');
 	
-	console.log( __foo.default );
+	console.log( foo.default );
 
 }).call(global);

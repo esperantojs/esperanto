@@ -2,6 +2,6 @@
 
 	'use strict';
 
-	var __asap = require('asap');
+	var asap = require('asap');
 
 }).call(global);

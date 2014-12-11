@@ -11,10 +11,10 @@
 	} else {
 		// browser global
 		global.myModule = {};
-		factory(global.myModule, global.__baz);
+		factory(global.myModule, global.baz);
 	}
 
-}(typeof window !== 'undefined' ? window : this, function (exports, __baz) {
+}(typeof window !== 'undefined' ? window : this, function (exports, baz) {
 
 	'use strict';
 

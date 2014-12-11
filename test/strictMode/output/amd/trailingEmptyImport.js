@@ -1,4 +1,4 @@
-define(['foo', 'polyfills'], function (__foo) {
+define(['foo', 'polyfills'], function (foo) {
 
 	'use strict';
 

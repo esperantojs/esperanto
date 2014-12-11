@@ -2,7 +2,7 @@
 
 	'use strict';
 
-	var __foo = require('foo');
+	var foo = require('foo');
 	require('polyfills');
 	
 	exports.default = 'baz';

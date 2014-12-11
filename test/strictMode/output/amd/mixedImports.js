@@ -1,4 +1,4 @@
-define(['asap'], function (__asap) {
+define(['asap'], function (asap) {
 
 	'use strict';
 

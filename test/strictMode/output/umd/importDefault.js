@@ -11,13 +11,13 @@
 	} else {
 		// browser global
 		global.myModule = {};
-		factory(global.myModule, global.__foo);
+		factory(global.myModule, global.foo);
 	}
 
-}(typeof window !== 'undefined' ? window : this, function (exports, __foo) {
+}(typeof window !== 'undefined' ? window : this, function (exports, foo) {
 
 	'use strict';
 
-	console.log( __foo.default );
+	console.log( foo.default );
 
 }));

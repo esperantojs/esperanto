@@ -1,4 +1,4 @@
-define(['baz'], function (__baz) {
+define(['baz'], function (baz) {
 
 	'use strict';
 

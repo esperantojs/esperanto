@@ -11,14 +11,14 @@
 	} else {
 		// browser global
 		global.myModule = {};
-		factory(global.myModule, global.__foo, global.__bar, global.__baz);
+		factory(global.myModule, global.foo, global.bar, global.baz);
 	}
 
-}(typeof window !== 'undefined' ? window : this, function (exports, __foo, __bar, __baz) {
+}(typeof window !== 'undefined' ? window : this, function (exports, foo, bar, baz) {
 
 	'use strict';
 
-	var qux = __foo.default( __bar.default( __baz.default ) );
+	var qux = foo.default( bar.default( baz.default ) );
 	exports.default = qux;
 
 }));

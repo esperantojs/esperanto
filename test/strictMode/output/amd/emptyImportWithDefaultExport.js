@@ -1,4 +1,4 @@
-define(['exports', 'foo', 'polyfills'], function (exports, __foo) {
+define(['exports', 'foo', 'polyfills'], function (exports, foo) {
 
 	'use strict';
 
