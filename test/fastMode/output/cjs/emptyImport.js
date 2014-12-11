@@ -3,6 +3,6 @@
 	'use strict';
 	
 	require('polyfills');
-	var foo = require('foo');
+	var bar = require('foo');
 
 }).call(global);

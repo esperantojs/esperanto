@@ -10,10 +10,10 @@
 		module.exports = factory(require('foo'), require('polyfills'));
 	} else {
 		// browser global
-		global.myModule = factory(global.foo);
+		global.myModule = factory(global.bar);
 	}
 
-}(typeof window !== 'undefined' ? window : this, function (foo) {
+}(typeof window !== 'undefined' ? window : this, function (bar) {
 
 	'use strict';
 

@@ -9,7 +9,7 @@ export default function gatherImports ( imports, getName, importedBindings, toRe
 				name = s.as;
 			}
 
-			replacement = s.batch ? s.name : ( getName( x.path ) + '.' + s.name );
+			replacement = s.batch ? s.name : ( getName( x ) + '.' + s.name );
 
 			importedBindings[ name ] = replacement;
 

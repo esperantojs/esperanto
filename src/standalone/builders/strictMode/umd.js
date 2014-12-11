@@ -22,7 +22,7 @@ export default function umd ( mod, body, options ) {
 		importPaths[i] = x.path;
 
 		if ( x.specifiers.length ) {
-			importNames[i] = mod.getName( x.path );
+			importNames[i] = mod.getName( x );
 		}
 	});
 

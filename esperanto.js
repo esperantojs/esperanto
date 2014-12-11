@@ -177,19 +177,29 @@
 	var sanitize__default = sanitize__sanitize;
 
 	function getModuleNameHelper__moduleNameHelper ( userFn ) {
-		var nameByPath = {}, usedNames = {}, getModuleName;
+		var nameById = {}, usedNames = {}, getModuleName;
 	
-		getModuleName = function(moduleId ) {
-			var parts, i, name;
+		getModuleName = function(x ) {
+			var moduleId, parts, i, name, candidate, specifier;
+	
+			moduleId = x.path;
 	
 			// use existing value
-			if ( name = nameByPath[ moduleId ] ) {
+			if ( name = nameById[ moduleId ] ) {
 				return name;
 			}
 	
 			// if user supplied a function, defer to it
 			if ( userFn && ( name = userFn( moduleId ) ) ) {
-				nameByPath[ moduleId ] = sanitize__default( name );
+				nameById[ moduleId ] = sanitize__default( name );
+			}
+	
+			else if ( x.default ) {
+				name = x.name;
+			}
+	
+			else if ( ( specifier = x.specifiers[0] ) && specifier.batch ) {
+				name = specifier.name;
 			}
 	
 			else {
@@ -197,18 +207,19 @@
 				i = parts.length;
 	
 				while ( i-- ) {
-					name = sanitize__default( parts.slice( i ).join( '__' ) );
+					candidate = sanitize__default( parts.slice( i ).join( '__' ) );
 	
-					if ( !usedNames[ name ] ) {
-						usedNames[ name ] = true;
-						nameByPath[ moduleId ] = name;
-	
+					if ( !usedNames[ candidate ] ) {
+						name = candidate;
 						break;
 					}
 				}
 			}
 	
-			return nameByPath[ moduleId ];
+			usedNames[ name ] = true;
+			nameById[ moduleId ] = name;
+	
+			return name;
 		};
 	
 		return getModuleName;
@@ -796,6 +807,45 @@
 	}
 	var combine__default = combine__combine;
 
+	function utils_getModuleNameHelper__moduleNameHelper ( userFn ) {
+		var nameByPath = {}, usedNames = {}, getModuleName;
+	
+		getModuleName = function(moduleId ) {
+			var parts, i, name;
+	
+			// use existing value
+			if ( name = nameByPath[ moduleId ] ) {
+				return name;
+			}
+	
+			// if user supplied a function, defer to it
+			if ( userFn && ( name = userFn( moduleId ) ) ) {
+				nameByPath[ moduleId ] = sanitize__default( name );
+			}
+	
+			else {
+				parts = moduleId.split( '/' );
+				i = parts.length;
+	
+				while ( i-- ) {
+					name = sanitize__default( parts.slice( i ).join( '__' ) );
+	
+					if ( !usedNames[ name ] ) {
+						usedNames[ name ] = true;
+						nameByPath[ moduleId ] = name;
+	
+						break;
+					}
+				}
+			}
+	
+			return nameByPath[ moduleId ];
+		};
+	
+		return getModuleName;
+	}
+	var utils_getModuleNameHelper__default = utils_getModuleNameHelper__moduleNameHelper;
+
 	function getModule__getStandaloneModule ( mod ) {
 		mod.body = new MagicString__default( mod.source );
 		mod.imports = [];
@@ -1266,7 +1316,7 @@
 					name = s.as;
 				}
 	
-				replacement = s.batch ? s.name : ( getName( x.path ) + '.' + s.name );
+				replacement = s.batch ? s.name : ( getName( x ) + '.' + s.name );
 	
 				importedBindings[ name ] = replacement;
 	
@@ -1512,7 +1562,7 @@
 			importPaths[i] = x.path;
 	
 			if ( x.specifiers.length ) { // don't add empty imports
-				importNames[i] = mod.getName( x.path );
+				importNames[i] = mod.getName( x );
 			}
 		});
 	
@@ -1555,7 +1605,7 @@
 				// empty import
 				replacement = (("require('" + (x.path)) + "');");
 			} else {
-				name = specifier.batch ? specifier.name : mod.getName( x.path );
+				name = specifier.batch ? specifier.name : mod.getName( x );
 				replacement = (("var " + name) + (" = require('" + (x.path)) + "');");
 			}
 	
@@ -1591,7 +1641,7 @@
 			importPaths[i] = x.path;
 	
 			if ( x.specifiers.length ) {
-				importNames[i] = mod.getName( x.path );
+				importNames[i] = mod.getName( x );
 			}
 		});
 	

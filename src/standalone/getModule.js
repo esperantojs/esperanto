@@ -2,7 +2,7 @@ import acorn from 'acorn';
 import MagicString from 'magic-string';
 //import parse from '../Module/prototype/parse';
 import findImportsAndExports from '../utils/findImportsAndExports';
-import getModuleNameHelper from '../utils/getModuleNameHelper';
+import getModuleNameHelper from './getModuleNameHelper';
 
 export default function getStandaloneModule ( options ) {
 	var mod;

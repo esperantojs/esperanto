@@ -21,7 +21,7 @@ export default function amd ( mod, body, options ) {
 		importPaths[i] = x.path;
 
 		if ( x.specifiers.length ) { // don't add empty imports
-			importNames[i] = mod.getName( x.path );
+			importNames[i] = mod.getName( x );
 		}
 	});
 

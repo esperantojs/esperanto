@@ -17,7 +17,7 @@ export default function cjs ( mod, body, options ) {
 			// empty import
 			replacement = `require('${x.path}');`;
 		} else {
-			name = specifier.batch ? specifier.name : mod.getName( x.path );
+			name = specifier.batch ? specifier.name : mod.getName( x );
 			replacement = `var ${name} = require('${x.path}');`;
 		}
 

@@ -2,12 +2,12 @@
 
 	'use strict';
 
-	var exporter = require('./exporter');
-	var exporter = require('./exporter');
+	var fn1 = require('./exporter');
+	var fn1 = require('./exporter');
 	
 	/* jshint esnext:true */
 	
-	assert.equal(exporter.default(), 1);
-	assert.equal(exporter.default(), 1);
+	assert.equal(fn1.default(), 1);
+	assert.equal(fn1.default(), 1);
 
 }).call(global);
