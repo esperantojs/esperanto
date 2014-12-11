@@ -1,11 +1,11 @@
 import acorn from 'acorn';
 import MagicString from 'magic-string';
-//import parse from '../Module/prototype/parse';
+import annotateAst from '../utils/annotateAst';
 import findImportsAndExports from '../utils/findImportsAndExports';
 import getModuleNameHelper from './getModuleNameHelper';
 
 export default function getStandaloneModule ( options ) {
-	var mod;
+	var mod, varNames;
 
 	mod = {
 		source: options.source,
@@ -15,9 +15,15 @@ export default function getStandaloneModule ( options ) {
 			locations: true
 		}),
 		imports: [],
-		exports: [],
-		getName: getModuleNameHelper( options.getModuleName )
+		exports: []
 	};
+
+	if ( options.strict ) {
+		annotateAst( mod.ast );
+		varNames = mod.ast._scope.names.concat( mod.ast._blockScope.names );
+	}
+
+	mod.getName = getModuleNameHelper( options.getModuleName, varNames );
 
 	findImportsAndExports( mod, mod.source, mod.ast, mod.imports, mod.exports, options.getModuleName );
 

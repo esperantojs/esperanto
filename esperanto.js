@@ -8,6 +8,110 @@
 	var sander__default = require('sander');
 	var estraverse__default = require('estraverse');
 
+	var annotateAst__Scope = function ( options ) {
+		options = options || {};
+	
+		this.parent = options.parent;
+		this.names = options.params || [];
+	};
+	
+	annotateAst__Scope.prototype = {
+		add: function ( name ) {
+			this.names.push( name );
+		},
+	
+		contains: function ( name ) {
+			if ( ~this.names.indexOf( name ) ) {
+				return true;
+			}
+	
+			if ( this.parent ) {
+				return this.parent.contains( name );
+			}
+	
+			return false;
+		}
+	};
+	
+	function annotateAst__annotateAst ( ast ) {
+		var scope = new annotateAst__Scope(), blockScope = new annotateAst__Scope();
+	
+		estraverse__default.traverse( ast, {
+			enter: function ( node ) {
+				if ( node.type === 'ImportDeclaration' ) {
+					node._skip = true;
+				}
+	
+				if ( node._skip ) {
+					return this.skip();
+				}
+	
+				if ( annotateAst__createsScope( node ) ) {
+					if ( node.id ) {
+						scope.add( node.id.name );
+					}
+	
+					scope = node._scope = new annotateAst__Scope({
+						parent: scope,
+						params: node.params.map( function(x ) {return x.name} ) // TODO rest params?
+					});
+				}
+	
+				else if ( annotateAst__createsBlockScope( node ) ) {
+					blockScope = node._blockScope = new annotateAst__Scope({
+						parent: blockScope
+					});
+				}
+	
+				if ( annotateAst__declaresVar( node ) ) {
+					scope.add( node.id.name );
+				}
+	
+				else if ( annotateAst__declaresLet( node ) ) {
+					blockScope.add( node.id.name );
+				}
+	
+				// Make a note of which children we should skip
+				if ( node.type === 'MemberExpression' && !node.computed ) {
+					node.property._skip = true;
+				}
+	
+				else if ( node.type === 'Property' ) {
+					node.key._skip = true;
+				}
+			},
+			leave: function ( node ) {
+				if ( annotateAst__createsScope( node ) ) {
+					scope = scope.parent;
+				}
+	
+				else if ( annotateAst__createsBlockScope( node ) ) {
+					blockScope = blockScope.parent;
+				}
+			}
+		});
+	
+		ast._scope = scope;
+		ast._blockScope = blockScope;
+	}
+	var annotateAst__default = annotateAst__annotateAst;
+	
+	function annotateAst__createsScope ( node ) {
+		return node.type === 'FunctionExpression' || node.type === 'FunctionDeclaration';
+	}
+	
+	function annotateAst__createsBlockScope ( node ) {
+		return node.type === 'BlockStatement';
+	}
+	
+	function annotateAst__declaresVar ( node ) {
+		return node.type === 'VariableDeclarator'; // TODO const, class? (function taken care of already)
+	}
+	
+	function annotateAst__declaresLet ( node ) {
+		return false; // TODO
+	}
+
 	function findImportsAndExports__findImportsAndExports ( mod, source, ast, imports, exports ) {
 		var previousDeclaration;
 	
@@ -176,11 +280,15 @@
 	}
 	var sanitize__default = sanitize__sanitize;
 
-	function getModuleNameHelper__moduleNameHelper ( userFn ) {
+	function getModuleNameHelper__moduleNameHelper ( userFn, varNames ) {
 		var nameById = {}, usedNames = {}, getModuleName;
 	
+		if ( varNames ) {
+			varNames.forEach( function(n ) {return usedNames[n] = true} );
+		}
+	
 		getModuleName = function(x ) {
-			var moduleId, parts, i, name, candidate, specifier;
+			var moduleId, parts, i, prefix = '', name, candidate, specifier;
 	
 			moduleId = x.path;
 	
@@ -191,7 +299,12 @@
 	
 			// if user supplied a function, defer to it
 			if ( userFn && ( name = userFn( moduleId ) ) ) {
-				nameById[ moduleId ] = sanitize__default( name );
+				name = sanitize__default( name );
+	
+				if ( usedNames[ name ] ) {
+					// TODO write a test for this
+					throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
+				}
 			}
 	
 			else if ( x.default ) {
@@ -206,14 +319,18 @@
 				parts = moduleId.split( '/' );
 				i = parts.length;
 	
-				while ( i-- ) {
-					candidate = sanitize__default( parts.slice( i ).join( '__' ) );
+				do {
+					while ( i-- ) {
+						candidate = prefix + sanitize__default( parts.slice( i ).join( '__' ) );
 	
-					if ( !usedNames[ candidate ] ) {
-						name = candidate;
-						break;
+						if ( !usedNames[ candidate ] ) {
+							name = candidate;
+							break;
+						}
 					}
-				}
+	
+					prefix += '_';
+				} while ( !name );
 			}
 	
 			usedNames[ name ] = true;
@@ -227,7 +344,7 @@
 	var getModuleNameHelper__default = getModuleNameHelper__moduleNameHelper;
 
 	function getStandaloneModule__getStandaloneModule ( options ) {
-		var mod;
+		var mod, varNames;
 	
 		mod = {
 			source: options.source,
@@ -237,9 +354,15 @@
 				locations: true
 			}),
 			imports: [],
-			exports: [],
-			getName: getModuleNameHelper__default( options.getModuleName )
+			exports: []
 		};
+	
+		if ( options.strict ) {
+			annotateAst__default( mod.ast );
+			varNames = mod.ast._scope.names.concat( mod.ast._blockScope.names );
+		}
+	
+		mod.getName = getModuleNameHelper__default( options.getModuleName, varNames );
 	
 		findImportsAndExports__default( mod, mod.source, mod.ast, mod.imports, mod.exports, options.getModuleName );
 	
@@ -681,110 +804,6 @@
 		}
 	}
 
-	var annotateAst__Scope = function ( options ) {
-		options = options || {};
-	
-		this.parent = options.parent;
-		this.names = options.params || [];
-	};
-	
-	annotateAst__Scope.prototype = {
-		add: function ( name ) {
-			this.names.push( name );
-		},
-	
-		contains: function ( name ) {
-			if ( ~this.names.indexOf( name ) ) {
-				return true;
-			}
-	
-			if ( this.parent ) {
-				return this.parent.contains( name );
-			}
-	
-			return false;
-		}
-	};
-	
-	function annotateAst__annotateAst ( ast ) {
-		var scope = new annotateAst__Scope(), blockScope = new annotateAst__Scope();
-	
-		estraverse__default.traverse( ast, {
-			enter: function ( node ) {
-				if ( node.type === 'ImportDeclaration' ) {
-					node._skip = true;
-				}
-	
-				if ( node._skip ) {
-					return this.skip();
-				}
-	
-				if ( annotateAst__createsScope( node ) ) {
-					if ( node.id ) {
-						scope.add( node.id.name );
-					}
-	
-					scope = node._scope = new annotateAst__Scope({
-						parent: scope,
-						params: node.params.map( function(x ) {return x.name} ) // TODO rest params?
-					});
-				}
-	
-				else if ( annotateAst__createsBlockScope( node ) ) {
-					blockScope = node._blockScope = new annotateAst__Scope({
-						parent: blockScope
-					});
-				}
-	
-				if ( annotateAst__declaresVar( node ) ) {
-					scope.add( node.id.name );
-				}
-	
-				else if ( annotateAst__declaresLet( node ) ) {
-					blockScope.add( node.id.name );
-				}
-	
-				// Make a note of which children we should skip
-				if ( node.type === 'MemberExpression' && !node.computed ) {
-					node.property._skip = true;
-				}
-	
-				else if ( node.type === 'Property' ) {
-					node.key._skip = true;
-				}
-			},
-			leave: function ( node ) {
-				if ( annotateAst__createsScope( node ) ) {
-					scope = scope.parent;
-				}
-	
-				else if ( annotateAst__createsBlockScope( node ) ) {
-					blockScope = blockScope.parent;
-				}
-			}
-		});
-	
-		ast._scope = scope;
-		ast._blockScope = blockScope;
-	}
-	var annotateAst__default = annotateAst__annotateAst;
-	
-	function annotateAst__createsScope ( node ) {
-		return node.type === 'FunctionExpression' || node.type === 'FunctionDeclaration';
-	}
-	
-	function annotateAst__createsBlockScope ( node ) {
-		return node.type === 'BlockStatement';
-	}
-	
-	function annotateAst__declaresVar ( node ) {
-		return node.type === 'VariableDeclarator'; // TODO const, class? (function taken care of already)
-	}
-	
-	function annotateAst__declaresLet ( node ) {
-		return false; // TODO
-	}
-
 	function combine__combine ( bundle ) {
 		var body = new MagicString__default.Bundle({
 			separator: '\n\n'
@@ -806,45 +825,6 @@
 		bundle.body = body;
 	}
 	var combine__default = combine__combine;
-
-	function utils_getModuleNameHelper__moduleNameHelper ( userFn ) {
-		var nameByPath = {}, usedNames = {}, getModuleName;
-	
-		getModuleName = function(moduleId ) {
-			var parts, i, name;
-	
-			// use existing value
-			if ( name = nameByPath[ moduleId ] ) {
-				return name;
-			}
-	
-			// if user supplied a function, defer to it
-			if ( userFn && ( name = userFn( moduleId ) ) ) {
-				nameByPath[ moduleId ] = sanitize__default( name );
-			}
-	
-			else {
-				parts = moduleId.split( '/' );
-				i = parts.length;
-	
-				while ( i-- ) {
-					name = sanitize__default( parts.slice( i ).join( '__' ) );
-	
-					if ( !usedNames[ name ] ) {
-						usedNames[ name ] = true;
-						nameByPath[ moduleId ] = name;
-	
-						break;
-					}
-				}
-			}
-	
-			return nameByPath[ moduleId ];
-		};
-	
-		return getModuleName;
-	}
-	var utils_getModuleNameHelper__default = utils_getModuleNameHelper__moduleNameHelper;
 
 	function getModule__getStandaloneModule ( mod ) {
 		mod.body = new MagicString__default( mod.source );
@@ -2130,14 +2110,13 @@
 		esperanto__alreadyWarned = false;
 	
 	function esperanto__transpileMethod ( format ) {
-		return function ( source, options ) {
-			var module,
+		return function ( source ) {var options = arguments[1];if(options === void 0)options = {};
+			var mod,
 				body,
 				builder;
 	
-			options = options || {};
-			module = getStandaloneModule__default({ source: source, getModuleName: options.getModuleName });
-			body = module.body.clone();
+			mod = getStandaloneModule__default({ source: source, getModuleName: options.getModuleName, strict: options.strict });
+			body = mod.body.clone();
 	
 			if ( 'defaultOnly' in options && !esperanto__alreadyWarned ) {
 				// TODO link to a wiki page explaining this, or something
@@ -2147,18 +2126,16 @@
 	
 			if ( !options.strict ) {
 				// ensure there are no named imports/exports. TODO link to a wiki page...
-				if ( hasNamedImports__default( module ) || hasNamedExports__default( module ) ) {
+				if ( hasNamedImports__default( mod ) || hasNamedExports__default( mod ) ) {
 					throw new Error( 'You must be in strict mode (pass `strict: true`) to use named imports or exports' );
 				}
 	
 				builder = moduleBuilders__default.defaultsMode[ format ];
 			} else {
-				// annotate AST with scope info
-				annotateAst__default( module.ast );
 				builder = moduleBuilders__default.strictMode[ format ];
 			}
 	
-			return builder( module, body, options );
+			return builder( mod, body, options );
 		};
 	}
 	

@@ -4,10 +4,6 @@ var path = require( 'path' ),
 
 process.chdir( __dirname );
 
-function getModuleName ( path ) {
-	return '__' + path.replace( /\.js$/, '' ).split( '/' ).pop();
-}
-
 require( './build' )().then( function ( esperanto ) {
 	generateFastModeOutput();
 	generateStrictModeOutput();
@@ -17,7 +13,7 @@ require( './build' )().then( function ( esperanto ) {
 		var profiles = [
 			{ outputdir: 'amd', method: 'toAmd' },
 			{ outputdir: 'cjs', method: 'toCjs' },
-			{ outputdir: 'umd', method: 'toUmd', options: { name: 'myModule', getModuleName: getModuleName } }
+			{ outputdir: 'umd', method: 'toUmd', options: { name: 'myModule' } }
 		];
 
 		return cleanup().then( buildAll ).catch( function ( err ) {
@@ -55,9 +51,9 @@ require( './build' )().then( function ( esperanto ) {
 
 	function generateStrictModeOutput () {
 		var profiles = [
-			{ outputdir: 'amd', method: 'toAmd', options: { strict: true, getModuleName: getModuleName } },
-			{ outputdir: 'cjs', method: 'toCjs', options: { strict: true, getModuleName: getModuleName } },
-			{ outputdir: 'umd', method: 'toUmd', options: { strict: true, name: 'myModule', getModuleName: getModuleName } }
+			{ outputdir: 'amd', method: 'toAmd', options: { strict: true } },
+			{ outputdir: 'cjs', method: 'toCjs', options: { strict: true } },
+			{ outputdir: 'umd', method: 'toUmd', options: { strict: true, name: 'myModule' } }
 		];
 
 		return cleanup().then( buildAll ).catch( function ( err ) {

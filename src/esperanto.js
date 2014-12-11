@@ -4,20 +4,18 @@ import moduleBuilders from './standalone/builders';
 import bundleBuilders from './bundler/builders';
 import hasNamedImports from './utils/hasNamedImports';
 import hasNamedExports from './utils/hasNamedExports';
-import annotateAst from './utils/annotateAst';
 
 var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
 	alreadyWarned = false;
 
 function transpileMethod ( format ) {
-	return function ( source, options ) {
-		var module,
+	return function ( source, options = {} ) {
+		var mod,
 			body,
 			builder;
 
-		options = options || {};
-		module = getStandaloneModule({ source: source, getModuleName: options.getModuleName });
-		body = module.body.clone();
+		mod = getStandaloneModule({ source: source, getModuleName: options.getModuleName, strict: options.strict });
+		body = mod.body.clone();
 
 		if ( 'defaultOnly' in options && !alreadyWarned ) {
 			// TODO link to a wiki page explaining this, or something
@@ -27,18 +25,16 @@ function transpileMethod ( format ) {
 
 		if ( !options.strict ) {
 			// ensure there are no named imports/exports. TODO link to a wiki page...
-			if ( hasNamedImports( module ) || hasNamedExports( module ) ) {
+			if ( hasNamedImports( mod ) || hasNamedExports( mod ) ) {
 				throw new Error( 'You must be in strict mode (pass `strict: true`) to use named imports or exports' );
 			}
 
 			builder = moduleBuilders.defaultsMode[ format ];
 		} else {
-			// annotate AST with scope info
-			annotateAst( module.ast );
 			builder = moduleBuilders.strictMode[ format ];
 		}
 
-		return builder( module, body, options );
+		return builder( mod, body, options );
 	};
 }
 

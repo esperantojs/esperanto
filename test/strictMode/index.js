@@ -26,7 +26,8 @@ module.exports = function () {
 			{ file: 'mixedImports', description: 'transpiles mixed named/default imports' },
 			{ file: 'multipleImports', description: 'transpiles multiple imports' },
 			{ file: 'renamedImport', description: 'transpiles renamed imports' },
-			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' }
+			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
+			{ file: 'clashingNames', description: 'avoids naming collisions' }
 		];
 
 		tests.forEach( function ( t ) {
