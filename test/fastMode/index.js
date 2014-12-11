@@ -1,5 +1,6 @@
 var assert = require( 'assert' ),
 	sander = require( 'sander' ),
+	makeWhitespaceVisible = require( '../utils/makeWhitespaceVisible' ),
 	esperanto;
 
 module.exports = function () {
@@ -35,7 +36,7 @@ module.exports = function () {
 				it( t.description, function () {
 					return sander.readFile( 'fastMode/output/amd', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toAmd( t.source );
-						assert.equal( actual.code, expected, 'AMD: Expected\n>\n' + actual.code + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+						assert.equal( actual.code, expected, 'AMD: Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
 					});
 				});
 			});
@@ -46,7 +47,7 @@ module.exports = function () {
 				it( t.description, function () {
 					return sander.readFile( 'fastMode/output/cjs', t.file ).then( String ).then( function ( expected ) {
 						var actual = esperanto.toCjs( t.source );
-						assert.equal( actual.code, expected, 'CJS: Expected\n>\n' + actual.code + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+						assert.equal( actual.code, expected, 'CJS: Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
 					});
 				});
 			});
@@ -60,7 +61,7 @@ module.exports = function () {
 							name: 'myModule'
 						});
 
-						assert.equal( actual.code, expected, 'UMD: Expected\n>\n' + actual.code + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+						assert.equal( actual.code, expected, 'UMD: Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
 					});
 				});
 			});
