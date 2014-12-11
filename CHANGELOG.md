@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.7
+
+* In standalone conversions, import names are inferred from the source code where possible (batch/default imports), and will avoid naming collisions ([#15](https://github.com/rich-harris/esperanto/issues/15))
+
 ## 0.4.6
 
 * Fix missing closing parenthesis on strict mode UMD output
