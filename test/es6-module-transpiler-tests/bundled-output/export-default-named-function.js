@@ -6,7 +6,7 @@
     return 1;
   }
   var exporter__default = exporter__foo;
-  
+
   function exporter__callsFoo() {
     return exporter__foo();
   }

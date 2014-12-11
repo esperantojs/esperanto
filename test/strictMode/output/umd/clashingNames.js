@@ -19,7 +19,7 @@
 	'use strict';
 
 	var foo = 'should not clash';
-	
+
 	_foo.bar();
 
 }));

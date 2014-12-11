@@ -3,9 +3,9 @@
   'use strict';
 
   exports.foo = foo;
-  
+
   /* jshint esnext:true */
-  
+
   function foo() {
     return 121;
   }

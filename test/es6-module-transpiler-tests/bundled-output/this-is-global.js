@@ -3,7 +3,7 @@
   'use strict';
 
   /* jshint esnext:true */
-  
+
   assert.strictEqual(
     this,
     global,

@@ -16,7 +16,7 @@
 }(typeof window !== 'undefined' ? window : this, function (foo) {
 
 	'use strict';
-	
+
 	console.log( foo );
 
 }));

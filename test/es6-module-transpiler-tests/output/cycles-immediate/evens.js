@@ -3,11 +3,11 @@
  'use strict';
 
  exports.isEven = isEven;
- 
+
  var odds = require('./odds');
- 
+
  /* jshint esnext:true */
- 
+
  var nextEven = (function() {
    return function(n) {
      var no = odds.nextOdd(n);
@@ -15,11 +15,11 @@
        no - 1 : no;
    };
  })(odds.nextOdd);
- 
+
  function isEven(n) {
    return n % 2 === 0;
  }
- 
+
  exports.nextEven = nextEven;
 
 }).call(global);

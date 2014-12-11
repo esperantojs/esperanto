@@ -4,9 +4,9 @@
 
  var evens = require('./evens');
  var odds = require('./odds');
- 
+
  /* jshint esnext:true */
- 
+
  /**
   * The 'evens' and 'odds' modules are configured in such a way that they both
   * have two exported functions: isEven, nextEven, isOdd, and nextOdd. Normally

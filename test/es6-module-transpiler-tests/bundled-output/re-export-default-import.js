@@ -3,7 +3,7 @@
   'use strict';
 
   /* jshint esnext:true */
-  
+
   function hi__hi() {
     return 'hi';
   }
@@ -12,7 +12,7 @@
 	/* jshint esnext:true */
 
 	/* jshint esnext:true */
-	
+
 	assert.equal(hi__default(), 'hi');
 
 }).call(global);

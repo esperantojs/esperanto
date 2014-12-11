@@ -8,7 +8,7 @@
     var a = 2;
     return a;
   };
-  
+
   assert.strictEqual(exporter__a, 1);
   assert.strictEqual(importer__getA(), 2);
 

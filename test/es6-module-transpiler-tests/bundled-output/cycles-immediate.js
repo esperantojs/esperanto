@@ -3,11 +3,11 @@
  'use strict';
 
  /* jshint esnext:true */
- 
+
  function odds__nextOdd(n) {
    return evens__isEven(n) ? n + 1 : n + 2;
  }
- 
+
  /**
   * We go through these gymnastics to eager-bind to isEven. This is done to
   * ensure that both this module and the 'evens' module eagerly use something
@@ -20,7 +20,7 @@
  })(evens__isEven);
 
  /* jshint esnext:true */
- 
+
  var evens__nextEven = (function() {
    return function(n) {
      var no = odds__nextOdd(n);
@@ -28,13 +28,13 @@
        no - 1 : no;
    };
  })(odds__nextOdd);
- 
+
  function evens__isEven(n) {
    return n % 2 === 0;
  }
 
  /* jshint esnext:true */
- 
+
  /**
   * The 'evens' and 'odds' modules are configured in such a way that they both
   * have two exported functions: isEven, nextEven, isOdd, and nextOdd. Normally

@@ -16,11 +16,11 @@
 }(typeof window !== 'undefined' ? window : this, function () {
 
 	'use strict';
-	
+
 	function foo () {
 		console.log( 'fooing' );
 	}
-	
+
 	return foo;
 
 }));
