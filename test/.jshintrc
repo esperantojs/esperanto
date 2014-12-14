@@ -2,6 +2,7 @@
 	"boss": true,
 	"unused": true,
 	"undef": true,
+	"esnext": true,
 	"globals": {
 		"process": true,
 		"require": true,
