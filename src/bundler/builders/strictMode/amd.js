@@ -18,7 +18,7 @@ export default function amd ( bundle, body, options ) {
 
 	defaultsBlock = externalModules.map( x => {
 		var name = bundle.uniqueNames[ x.id ];
-		return indentStr + `var ${name}__default = ('default' in ${name} ? ${name}.default : ${name});`;
+		return indentStr + `var ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`;
 	}).join( '\n' );
 
 	if ( defaultsBlock ) {

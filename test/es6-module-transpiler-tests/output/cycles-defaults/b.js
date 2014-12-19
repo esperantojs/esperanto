@@ -6,6 +6,6 @@
 
 	/* jshint esnext:true */
 
-	exports.default = { b: 2, get a() { return a.default.a; } };
+	exports['default'] = { b: 2, get a() { return a['default'].a; } };
 
 }).call(global);

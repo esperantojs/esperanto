@@ -13,7 +13,7 @@
   }
 
   assert.equal(a, 42);
-  exports.default = a;
+  exports['default'] = a;
 
   // Any replacement for the `export default` above needs to happen in the same
   // location. It cannot be done, say, at the end of the file. Otherwise the new

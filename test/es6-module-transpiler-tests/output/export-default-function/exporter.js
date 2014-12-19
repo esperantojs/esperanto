@@ -4,7 +4,7 @@
 
   /* jshint esnext:true */
 
-  exports.default = function () {
+  exports['default'] = function () {
     return 1;
   }
 

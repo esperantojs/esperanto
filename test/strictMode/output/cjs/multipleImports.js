@@ -6,7 +6,7 @@
 	var bar = require('bar');
 	var baz = require('baz');
 
-	var qux = foo.default( bar.default( baz.default ) );
-	exports.default = qux;
+	var qux = foo['default']( bar['default']( baz['default'] ) );
+	exports['default'] = qux;
 
 }).call(global);

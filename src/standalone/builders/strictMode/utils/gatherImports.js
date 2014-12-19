@@ -9,7 +9,15 @@ export default function gatherImports ( imports, getName, importedBindings, toRe
 				name = s.as;
 			}
 
-			replacement = s.batch ? s.name : ( getName( x ) + '.' + s.name );
+			if ( s.batch ) {
+				replacement = s.name;
+			} else {
+				if ( s.default ) {
+					replacement = getName( x ) + '[\'default\']';
+				} else {
+					replacement = getName( x ) + '.' + s.name;
+				}
+			}
 
 			importedBindings[ name ] = replacement;
 
