@@ -2,10 +2,10 @@
 
 	'use strict';
 
-	var acorn__default = require('acorn');
-	var MagicString__default = require('magic-string');
 	var path__default = require('path');
 	var sander__default = require('sander');
+	var acorn__default = require('acorn');
+	var MagicString__default = require('magic-string');
 	var estraverse__default = require('estraverse');
 
 	var annotateAst__Scope = function ( options ) {
@@ -1296,7 +1296,15 @@
 					name = s.as;
 				}
 
-				replacement = s.batch ? s.name : ( getName( x ) + '.' + s.name );
+				if ( s.batch ) {
+					replacement = s.name;
+				} else {
+					if ( s.default ) {
+						replacement = getName( x ) + '[\'default\']';
+					} else {
+						replacement = getName( x ) + '.' + s.name;
+					}
+				}
 
 				importedBindings[ name ] = replacement;
 
@@ -1422,7 +1430,7 @@
 					if ( x.default ) {
 						// export default function answer () { return 42; }
 						defaultValue = body.slice( x.valueStart, x.end );
-						body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + x.name + ';' );
+						body.replace( x.start, x.end, defaultValue + '\nexports[\'default\'] = ' + x.name + ';' );
 					} else {
 						// export function answer () { return 42; }
 						shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
@@ -1432,12 +1440,12 @@
 
 				case 'anonFunction':
 					// export default function () {}
-					body.replace( x.start, x.valueStart, 'exports.default = ' );
+					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 					return;
 
 				case 'expression':
 					// export default 40 + 2;
-					body.replace( x.start, x.valueStart, 'exports.default = ' );
+					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 					return;
 
 				case 'named':
@@ -1833,7 +1841,7 @@
 
 		// create an export block
 		if ( entry.defaultExport ) {
-			exportBlock = indentStr + 'exports.default = ' + name + '__default;';
+			exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
 		}
 
 		entry.exports.forEach( function(x ) {
@@ -1895,7 +1903,7 @@
 
 		defaultsBlock = externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( defaultsBlock ) {
@@ -1944,7 +1952,7 @@
 			var name = bundle.uniqueNames[ x.id ];
 
 			return indentStr + (("var " + name) + (" = require('" + (x.id)) + "');\n") +
-			       indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			       indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( importBlock ) {
@@ -1986,7 +1994,7 @@
 
 		defaultsBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( defaultsBlock ) {
