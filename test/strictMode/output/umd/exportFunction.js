@@ -21,6 +21,6 @@
 	function foo ( str ) {
 		return str.toUpperCase();
 	}
-	exports.default = foo;
+	exports['default'] = foo;
 
 }));

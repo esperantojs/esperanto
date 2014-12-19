@@ -4,6 +4,6 @@
 
 	var foo = require('foo');
 
-	console.log( foo.default );
+	console.log( foo['default'] );
 
 }).call(global);

@@ -7,7 +7,7 @@
 
 	/* jshint esnext:true */
 
-	assert.equal(fn1.default(), 1);
+	assert.equal(fn1['default'](), 1);
 	assert.equal(fn1.default(), 1);
 
 }).call(global);

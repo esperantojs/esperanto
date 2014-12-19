@@ -9,7 +9,7 @@ export default function getExportBlock ( bundle, entry, indentStr ) {
 
 	// create an export block
 	if ( entry.defaultExport ) {
-		exportBlock = indentStr + 'exports.default = ' + name + '__default;';
+		exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
 	}
 
 	entry.exports.forEach( x => {

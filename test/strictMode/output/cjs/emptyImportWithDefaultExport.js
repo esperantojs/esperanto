@@ -5,6 +5,6 @@
 	var foo = require('foo');
 	require('polyfills');
 
-	exports.default = 'baz';
+	exports['default'] = 'baz';
 
 }).call(global);

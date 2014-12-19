@@ -14,7 +14,7 @@ export default function cjs ( bundle, body, options ) {
 		var name = bundle.uniqueNames[ x.id ];
 
 		return indentStr + `var ${name} = require('${x.id}');\n` +
-		       indentStr + `var ${name}__default = ('default' in ${name} ? ${name}.default : ${name});`;
+		       indentStr + `var ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`;
 	}).join( '\n' );
 
 	if ( importBlock ) {

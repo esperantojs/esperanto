@@ -98,7 +98,7 @@ export default function transformBody ( mod, body, options ) {
 				if ( x.default ) {
 					// export default function answer () { return 42; }
 					defaultValue = body.slice( x.valueStart, x.end );
-					body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + x.name + ';' );
+					body.replace( x.start, x.end, defaultValue + '\nexports[\'default\'] = ' + x.name + ';' );
 				} else {
 					// export function answer () { return 42; }
 					shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
@@ -108,12 +108,12 @@ export default function transformBody ( mod, body, options ) {
 
 			case 'anonFunction':
 				// export default function () {}
-				body.replace( x.start, x.valueStart, 'exports.default = ' );
+				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 				return;
 
 			case 'expression':
 				// export default 40 + 2;
-				body.replace( x.start, x.valueStart, 'exports.default = ' );
+				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 				return;
 
 			case 'named':

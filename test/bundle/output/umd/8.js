@@ -18,6 +18,6 @@
 
 	'use strict';
 
-	var ImplicitlyNamed__default = ('default' in ImplicitlyNamed ? ImplicitlyNamed.default : ImplicitlyNamed);
+	var ImplicitlyNamed__default = ('default' in ImplicitlyNamed ? ImplicitlyNamed['default'] : ImplicitlyNamed);
 
 }));

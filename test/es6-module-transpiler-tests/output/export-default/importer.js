@@ -7,11 +7,11 @@
 
   /* jshint esnext:true */
 
-  assert.equal(value.default, 42);
+  assert.equal(value['default'], 42);
 
   value.change();
   assert.equal(
-    value.default,
+    value['default'],
     42,
     'default export should not be bound'
   );
