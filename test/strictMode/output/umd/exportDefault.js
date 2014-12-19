@@ -18,6 +18,6 @@
 
 	'use strict';
 
-	exports.default = 'foo';
+	exports['default'] = 'foo';
 
 }));

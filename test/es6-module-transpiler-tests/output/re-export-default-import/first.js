@@ -7,6 +7,6 @@
   function hi() {
     return 'hi';
   }
-  exports.default = hi;
+  exports['default'] = hi;
 
 }).call(global);

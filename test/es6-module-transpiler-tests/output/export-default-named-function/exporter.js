@@ -7,7 +7,7 @@
   function foo() {
     return 1;
   }
-  exports.default = foo;
+  exports['default'] = foo;
 
   function callsFoo() {
     return foo();

@@ -18,7 +18,7 @@
 
 	'use strict';
 
-	var qux = foo.default( bar.default( baz.default ) );
-	exports.default = qux;
+	var qux = foo['default']( bar['default']( baz['default'] ) );
+	exports['default'] = qux;
 
 }));

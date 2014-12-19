@@ -18,6 +18,6 @@
 
 	'use strict';
 
-	exports.default = 'baz';
+	exports['default'] = 'baz';
 
 }));
