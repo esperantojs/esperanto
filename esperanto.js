@@ -2,10 +2,10 @@
 
 	'use strict';
 
-	var path__default = require('path');
-	var sander__default = require('sander');
 	var acorn__default = require('acorn');
 	var MagicString__default = require('magic-string');
+	var path__default = require('path');
+	var sander__default = require('sander');
 	var estraverse__default = require('estraverse');
 
 	var annotateAst__Scope = function ( options ) {
@@ -1165,10 +1165,10 @@
 
 			if ( !specifier ) {
 				// empty import
-				replacement = (("require('" + (x.path)) + "')");
+				replacement = (("require('" + (x.path)) + "');");
 			} else {
 				name = specifier.batch ? specifier.name : specifier.as;
-				replacement = (("var " + name) + (" = require('" + (x.path)) + "')");
+				replacement = (("var " + name) + (" = require('" + (x.path)) + "');");
 			}
 
 			body.replace( x.start, x.end, replacement );
