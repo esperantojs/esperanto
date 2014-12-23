@@ -35,7 +35,7 @@ require( './build' )().then( function ( esperanto ) {
 				var promises = profiles.map( function ( profile ) {
 					try {
 						var transpiled = esperanto[ profile.method ]( source, profile.options );
-						return sander.writeFile( '../fastMode/output', profile.outputdir, sourceFile, transpiled );
+						return sander.writeFile( '../fastMode/output', profile.outputdir, sourceFile, transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly
 						if ( !/strict mode/.test( err.message ) ) {
@@ -75,7 +75,7 @@ require( './build' )().then( function ( esperanto ) {
 				var promises = profiles.map( function ( profile ) {
 					try {
 						var transpiled = esperanto[ profile.method ]( source, profile.options );
-						return sander.writeFile( '../strictMode/output', profile.outputdir, sourceFile, transpiled );
+						return sander.writeFile( '../strictMode/output', profile.outputdir, sourceFile, transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly
 						if ( !/defaultOnly/.test( err.message ) ) {
@@ -131,7 +131,7 @@ require( './build' )().then( function ( esperanto ) {
 				var promises = profiles.map( function ( profile ) {
 					try {
 						var transpiled = bundle[ profile.method ]( profile.options );
-						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled );
+						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly
 						if ( !/strict mode/.test( err.message ) ) {
