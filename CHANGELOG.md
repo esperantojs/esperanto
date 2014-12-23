@@ -1,8 +1,13 @@
 # changelog
 
+## 0.4.9
+
+* Adds `class` support - thanks [@leebyron](https://github.com/leebyron)
+* Use `hasOwnProperty` check to prevent garbled output - thanks [@leebyron](https://github.com/leebyron)
+
 ## 0.4.8
 
-* `exports['default']` is used in favour of `exports.default`, for the benefit of IE8
+* `exports['default']` is used in favour of `exports.default`, for the benefit of IE8 - thanks [@evs-chris](https://github.com/evs-chris/)
 
 ## 0.4.7
 

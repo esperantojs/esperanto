@@ -2,10 +2,10 @@
 
 	'use strict';
 
-	var acorn__default = require('acorn');
-	var MagicString__default = require('magic-string');
 	var path__default = require('path');
 	var sander__default = require('sander');
+	var acorn__default = require('acorn');
+	var MagicString__default = require('magic-string');
 	var estraverse__default = require('estraverse');
 
 	var annotateAst__Scope = function ( options ) {
