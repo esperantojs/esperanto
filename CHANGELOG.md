@@ -1,5 +1,9 @@
 # changelog
 
+## 0.4.10
+
+* Update acorn (greater ES6 coverage) and estraverse dependencies - thanks [@leebyron](https://github.com/leebyron)
+
 ## 0.4.9
 
 * Adds `class` support - thanks [@leebyron](https://github.com/leebyron)
