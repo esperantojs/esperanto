@@ -114,7 +114,12 @@
 	}
 
 	function annotateAst__declaresVar ( node ) {
-		return node.type === 'VariableDeclarator'; // TODO const, class? (function taken care of already)
+		// TODO const? (function taken care of already)
+		return (
+			node.type === 'VariableDeclarator' ||
+			node.type === 'ClassExpression' ||
+			node.type === 'ClassDeclaration'
+		);
 	}
 
 	function annotateAst__declaresLet ( node ) {
@@ -256,7 +261,31 @@
 				}
 			}
 
-			// Case 5: `export default 1 + 2`
+			// Case 5: `export class Foo {...}`
+			else if ( d.type === 'ClassDeclaration' ) {
+				result.declaration = true; // TODO remove in favour of result.type
+				result.type = 'namedClass';
+				result.default = !!node.default;
+				result.name = d.id.name;
+			}
+
+			else if ( d.type === 'ClassExpression' ) {
+				result.declaration = true; // TODO remove in favour of result.type
+				result.default = true;
+
+				// Case 6: `export default class Foo {...}`
+				if ( d.id ) {
+					result.type = 'namedClass';
+					result.name = d.id.name;
+				}
+
+				// Case 7: `export default class {...}`
+				else {
+					result.type = 'anonClass';
+				}
+			}
+
+			// Case 8: `export default 1 + 2`
 			else {
 				result.type = 'expression';
 				result.default = true;
@@ -264,7 +293,7 @@
 			}
 		}
 
-		// Case 6: `export { foo, bar };`
+		// Case 9: `export { foo, bar };`
 		else {
 			result.type = 'named';
 			result.specifiers = node.specifiers.map( function(s ) {return { name: s.id.name }}  ); // TODO as?
@@ -302,15 +331,15 @@
 			moduleId = x.path;
 
 			// use existing value
-			if ( name = nameById[ moduleId ] ) {
-				return name;
+			if ( nameById.hasOwnProperty( moduleId ) ) {
+				return nameById[ moduleId ];
 			}
 
 			// if user supplied a function, defer to it
 			if ( userFn && ( name = userFn( moduleId ) ) ) {
 				name = sanitize__default( name );
 
-				if ( usedNames[ name ] ) {
+				if ( usedNames.hasOwnProperty( name ) ) {
 					// TODO write a test for this
 					throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
 				}
@@ -332,7 +361,7 @@
 					while ( i-- ) {
 						candidate = prefix + sanitize__default( parts.slice( i ).join( '__' ) );
 
-						if ( !usedNames[ candidate ] ) {
+						if ( !usedNames.hasOwnProperty( candidate ) ) {
 							name = candidate;
 							break;
 						}
@@ -385,11 +414,13 @@
 		if ( declaration ) {
 			switch ( declaration.type ) {
 				case 'namedFunction':
+				case 'namedClass':
 					body.remove( declaration.start, declaration.valueStart );
 					exportedValue = declaration.name;
 					break;
 
 				case 'anonFunction':
+				case 'anonClass':
 					if ( declaration.isFinal ) {
 						body.replace( declaration.start, declaration.valueStart, 'return ' );
 					} else {
@@ -562,11 +593,13 @@
 		if ( exportDeclaration ) {
 			switch ( exportDeclaration.type ) {
 				case 'namedFunction':
+				case 'namedClass':
 				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
 				body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
 				break;
 
 				case 'anonFunction':
+				case 'anonClass':
 				case 'expression':
 				body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
 				break;
@@ -708,7 +741,15 @@
 					name = s.as;
 				}
 
-				replacement = s.batch ? s.name : ( getName( x ) + '.' + s.name );
+				if ( s.batch ) {
+					replacement = s.name;
+				} else {
+					if ( s.default ) {
+						replacement = getName( x ) + '[\'default\']';
+					} else {
+						replacement = getName( x ) + '.' + s.name;
+					}
+				}
 
 				importedBindings[ name ] = replacement;
 
@@ -763,7 +804,7 @@
 		}
 
 		name = assignee.name;
-		replacement = names[ name ];
+		replacement = names.hasOwnProperty( name ) && names[ name ];
 
 		if ( !!replacement && !scope.contains( name ) ) {
 			throw new Error( message + '`' + name + '`' );
@@ -776,7 +817,7 @@
 
 		if ( node.type === 'Identifier' ) {
 			name = node.name;
-			replacement = toRewrite[ name ];
+			replacement = toRewrite.hasOwnProperty( name ) && toRewrite[ name ];
 
 			if ( replacement && !scope.contains( name ) ) {
 				// rewrite
@@ -877,10 +918,11 @@
 					return;
 
 				case 'namedFunction':
+				case 'namedClass':
 					if ( x.default ) {
 						// export default function answer () { return 42; }
 						defaultValue = body.slice( x.valueStart, x.end );
-						body.replace( x.start, x.end, defaultValue + '\nexports.default = ' + x.name + ';' );
+						body.replace( x.start, x.end, defaultValue + '\nexports[\'default\'] = ' + x.name + ';' );
 					} else {
 						// export function answer () { return 42; }
 						shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
@@ -889,13 +931,14 @@
 					return;
 
 				case 'anonFunction':
+				case 'anonClass':
 					// export default function () {}
-					body.replace( x.start, x.valueStart, 'exports.default = ' );
+					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 					return;
 
 				case 'expression':
 					// export default 40 + 2;
-					body.replace( x.start, x.valueStart, 'exports.default = ' );
+					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 					return;
 
 				case 'named':
@@ -1291,7 +1334,7 @@
 
 		// create an export block
 		if ( entry.defaultExport ) {
-			exportBlock = indentStr + 'exports.default = ' + name + '__default;';
+			exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
 		}
 
 		entry.exports.forEach( function(x ) {
@@ -1353,7 +1396,7 @@
 
 		defaultsBlock = externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( defaultsBlock ) {
@@ -1402,7 +1445,7 @@
 			var name = bundle.uniqueNames[ x.id ];
 
 			return indentStr + (("var " + name) + (" = require('" + (x.id)) + "');\n") +
-			       indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			       indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( importBlock ) {
@@ -1444,7 +1487,7 @@
 
 		defaultsBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + (".default : " + name) + ");");
+			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( defaultsBlock ) {

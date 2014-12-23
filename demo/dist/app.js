@@ -12631,12 +12631,12 @@ _data_ = {
       name: 'Mixed imports\n'
     },
     {
-      code: '// example from http://jsmodules.io\nimport { unlink as rm } from "fs";\n\nrm(filename, function(err) { /* check errors */ });\n',
-      name: 'Renaming imports\n'
+      name: 'Renaming imports\n',
+      code: '// example from http://jsmodules.io\nimport { unlink as rm } from "fs";\n\nrm(filename, function(err) { /* check errors */ });\n'
     },
     {
-      code: '// example from http://jsmodules.io\nimport * as fs from "fs";\n\nfs.unlink(filename, function(err) { /* check errors */ });\n',
-      name: 'Batch imports\n'
+      name: 'Batch imports\n',
+      code: '// example from http://jsmodules.io\nimport * as fs from "fs";\n\nfs.unlink(filename, function(err) { /* check errors */ });\n'
     },
     {
       code: '// example from http://jsmodules.io\n\n// exports this function as "requestAnimationFrame"\nexport function requestAnimationFrame() {\n  // cross-browser requestAnimationFrame\n}\n\n// exports document.location as "location"\nexport var location = document.location;\n',
