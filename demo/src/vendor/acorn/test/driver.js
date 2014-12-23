@@ -1,6 +1,5 @@
 (function(exports) {
   var tests = [];
-  var acorn = typeof require == "undefined" ? window.acorn : require("../acorn.js");
 
   exports.test = function(code, ast, options) {
     tests.push({code: code, ast: ast, options: options});
@@ -12,14 +11,29 @@
     tests.push({code: code, assert: assert, options: options});
   };
 
-  exports.runTests = function(callback) {
-    var opts = {locations: true};
+  exports.runTests = function(config, callback) {
+    var parse = config.parse;
+
     for (var i = 0; i < tests.length; ++i) {
       var test = tests[i];
+      if (config.filter && !config.filter(test)) continue;
       try {
-        var ast = acorn.parse(test.code, test.options || opts);
-        if (test.error) callback("fail", test.code,
-                                 "Expected error message: " + test.error + "\nBut parsing succeeded.");
+        var testOpts = test.options || {locations: true};
+        var expected = {};
+        if (expected.onComment = testOpts.onComment) {
+          testOpts.onComment = []
+        }
+        if (expected.onToken = testOpts.onToken) {
+          testOpts.onToken = [];
+        }
+        var ast = parse(test.code, testOpts);
+        if (test.error) {
+          if (config.loose) {
+            callback("ok", test.code);
+          } else {
+            callback("fail", test.code, "Expected error message: " + test.error + "\nBut parsing succeeded.");
+          }
+        }
         else if (test.assert) {
           var error = test.assert(ast);
           if (error) callback("fail", test.code,
@@ -27,11 +41,21 @@
           else callback("ok", test.code);
         } else {
           var mis = misMatch(test.ast, ast);
-          if (!mis) callback("ok", test.code);
-          else callback("fail", test.code, mis);
+          for (var name in expected) {
+            if (mis) break;
+            if (expected[name]) {
+              mis = misMatch(expected[name], testOpts[name]);
+              testOpts[name] = expected[name];
+            }
+          }
+          if (mis) callback("fail", test.code, mis);
+          else callback("ok", test.code);
         }
       } catch(e) {
-        if (test.error && e instanceof SyntaxError) {
+        if (!(e instanceof SyntaxError)) {
+          throw e;
+        }
+        if (test.error) {
           if (e.message == test.error) callback("ok", test.code);
           else callback("fail", test.code,
                         "Expected error message: " + test.error + "\nGot error message: " + e.message);
@@ -49,7 +73,7 @@
     return str + " (" + pt + ")";
   }
 
-  function misMatch(exp, act) {
+  var misMatch = exports.misMatch = function(exp, act) {
     if (!exp || !act || (typeof exp != "object") || (typeof act != "object")) {
       if (exp !== act) return ppJSON(exp) + " !== " + ppJSON(act);
     } else if (exp.splice) {
@@ -65,7 +89,7 @@
         if (mis) return addPath(mis, prop);
       }
     }
-  }
+  };
 
   function mangle(ast) {
     if (typeof ast != "object" || !ast) return;

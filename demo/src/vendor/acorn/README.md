@@ -1,5 +1,7 @@
 # Acorn
 
+[![Build Status](https://travis-ci.org/marijnh/acorn.svg?branch=master)](https://travis-ci.org/marijnh/acorn)
+
 A tiny, fast JavaScript parser, written completely in JavaScript.
 
 ## Installation
@@ -48,8 +50,7 @@ object referring to that same position.
 
 - **ecmaVersion**: Indicates the ECMAScript version to parse. Must be
   either 3, 5, or 6. This influences support for strict mode, the set
-  of reserved words, and support for getters and setter. Default is 5.
-  ES6 is only partially supported.
+  of reserved words, and support for new syntax features. Default is 5.
 
 - **strictSemicolons**: If `true`, prevents the parser from doing
   automatic semicolon insertion, and statements that do not end with
@@ -67,10 +68,22 @@ object referring to that same position.
   the top level raises an error. Set this to `true` to accept such
   code.
 
+- **allowImportExportEverywhere**: By default, `import` and `export`
+  declarations can only appear at a program's top level. Setting this
+  option to `true` allows them anywhere where a statement is allowed.
+
 - **locations**: When `true`, each node has a `loc` object attached
   with `start` and `end` subobjects, each of which contains the
   one-based line and zero-based column numbers in `{line, column}`
   form. Default is `false`.
+
+- **onToken**: If a function is passed for this option, each found
+  token will be passed in same format as `tokenize()` returns.
+
+  If array is passed, each found token is pushed to it.
+
+  Note that you are not allowed to call the parser from the
+  callback—that will corrupt its internal state.
 
 - **onComment**: If a function is passed for this option, whenever a
   comment is encountered the function will be called with the
@@ -85,6 +98,18 @@ object referring to that same position.
   When the `locations` options is on, the `{line, column}` locations
   of the comment’s start and end are passed as two additional
   parameters.
+
+  If array is passed for this option, each found comment is pushed
+  to it as object in Esprima format:
+  
+  ```javascript
+  {
+    "type": "Line" | "Block",
+    "value": "comment text",
+    "range": ...,
+    "loc": ...
+  }
+  ```
 
   Note that you are not allowed to call the parser from the
   callback—that will corrupt its internal state.
@@ -103,15 +128,24 @@ object referring to that same position.
   parse tree.
 
 - **sourceFile**: When the `locations` option is `true`, you can pass
-  this option to add a `sourceFile` attribute in every node’s `loc`
+  this option to add a `source` attribute in every node’s `loc`
   object. Note that the contents of this option are not examined or
   processed in any way; you are free to use whatever format you
   choose.
 
-- **directSourceFile**: Like `sourceFile`, but the property will be
-  added directly to the nodes, rather than to a `loc` object.
+- **directSourceFile**: Like `sourceFile`, but a `sourceFile` property
+  will be added directly to the nodes, rather than the `loc` object.
+
+- **preserveParens**: If this option is `true`, parenthesized expressions
+  are represented by (non-standard) `ParenthesizedExpression` nodes
+  that have a single `expression` property containing the expression
+  inside parentheses.
 
 [range]: https://bugzilla.mozilla.org/show_bug.cgi?id=745678
+
+**parseExpressionAt**`(input, offset, options)` will parse a single
+expression in a string, and return its AST. It will not complain if
+there is more of the string left after the expression.
 
 **getLineInfo**`(input, offset)` can be used to get a `{line,
 column}` object for a given program string and character offset.
@@ -121,12 +155,54 @@ Acorn's tokenizer. The function takes an input string and options
 similar to `parse` (though only some options are meaningful here), and
 returns a function that can be called repeatedly to read a single
 token, and returns a `{start, end, type, value}` object (with added
-`startLoc` and `endLoc` properties when the `locations` option is
-enabled). This object will be reused (updated) for each token, so you
-can't count on it staying stable.
+`loc` property when the `locations` option is enabled and `range`
+property when the `ranges` option is enabled).
 
 **tokTypes** holds an object mapping names to the token type objects
 that end up in the `type` properties of tokens.
+
+#### Note on using with [Escodegen][escodegen]
+
+Escodegen supports generating comments from AST, attached in
+Esprima-specific format. In order to simulate same format in
+Acorn, consider following example:
+
+```javascript
+var comments = [], tokens = [];
+
+var ast = acorn.parse('var x = 42; // answer', {
+	// collect ranges for each node
+	ranges: true,
+	// collect comments in Esprima's format
+	onComment: comments,
+	// collect token ranges
+	onToken: tokens
+});
+
+// attach comments using collected information
+escodegen.attachComments(ast, comments, tokens);
+
+// generate code
+console.log(escodegen.generate(ast, {comment: true}));
+// > 'var x = 42;    // answer'
+```
+
+[escodegen]: https://github.com/Constellation/escodegen
+
+#### Using Acorn in an environment with a Content Security Policy
+
+Some contexts, such as Chrome Web Apps, disallow run-time code evaluation.
+Acorn uses `new Function` to generate fast functions that test whether
+a word is in a given set, and will trigger a security error when used
+in a context with such a
+[Content Security Policy](http://www.html5rocks.com/en/tutorials/security/content-security-policy/#eval-too)
+(see [#90](https://github.com/marijnh/acorn/issues/90) and
+[#123](https://github.com/marijnh/acorn/issues/123)).
+
+The `bin/without_eval` script can be used to generate a version of
+`acorn.js` that has the generated code inlined, and can thus run
+without evaluating anything. In versions of this library downloaded
+from NPM, this script will be available as `acorn_csp.js`.
 
 ### acorn_loose.js ###
 
@@ -139,7 +215,7 @@ but never raises an error, and will do its best to parse syntactically
 invalid code in as meaningful a way as it can. It'll insert identifier
 nodes with name `"✖"` as placeholders in places where it can't make
 sense of the input. Depends on `acorn.js`, because it uses the same
-tokenizer.
+tokenizer. The loose parser does not support ECMAScript 6 syntax yet.
 
 ### util/walk.js ###
 
@@ -200,7 +276,7 @@ The `bin/acorn` utility can be used to parse a file from the command
 line. It accepts as arguments its input file and the following
 options:
 
-- `--ecma3|--ecma5`: Sets the ECMAScript version to parse. Default is
+- `--ecma3|--ecma5|--ecma6`: Sets the ECMAScript version to parse. Default is
   version 5.
 
 - `--strictSemicolons`: Prevents the parser from doing automatic
