@@ -1,4 +1,4 @@
-export default function gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames ) {
+export default function gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames, conflicts ) {
 	var replacements = {};
 
 	imports.forEach( x => {
@@ -35,8 +35,14 @@ export default function gatherImports ( imports, externalModuleLookup, importedB
 
 				moduleName = uniqueNames[ moduleId ];
 
-				if ( !external || specifierName === 'default' ) {
-					replacement = moduleName + '__' + specifierName;
+				if ( specifierName === 'default' ) {
+					replacement = external || conflicts.hasOwnProperty( moduleName ) ?
+						moduleName + '__default' :
+						moduleName;
+				} else if ( !external ) {
+					replacement = conflicts.hasOwnProperty( specifierName ) ?
+						moduleName + '__' + specifierName :
+						specifierName;
 				} else {
 					replacement = moduleName + '.' + specifierName;
 				}

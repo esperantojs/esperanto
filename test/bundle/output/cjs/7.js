@@ -2,14 +2,14 @@
 
 	'use strict';
 
-	var foo__default = 'this is foo';
+	var foo = 'this is foo';
 
-	function main__logFoo () {
-		console.log( foo__default );
+	function logFoo () {
+		console.log( foo );
 	}
 
-	function main__logBar () {
-		console.log( bar__default );
+	function logBar () {
+		console.log( bar );
 	}
 
 }).call(global);

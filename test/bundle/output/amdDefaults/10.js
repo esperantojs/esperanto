@@ -2,7 +2,7 @@ define(function () {
 
 	'use strict';
 
-	class main__Foo {
+	class Foo {
 		constructor( str ) {
 			this.str = str;
 		}
@@ -11,8 +11,8 @@ define(function () {
 			return this.str;
 		}
 	}
-	var main__default = main__Foo;
+	var main = Foo;
 
-	return main__default;
+	return main;
 
 });

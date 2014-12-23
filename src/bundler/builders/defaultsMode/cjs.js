@@ -20,7 +20,11 @@ export default function cjs ( bundle, body, options ) {
 	}
 
 	if ( x = entry.exports[0] ) {
-		exportStatement = indentStr + 'module.exports = ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+		var name = bundle.uniqueNames[ bundle.entry ];
+		if ( bundle.conflicts.hasOwnProperty( name ) ) {
+			name += '__default';
+		}
+		exportStatement = indentStr + 'module.exports = ' + name + ';';
 		body.append( '\n\n' + exportStatement );
 	}
 

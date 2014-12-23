@@ -44,6 +44,7 @@ module.exports = function () {
 				{ entry: 'importer', dir: 'import-as' },
 				{ entry: 'third', dir: 'import-chain' },
 				{ entry: 'index', dir: 'import-not-at-top-level-fails', expectedError: "'import' and 'export' may only appear at the top level" },
+				{ entry: 'importer', dir: 'import-not-exported' },
 				{ entry: 'mod', dir: 'module-level-declarations' },
 				{ entry: 'importer', dir: 'named-function-expression' },
 				{ entry: 'importer', dir: 'namespace-reassign-import-fails', expectedError: 'Cannot reassign imported binding of namespace `exp`' },

@@ -549,6 +549,107 @@
 	}
 	var getUniqueNames__default = getUniqueNames__getUniqueNames;
 
+	function getUnscopedNames__getUnscopedNames ( mod ) {
+		var unscoped = {};
+
+		var importedNames;
+		function imported ( name ) {
+			if (!importedNames) {
+				importedNames = {};
+				mod.imports.forEach(function(i ) {
+					!i.passthrough && i.specifiers.forEach(function(s ) {
+						importedNames[ s.batch ? s.name : s.as ] = true;
+					});
+				});
+			}
+			return importedNames.hasOwnProperty( name );
+		}
+
+		var scope;
+
+		estraverse__default.traverse( mod.ast, {
+			enter: function ( node, parent ) {
+				// we're only interested in references, not property names etc
+				if ( node._skip ) return this.skip();
+
+				if ( node._scope ) {
+					scope = node._scope;
+				}
+
+				if ( node.type === 'Identifier' &&
+						 !scope.contains( node.name ) &&
+						 !imported( node.name ) ) {
+					unscoped[ node.name ] = true;
+				}
+			},
+
+			leave: function ( node ) {
+				if ( node.type === 'Program' ) {
+					return;
+				}
+
+				if ( node._scope ) {
+					scope = scope.parent;
+				}
+			}
+		});
+
+		return unscoped;
+	}
+	var getUnscopedNames__default = getUnscopedNames__getUnscopedNames;
+
+	function topLevelScopeConflicts__topLevelScopeConflicts ( bundle ) {
+		var conflicts = {};
+		var inScope = {};
+
+		bundle.modules.forEach( function(mod ) {
+			var inModule = {};
+
+			// bundle name is in top scope
+			inModule[ bundle.uniqueNames[ mod.id ] ] = true;
+
+			// all top defined identifiers are in top scope
+			mod.ast._scope.names.forEach( function(name ) {
+				inModule[ name ] = true;
+			});
+
+			// all unattributed identifiers could collide with top scope
+			var unscoped = getUnscopedNames__default( mod );
+			Object.keys( getUnscopedNames__default( mod ) ).forEach( function(name ) {
+				inModule[ name ] = true;
+			});
+
+			// merge this module's top scope with bundle top scope
+			Object.keys( inModule ).forEach( function(name ) {
+				if ( inScope.hasOwnProperty( name ) ) {
+					conflicts[ name ] = true;
+				} else {
+					inScope[ name ] = true;
+				}
+			});
+		});
+
+		return conflicts;
+	}
+	var topLevelScopeConflicts__default = topLevelScopeConflicts__topLevelScopeConflicts;
+
+	function importsByModule__importsByModule ( bundle ) {
+		var imports = {};
+
+		bundle.modules.forEach( function(mod ) {
+			mod.imports.forEach(function(i ) {
+				i.specifiers.forEach(function(s ) {
+					if ( !s.default ) {
+						(imports[ i.id ] || (imports[ i.id ] = {}))[ s.name ] = true;
+					}
+				});
+			});
+		});
+
+		return imports;
+	}
+	var importsByModule__default = importsByModule__importsByModule;
+
 	function disallowIllegalReassignment__disallowIllegalReassignment ( node, names, scope ) {
 		var assignee, name, replacement, message;
 
@@ -580,14 +681,16 @@
 	}
 	var disallowIllegalReassignment__default = disallowIllegalReassignment__disallowIllegalReassignment;
 
-	function rewriteIdentifiers__rewriteIdentifiers ( body, node, toRewrite, scope ) {
+	function rewriteIdentifiers__rewriteIdentifiers ( body, node, toRewrite, scope, unscoped ) {
 		var name, replacement;
 
 		if ( node.type === 'Identifier' ) {
 			name = node.name;
 			replacement = toRewrite.hasOwnProperty( name ) && toRewrite[ name ];
 
-			if ( replacement && !scope.contains( name ) ) {
+			if ( replacement &&
+					 !scope.contains( name ) &&
+					 !(unscoped && unscoped.hasOwnProperty( name )) ) {
 				// rewrite
 				body.replace( node.start, node.end, replacement );
 			}
@@ -595,7 +698,29 @@
 	}
 	var rewriteIdentifiers__default = rewriteIdentifiers__rewriteIdentifiers;
 
-	function gatherImports__gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames ) {
+	function gatherExports__gatherExports ( exports, toRewrite, prefix, conflicts ) {
+		exports.forEach( function(x ) {
+			if ( x.declaration ) {
+				var name = x.name;
+				if ( !toRewrite.hasOwnProperty( name ) ) {
+					toRewrite[ name ] = conflicts.hasOwnProperty( name ) ?
+						prefix + '__' + name :
+						name;
+				}
+			} else if ( x.specifiers ) {
+				x.specifiers.forEach( function(s ) {
+					if ( !toRewrite.hasOwnProperty( s.name ) ) {
+						toRewrite[ s.name ] = conflicts.hasOwnProperty( s.name ) ?
+							prefix + '__' + s.name :
+							s.name;
+					}
+				});
+			}
+		});
+	}
+	var gatherExports__default = gatherExports__gatherExports;
+
+	function gatherImports__gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames, conflicts ) {
 		var replacements = {};
 
 		imports.forEach( function(x ) {
@@ -632,8 +757,14 @@
 
 					moduleName = uniqueNames[ moduleId ];
 
-					if ( !external || specifierName === 'default' ) {
-						replacement = moduleName + '__' + specifierName;
+					if ( specifierName === 'default' ) {
+						replacement = external || conflicts.hasOwnProperty( moduleName ) ?
+							moduleName + '__default' :
+							moduleName;
+					} else if ( !external ) {
+						replacement = conflicts.hasOwnProperty( specifierName ) ?
+							moduleName + '__' + specifierName :
+							specifierName;
 					} else {
 						replacement = moduleName + '.' + specifierName;
 					}
@@ -667,17 +798,37 @@
 		scope = mod.ast._scope;
 		blockScope = mod.ast._blockScope;
 
-		gatherImports__default( mod.imports, bundle.externalModuleLookup, importedBindings, toRewrite, bundle.chains, bundle.uniqueNames );
+		gatherImports__default(
+			mod.imports,
+			bundle.externalModuleLookup,
+			importedBindings,
+			toRewrite,
+			bundle.chains,
+			bundle.uniqueNames,
+			bundle.conflicts
+		);
+
 		Object.keys( toRewrite ).forEach( function(k ) {return readOnly[k] = toRewrite[k]} );
 
-		scope.names.forEach( function(n ) {return toRewrite[n] = prefix + '__' + n} );
+		gatherExports__default( mod.exports, toRewrite, prefix, bundle.conflicts );
+		//exportNames = getExportNames( mod.exports );
+
+		scope.names.forEach( function(n ) {
+			if ( !toRewrite.hasOwnProperty( n ) ) {
+				var unconflicted = bundle.conflicts.hasOwnProperty( n ) ?
+					prefix + '__' + n :
+					n;
+				toRewrite[ n ] =  transformBody__wasImported( bundle, mod, n ) ?
+					'__' + unconflicted :
+					unconflicted;
+			}
+		});
+
+		var unscoped = getUnscopedNames__default( mod );
 
 		// remove top-level names from scope. TODO is there a cleaner way to do this?
 		scopeNames = scope.names;
 		scope.names = [];
-
-		//gatherExports( mod.exports, toRewrite, prefix );
-		//exportNames = getExportNames( mod.exports );
 
 		estraverse__default.traverse( mod.ast, {
 			enter: function ( node, parent ) {
@@ -697,7 +848,7 @@
 				transformBody__rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~mod.ast.body.indexOf( parent ) );
 
 				// Rewrite import and export identifiers
-				rewriteIdentifiers__default( body, node, toRewrite, scope );
+				rewriteIdentifiers__default( body, node, toRewrite, scope, unscoped );
 
 				// Add multi-line strings to exclusion ranges
 				if ( node.type === 'TemplateLiteral' ) {
@@ -727,6 +878,11 @@
 			}
 		});
 
+		var defaultName = prefix;
+		if ( bundle.conflicts.hasOwnProperty( prefix ) || mod._exportsNamespace ) {
+			defaultName += '__default';
+		}
+
 		// Remove export statements (but keep declarations)
 		mod.exports.forEach( function(x ) {
 			var name;
@@ -745,14 +901,15 @@
 					// as the `foo` reference may be used elsewhere
 					defaultValue = body.slice( x.valueStart, x.end ); // in case rewrites occured inside the function body
 					body.remove( x.start, x.valueStart );
-					body.replace( x.end, x.end, '\nvar ' + prefix + '__default = ' + prefix + '__' + name + ';' );
+
+					body.replace( x.end, x.end, '\nvar ' + defaultName + ' = ' + toRewrite[ name ] + ';');
 				} else {
 					// TODO this is a bit convoluted...
 					if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
-						defaultValue = prefix + '__' + name;
-						body.replace( x.start, x.end, 'var ' + prefix + '__default = ' + defaultValue + ';' );
+						defaultValue = toRewrite[ name ];
+						body.replace( x.start, x.end, 'var ' + defaultName + ' = ' + defaultValue + ';');
 					} else {
-						body.replace( x.start, x.valueStart, 'var ' + prefix + '__default = ' );
+						body.replace( x.start, x.valueStart, 'var ' + defaultName + ' = ');
 					}
 				}
 
@@ -776,11 +933,11 @@
 
 			mod.exports.forEach( function(x ) {
 				if ( x.declaration ) {
-					namespaceExports.push( body.indentStr + 'get ' + x.name + ' () { return ' + prefix + '__' + x.name + '; }' );
+					namespaceExports.push( body.indentStr + 'get ' + x.name + ' () { return ' + toRewrite[ x.name ] + '; }' );
 				}
 
 				else if ( x.default ) {
-					namespaceExports.push( body.indentStr + 'get default () { return ' + prefix + '__default; }' );
+					namespaceExports.push( body.indentStr + 'get default () { return ' + defaultName + '; }' );
 				}
 
 				else {
@@ -831,17 +988,33 @@
 		}
 	}
 
+	function transformBody__wasImported ( bundle, mod, name ) {
+		return (
+			bundle.importsByModule.hasOwnProperty( mod.id ) &&
+			bundle.importsByModule[ mod.id ].hasOwnProperty( name )
+		);
+	}
+
 	function combine__combine ( bundle ) {
 		var body = new MagicString__default.Bundle({
 			separator: '\n\n'
 		});
 
 		bundle.modules.forEach( function(mod ) {
+			annotateAst__default( mod.ast );
+		});
+
+		var conflicts = topLevelScopeConflicts__default( bundle );
+		bundle.conflicts = conflicts;
+
+		var imports = importsByModule__default( bundle );
+		bundle.importsByModule = imports;
+
+		bundle.modules.forEach( function(mod ) {
 			var modBody = mod.body.clone(),
 				prefix = bundle.uniqueNames[ mod.id ];
 
-			annotateAst__default( mod.ast );
-			transformBody__default( bundle, mod, modBody, prefix );
+			transformBody__default( bundle, mod, modBody, prefix, conflicts );
 
 			body.addSource({
 				filename: path__default.resolve( bundle.base, mod.file ),
@@ -912,7 +1085,7 @@
 					externalModuleLookup: externalModuleLookup,
 					skip: skip,
 					names: names,
-					uniqueNames: getUniqueNames__default( modules, options.names ),
+					uniqueNames: getUniqueNames__default( modules, names ),
 					chains: resolveChains__default( modules, moduleLookup )
 				};
 
@@ -1741,13 +1914,17 @@
 		indentStr = body.getIndentString();
 
 		if ( x = entry.exports[0] ) {
-			exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+			var name = bundle.uniqueNames[ bundle.entry ];
+			if ( bundle.conflicts.hasOwnProperty( name ) ) {
+				name += '__default';
+			}
+			exportStatement = indentStr + 'return ' + name + ';';
 			body.append( '\n\n' + exportStatement );
 		}
 
 		intro = defaultsMode_amd__introTemplate({
 			amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( defaultsMode_amd__quoteId ).join( ', ' ) + '], ' : '',
-			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} ).join( ', ' )
+			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ] + '__default'} ).join( ', ' )
 		}).replace( /\t/g, indentStr );
 
 		body.prepend( intro ).trim().append( '\n\n});' );
@@ -1779,7 +1956,11 @@
 		}
 
 		if ( x = entry.exports[0] ) {
-			exportStatement = indentStr + 'module.exports = ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+			var name = bundle.uniqueNames[ bundle.entry ];
+			if ( bundle.conflicts.hasOwnProperty( name ) ) {
+				name += '__default';
+			}
+			exportStatement = indentStr + 'module.exports = ' + name + ';';
 			body.append( '\n\n' + exportStatement );
 		}
 
@@ -1809,7 +1990,11 @@
 		}
 
 		if ( x = entry.exports[0] ) {
-			exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+			var name = bundle.uniqueNames[ bundle.entry ];
+			if ( bundle.conflicts.hasOwnProperty( name ) ) {
+				name += '__default';
+			}
+			exportStatement = indentStr + 'return ' + name + ';';
 			body.append( '\n\n' + exportStatement );
 		}
 
@@ -1874,7 +2059,11 @@
 
 		// create an export block
 		if ( entry.defaultExport ) {
-			exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
+			var defaultName = name;
+			if ( bundle.conflicts.hasOwnProperty( name ) ) {
+				defaultName += '__default';
+			}
+			exportBlock = indentStr + 'exports[\'default\'] = ' + defaultName + ';';
 		}
 
 		entry.exports.forEach( function(x ) {
@@ -1883,12 +2072,18 @@
 			}
 
 			if ( x.declaration ) {
-				statements.push( indentStr + (("__export('" + (x.name)) + ("', function () { return " + name) + ("__" + (x.name)) + "; });")  );
+				var declName = bundle.conflicts.hasOwnProperty( x.name ) ?
+					name + '__' + x.name :
+					x.name;
+				statements.push( indentStr + (("__export('" + (x.name)) + ("', function () { return " + declName) + "; });")  );
 			}
 
 			else {
 				x.specifiers.forEach( function(s ) {
-					statements.push( indentStr + (("__export('" + (s.name)) + ("', function () { return " + name) + ("__" + (s.name)) + "; });")  );
+					var declName = bundle.conflicts.hasOwnProperty( s.name ) ?
+						name + '__' + s.name :
+						s.name;
+					statements.push( indentStr + (("__export('" + (s.name)) + ("', function () { return " + declName) + "; });")  );
 				});
 			}
 		});
@@ -1985,7 +2180,7 @@
 			var name = bundle.uniqueNames[ x.id ];
 
 			return indentStr + (("var " + name) + (" = require('" + (x.id)) + "');\n") +
-			       indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+						 indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 		}).join( '\n' );
 
 		if ( importBlock ) {

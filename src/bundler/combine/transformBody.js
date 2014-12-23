@@ -1,7 +1,9 @@
 import estraverse from 'estraverse';
 import disallowIllegalReassignment from '../../utils/disallowIllegalReassignment';
 import rewriteIdentifiers from '../../utils/rewriteIdentifiers';
+import gatherExports from './gatherExports';
 import gatherImports from './gatherImports';
+import getUnscopedNames from '../utils/getUnscopedNames';
 
 export default function transformBody ( bundle, mod, body, prefix ) {
 	var scope,
@@ -19,17 +21,37 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 	scope = mod.ast._scope;
 	blockScope = mod.ast._blockScope;
 
-	gatherImports( mod.imports, bundle.externalModuleLookup, importedBindings, toRewrite, bundle.chains, bundle.uniqueNames );
+	gatherImports(
+		mod.imports,
+		bundle.externalModuleLookup,
+		importedBindings,
+		toRewrite,
+		bundle.chains,
+		bundle.uniqueNames,
+		bundle.conflicts
+	);
+
 	Object.keys( toRewrite ).forEach( k => readOnly[k] = toRewrite[k] );
 
-	scope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
+	gatherExports( mod.exports, toRewrite, prefix, bundle.conflicts );
+	//exportNames = getExportNames( mod.exports );
+
+	scope.names.forEach( n => {
+		if ( !toRewrite.hasOwnProperty( n ) ) {
+			var unconflicted = bundle.conflicts.hasOwnProperty( n ) ?
+				prefix + '__' + n :
+				n;
+			toRewrite[ n ] =  wasImported( bundle, mod, n ) ?
+				'__' + unconflicted :
+				unconflicted;
+		}
+	});
+
+	var unscoped = getUnscopedNames( mod );
 
 	// remove top-level names from scope. TODO is there a cleaner way to do this?
 	scopeNames = scope.names;
 	scope.names = [];
-
-	//gatherExports( mod.exports, toRewrite, prefix );
-	//exportNames = getExportNames( mod.exports );
 
 	estraverse.traverse( mod.ast, {
 		enter: function ( node, parent ) {
@@ -49,7 +71,7 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~mod.ast.body.indexOf( parent ) );
 
 			// Rewrite import and export identifiers
-			rewriteIdentifiers( body, node, toRewrite, scope );
+			rewriteIdentifiers( body, node, toRewrite, scope, unscoped );
 
 			// Add multi-line strings to exclusion ranges
 			if ( node.type === 'TemplateLiteral' ) {
@@ -79,6 +101,11 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		}
 	});
 
+	var defaultName = prefix;
+	if ( bundle.conflicts.hasOwnProperty( prefix ) || mod._exportsNamespace ) {
+		defaultName += '__default';
+	}
+
 	// Remove export statements (but keep declarations)
 	mod.exports.forEach( x => {
 		var name;
@@ -97,14 +124,15 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 				// as the `foo` reference may be used elsewhere
 				defaultValue = body.slice( x.valueStart, x.end ); // in case rewrites occured inside the function body
 				body.remove( x.start, x.valueStart );
-				body.replace( x.end, x.end, '\nvar ' + prefix + '__default = ' + prefix + '__' + name + ';' );
+
+				body.replace( x.end, x.end, '\nvar ' + defaultName + ' = ' + toRewrite[ name ] + ';');
 			} else {
 				// TODO this is a bit convoluted...
 				if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
-					defaultValue = prefix + '__' + name;
-					body.replace( x.start, x.end, 'var ' + prefix + '__default = ' + defaultValue + ';' );
+					defaultValue = toRewrite[ name ];
+					body.replace( x.start, x.end, 'var ' + defaultName + ' = ' + defaultValue + ';');
 				} else {
-					body.replace( x.start, x.valueStart, 'var ' + prefix + '__default = ' );
+					body.replace( x.start, x.valueStart, 'var ' + defaultName + ' = ');
 				}
 			}
 
@@ -128,11 +156,11 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 
 		mod.exports.forEach( x => {
 			if ( x.declaration ) {
-				namespaceExports.push( body.indentStr + 'get ' + x.name + ' () { return ' + prefix + '__' + x.name + '; }' );
+				namespaceExports.push( body.indentStr + 'get ' + x.name + ' () { return ' + toRewrite[ x.name ] + '; }' );
 			}
 
 			else if ( x.default ) {
-				namespaceExports.push( body.indentStr + 'get default () { return ' + prefix + '__default; }' );
+				namespaceExports.push( body.indentStr + 'get default () { return ' + defaultName + '; }' );
 			}
 
 			else {
@@ -180,4 +208,11 @@ function rewriteExportAssignments ( body, node, exports, scope, alreadyExported,
 			alreadyExported[ name ] = true;
 		}
 	}
+}
+
+function wasImported ( bundle, mod, name ) {
+	return (
+		bundle.importsByModule.hasOwnProperty( mod.id ) &&
+		bundle.importsByModule[ mod.id ].hasOwnProperty( name )
+	);
 }

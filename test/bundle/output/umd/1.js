@@ -18,9 +18,9 @@
 
 	'use strict';
 
-	var foo__message = 'yes';
-	var foo__default = foo__message;
+	var message = 'yes';
+	var foo = message;
 
-	console.log( foo__default );
+	console.log( foo );
 
 }));

@@ -41,7 +41,7 @@ export default function getBundle ( options ) {
 				externalModuleLookup: externalModuleLookup,
 				skip: skip,
 				names: names,
-				uniqueNames: getUniqueNames( modules, options.names ),
+				uniqueNames: getUniqueNames( modules, names ),
 				chains: resolveChains( modules, moduleLookup )
 			};
 

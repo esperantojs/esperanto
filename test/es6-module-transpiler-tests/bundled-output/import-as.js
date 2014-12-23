@@ -4,14 +4,14 @@
 
 	/* jshint esnext:true */
 
-	var exporter__a = 'a';
-	var exporter__b = 'b';
-	var exporter__default = 'DEF';
+	var a = 'a';
+	var b = 'b';
+	var exporter = 'DEF';
 
 	/* jshint esnext:true */
 
-	assert.equal(exporter__a, 'a');
-	assert.equal(exporter__b, 'b');
-	assert.equal(exporter__default, 'DEF');
+	assert.equal(a, 'a');
+	assert.equal(b, 'b');
+	assert.equal(exporter, 'DEF');
 
 }).call(global);
