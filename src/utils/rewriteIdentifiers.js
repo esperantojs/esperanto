@@ -3,7 +3,7 @@ export default function rewriteIdentifiers ( body, node, toRewrite, scope ) {
 
 	if ( node.type === 'Identifier' ) {
 		name = node.name;
-		replacement = toRewrite[ name ];
+		replacement = toRewrite.hasOwnProperty( name ) && toRewrite[ name ];
 
 		if ( replacement && !scope.contains( name ) ) {
 			// rewrite

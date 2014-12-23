@@ -96,7 +96,12 @@ function createsBlockScope ( node ) {
 }
 
 function declaresVar ( node ) {
-	return node.type === 'VariableDeclarator'; // TODO const, class? (function taken care of already)
+	// TODO const? (function taken care of already)
+	return (
+		node.type === 'VariableDeclarator' ||
+		node.type === 'ClassExpression' ||
+		node.type === 'ClassDeclaration'
+	);
 }
 
 function declaresLet ( node ) {

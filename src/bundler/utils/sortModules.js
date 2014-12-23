@@ -7,7 +7,7 @@ export default function sortModules ( entry, moduleLookup ) {
 	function visit ( mod ) {
 		// ignore external modules, and modules we've
 		// already included
-		if ( !mod || seen[ mod.id ] ) {
+		if ( !mod || seen.hasOwnProperty( mod.id ) ) {
 			return;
 		}
 

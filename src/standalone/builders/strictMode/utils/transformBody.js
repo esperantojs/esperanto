@@ -95,6 +95,7 @@ export default function transformBody ( mod, body, options ) {
 				return;
 
 			case 'namedFunction':
+			case 'namedClass':
 				if ( x.default ) {
 					// export default function answer () { return 42; }
 					defaultValue = body.slice( x.valueStart, x.end );
@@ -107,6 +108,7 @@ export default function transformBody ( mod, body, options ) {
 				return;
 
 			case 'anonFunction':
+			case 'anonClass':
 				// export default function () {}
 				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 				return;

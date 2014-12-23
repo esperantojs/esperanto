@@ -2,10 +2,10 @@
 
 	'use strict';
 
-	var path__default = require('path');
-	var sander__default = require('sander');
 	var acorn__default = require('acorn');
 	var MagicString__default = require('magic-string');
+	var path__default = require('path');
+	var sander__default = require('sander');
 	var estraverse__default = require('estraverse');
 
 	var annotateAst__Scope = function ( options ) {
@@ -105,7 +105,12 @@
 	}
 
 	function annotateAst__declaresVar ( node ) {
-		return node.type === 'VariableDeclarator'; // TODO const, class? (function taken care of already)
+		// TODO const? (function taken care of already)
+		return (
+			node.type === 'VariableDeclarator' ||
+			node.type === 'ClassExpression' ||
+			node.type === 'ClassDeclaration'
+		);
 	}
 
 	function annotateAst__declaresLet ( node ) {
@@ -247,7 +252,31 @@
 				}
 			}
 
-			// Case 5: `export default 1 + 2`
+			// Case 5: `export class Foo {...}`
+			else if ( d.type === 'ClassDeclaration' ) {
+				result.declaration = true; // TODO remove in favour of result.type
+				result.type = 'namedClass';
+				result.default = !!node.default;
+				result.name = d.id.name;
+			}
+
+			else if ( d.type === 'ClassExpression' ) {
+				result.declaration = true; // TODO remove in favour of result.type
+				result.default = true;
+
+				// Case 6: `export default class Foo {...}`
+				if ( d.id ) {
+					result.type = 'namedClass';
+					result.name = d.id.name;
+				}
+
+				// Case 7: `export default class {...}`
+				else {
+					result.type = 'anonClass';
+				}
+			}
+
+			// Case 8: `export default 1 + 2`
 			else {
 				result.type = 'expression';
 				result.default = true;
@@ -255,7 +284,7 @@
 			}
 		}
 
-		// Case 6: `export { foo, bar };`
+		// Case 9: `export { foo, bar };`
 		else {
 			result.type = 'named';
 			result.specifiers = node.specifiers.map( function(s ) {return { name: s.id.name }}  ); // TODO as?
@@ -293,15 +322,15 @@
 			moduleId = x.path;
 
 			// use existing value
-			if ( name = nameById[ moduleId ] ) {
-				return name;
+			if ( nameById.hasOwnProperty( moduleId ) ) {
+				return nameById[ moduleId ];
 			}
 
 			// if user supplied a function, defer to it
 			if ( userFn && ( name = userFn( moduleId ) ) ) {
 				name = sanitize__default( name );
 
-				if ( usedNames[ name ] ) {
+				if ( usedNames.hasOwnProperty( name ) ) {
 					// TODO write a test for this
 					throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
 				}
@@ -323,7 +352,7 @@
 					while ( i-- ) {
 						candidate = prefix + sanitize__default( parts.slice( i ).join( '__' ) );
 
-						if ( !usedNames[ candidate ] ) {
+						if ( !usedNames.hasOwnProperty( candidate ) ) {
 							name = candidate;
 							break;
 						}
@@ -403,7 +432,7 @@
 		function visit ( mod ) {
 			// ignore external modules, and modules we've
 			// already included
-			if ( !mod || seen[ mod.id ] ) {
+			if ( !mod || seen.hasOwnProperty( mod.id ) ) {
 				return;
 			}
 
@@ -437,8 +466,8 @@
 					if ( s.batch ) {
 						// if this is an internal module, we need to tell that module that
 						// it needs to export an object full of getters
-						if ( namespaceExporter = moduleLookup[ moduleId ] ) {
-							namespaceExporter._exportsNamespace = true;
+						if ( moduleLookup.hasOwnProperty( moduleId ) ) {
+							moduleLookup[ moduleId ]._exportsNamespace = true;
 						}
 
 						return; // TODO can batch imports be chained?
@@ -452,10 +481,8 @@
 				if ( !x.specifiers ) return;
 
 				x.specifiers.forEach( function(s ) {
-					var o = origin[ s.name ];
-
-					if ( o ) {
-						chains[ mod.id + '@' + s.name ] = o;
+					if ( origin.hasOwnProperty( s.name ) ) {
+						chains[ mod.id + '@' + s.name ] = origin[ s.name ];
 					}
 				});
 			});
@@ -482,7 +509,7 @@
 				var id = resolve__default( x.path, mod.file );
 				x.id = id;
 
-				if ( x.default && !names[ id ] && !used[ x.name ] ) {
+				if ( x.default && !names.hasOwnProperty( id ) && !used.hasOwnProperty( x.name ) ) {
 					names[ id ] = x.name;
 					used[ x.name ] = true;
 				}
@@ -495,7 +522,7 @@
 			var parts, i, name;
 
 			// is this already named?
-			if ( names[ mod.id ] ) {
+			if ( names.hasOwnProperty( mod.id ) ) {
 				return;
 			}
 
@@ -505,12 +532,12 @@
 			while ( i-- ) {
 				name = sanitize__default( parts.slice( i ).join( '_' ) );
 
-				if ( !used[ name ] ) {
+				if ( !used.hasOwnProperty( name ) ) {
 					break;
 				}
 			}
 
-			while ( used[ name ] ) {
+			while ( used.hasOwnProperty( name ) ) {
 				name = '_' + name;
 			}
 
@@ -545,7 +572,7 @@
 		}
 
 		name = assignee.name;
-		replacement = names[ name ];
+		replacement = names.hasOwnProperty( name ) && names[ name ];
 
 		if ( !!replacement && !scope.contains( name ) ) {
 			throw new Error( message + '`' + name + '`' );
@@ -558,7 +585,7 @@
 
 		if ( node.type === 'Identifier' ) {
 			name = node.name;
-			replacement = toRewrite[ name ];
+			replacement = toRewrite.hasOwnProperty( name ) && toRewrite[ name ];
 
 			if ( replacement && !scope.contains( name ) ) {
 				// rewrite
@@ -574,7 +601,7 @@
 		imports.forEach( function(x ) {
 			var external;
 
-			if ( !!externalModuleLookup[ x.path ] ) {
+			if ( externalModuleLookup.hasOwnProperty( x.path ) ) {
 				external = true;
 			}
 
@@ -592,7 +619,7 @@
 
 					// If this is a chained import, get the origin
 					hash = moduleId + '@' + specifierName;
-					while ( chains[ hash ] ) {
+					while ( chains.hasOwnProperty( hash ) ) {
 						hash = chains[ hash ];
 						isChained = true;
 					}
@@ -899,7 +926,7 @@
 
 			modulePath = path__default.resolve( base, moduleId + '.js' );
 
-			if ( !promiseById[ moduleId ] ) {
+			if ( !promiseById.hasOwnProperty( moduleId ) ) {
 				promiseById[ moduleId ] = sander__default.readFile( modulePath ).catch( function ( err ) {
 					if ( err.code === 'ENOENT' ) {
 						modulePath = modulePath.replace( /\.js$/, '/index.js' );
@@ -948,7 +975,7 @@
 						}
 
 						// Most likely an external module
-						if ( !externalModuleLookup[ moduleId ] ) {
+						if ( !externalModuleLookup.hasOwnProperty( moduleId ) ) {
 							externalModule = {
 								id: moduleId
 							};
@@ -973,11 +1000,13 @@
 		if ( declaration ) {
 			switch ( declaration.type ) {
 				case 'namedFunction':
+				case 'namedClass':
 					body.remove( declaration.start, declaration.valueStart );
 					exportedValue = declaration.name;
 					break;
 
 				case 'anonFunction':
+				case 'anonClass':
 					if ( declaration.isFinal ) {
 						body.replace( declaration.start, declaration.valueStart, 'return ' );
 					} else {
@@ -1150,11 +1179,13 @@
 		if ( exportDeclaration ) {
 			switch ( exportDeclaration.type ) {
 				case 'namedFunction':
+				case 'namedClass':
 				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
 				body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
 				break;
 
 				case 'anonFunction':
+				case 'anonClass':
 				case 'expression':
 				body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
 				break;
@@ -1427,6 +1458,7 @@
 					return;
 
 				case 'namedFunction':
+				case 'namedClass':
 					if ( x.default ) {
 						// export default function answer () { return 42; }
 						defaultValue = body.slice( x.valueStart, x.end );
@@ -1439,6 +1471,7 @@
 					return;
 
 				case 'anonFunction':
+				case 'anonClass':
 					// export default function () {}
 					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 					return;

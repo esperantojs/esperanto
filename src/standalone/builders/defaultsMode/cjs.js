@@ -24,11 +24,13 @@ export default function cjs ( mod, body, options ) {
 	if ( exportDeclaration ) {
 		switch ( exportDeclaration.type ) {
 			case 'namedFunction':
+			case 'namedClass':
 			body.remove( exportDeclaration.start, exportDeclaration.valueStart );
 			body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
 			break;
 
 			case 'anonFunction':
+			case 'anonClass':
 			case 'expression':
 			body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
 			break;

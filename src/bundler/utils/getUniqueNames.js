@@ -19,7 +19,7 @@ export default function getUniqueNames ( modules, userNames ) {
 			var id = resolve( x.path, mod.file );
 			x.id = id;
 
-			if ( x.default && !names[ id ] && !used[ x.name ] ) {
+			if ( x.default && !names.hasOwnProperty( id ) && !used.hasOwnProperty( x.name ) ) {
 				names[ id ] = x.name;
 				used[ x.name ] = true;
 			}
@@ -32,7 +32,7 @@ export default function getUniqueNames ( modules, userNames ) {
 		var parts, i, name;
 
 		// is this already named?
-		if ( names[ mod.id ] ) {
+		if ( names.hasOwnProperty( mod.id ) ) {
 			return;
 		}
 
@@ -42,12 +42,12 @@ export default function getUniqueNames ( modules, userNames ) {
 		while ( i-- ) {
 			name = sanitize( parts.slice( i ).join( '_' ) );
 
-			if ( !used[ name ] ) {
+			if ( !used.hasOwnProperty( name ) ) {
 				break;
 			}
 		}
 
-		while ( used[ name ] ) {
+		while ( used.hasOwnProperty( name ) ) {
 			name = '_' + name;
 		}
 

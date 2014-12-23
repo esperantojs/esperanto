@@ -1,0 +1,33 @@
+(function (global, factory) {
+
+	'use strict';
+
+	if (typeof define === 'function' && define.amd) {
+		// export as AMD
+		define([], factory);
+	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+		// node/browserify
+		module.exports = factory();
+	} else {
+		// browser global
+		global.myModule = factory();
+	}
+
+}(typeof window !== 'undefined' ? window : this, function () {
+
+	'use strict';
+
+	class main__Foo {
+		constructor( str ) {
+			this.str = str;
+		}
+
+		toString() {
+			return this.str;
+		}
+	}
+	var main__default = main__Foo;
+
+	return main__default;
+
+}));

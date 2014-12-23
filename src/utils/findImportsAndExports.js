@@ -132,7 +132,31 @@ function processExport ( node, source ) {
 			}
 		}
 
-		// Case 5: `export default 1 + 2`
+		// Case 5: `export class Foo {...}`
+		else if ( d.type === 'ClassDeclaration' ) {
+			result.declaration = true; // TODO remove in favour of result.type
+			result.type = 'namedClass';
+			result.default = !!node.default;
+			result.name = d.id.name;
+		}
+
+		else if ( d.type === 'ClassExpression' ) {
+			result.declaration = true; // TODO remove in favour of result.type
+			result.default = true;
+
+			// Case 6: `export default class Foo {...}`
+			if ( d.id ) {
+				result.type = 'namedClass';
+				result.name = d.id.name;
+			}
+
+			// Case 7: `export default class {...}`
+			else {
+				result.type = 'anonClass';
+			}
+		}
+
+		// Case 8: `export default 1 + 2`
 		else {
 			result.type = 'expression';
 			result.default = true;
@@ -140,7 +164,7 @@ function processExport ( node, source ) {
 		}
 	}
 
-	// Case 6: `export { foo, bar };`
+	// Case 9: `export { foo, bar };`
 	else {
 		result.type = 'named';
 		result.specifiers = node.specifiers.map( s => ({ name: s.id.name }) ); // TODO as?

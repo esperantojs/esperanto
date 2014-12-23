@@ -21,7 +21,7 @@ export default function disallowIllegalReassignment ( node, names, scope ) {
 	}
 
 	name = assignee.name;
-	replacement = names[ name ];
+	replacement = names.hasOwnProperty( name ) && names[ name ];
 
 	if ( !!replacement && !scope.contains( name ) ) {
 		throw new Error( message + '`' + name + '`' );

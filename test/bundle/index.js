@@ -116,7 +116,8 @@ module.exports = function () {
 			{ dir: '6', description: 'gives legal names to nested imports' },
 			{ dir: '7', description: 'modules can be skipped' },
 			{ dir: '8', description: 'external module names are guessed (affects UMD only)' },
-			{ dir: '9', description: 'external module names can be specified (affects UMD only)' }
+			{ dir: '9', description: 'external module names can be specified (affects UMD only)' },
+			{ dir: '10', description: 'does not affect ES6 classes' },
 		];
 
 		profiles.forEach( function ( profile ) {
