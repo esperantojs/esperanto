@@ -13,15 +13,15 @@ export default function moduleNameHelper ( userFn, varNames ) {
 		moduleId = x.path;
 
 		// use existing value
-		if ( name = nameById[ moduleId ] ) {
-			return name;
+		if ( nameById.hasOwnProperty( moduleId ) ) {
+			return nameById[ moduleId ];
 		}
 
 		// if user supplied a function, defer to it
 		if ( userFn && ( name = userFn( moduleId ) ) ) {
 			name = sanitize( name );
 
-			if ( usedNames[ name ] ) {
+			if ( usedNames.hasOwnProperty( name ) ) {
 				// TODO write a test for this
 				throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
 			}
@@ -43,7 +43,7 @@ export default function moduleNameHelper ( userFn, varNames ) {
 				while ( i-- ) {
 					candidate = prefix + sanitize( parts.slice( i ).join( '__' ) );
 
-					if ( !usedNames[ candidate ] ) {
+					if ( !usedNames.hasOwnProperty( candidate ) ) {
 						name = candidate;
 						break;
 					}

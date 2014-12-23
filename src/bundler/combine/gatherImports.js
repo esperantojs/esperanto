@@ -4,7 +4,7 @@ export default function gatherImports ( imports, externalModuleLookup, importedB
 	imports.forEach( x => {
 		var external;
 
-		if ( !!externalModuleLookup[ x.path ] ) {
+		if ( externalModuleLookup.hasOwnProperty( x.path ) ) {
 			external = true;
 		}
 
@@ -22,7 +22,7 @@ export default function gatherImports ( imports, externalModuleLookup, importedB
 
 				// If this is a chained import, get the origin
 				hash = moduleId + '@' + specifierName;
-				while ( chains[ hash ] ) {
+				while ( chains.hasOwnProperty( hash ) ) {
 					hash = chains[ hash ];
 					isChained = true;
 				}

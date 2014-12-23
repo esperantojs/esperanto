@@ -55,7 +55,7 @@ export default function getBundle ( options ) {
 
 		modulePath = path.resolve( base, moduleId + '.js' );
 
-		if ( !promiseById[ moduleId ] ) {
+		if ( !promiseById.hasOwnProperty( moduleId ) ) {
 			promiseById[ moduleId ] = sander.readFile( modulePath ).catch( function ( err ) {
 				if ( err.code === 'ENOENT' ) {
 					modulePath = modulePath.replace( /\.js$/, '/index.js' );
@@ -104,7 +104,7 @@ export default function getBundle ( options ) {
 					}
 
 					// Most likely an external module
-					if ( !externalModuleLookup[ moduleId ] ) {
+					if ( !externalModuleLookup.hasOwnProperty( moduleId ) ) {
 						externalModule = {
 							id: moduleId
 						};
