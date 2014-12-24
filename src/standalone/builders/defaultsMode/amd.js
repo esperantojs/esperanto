@@ -1,5 +1,6 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from '../../../utils/packageResult';
+import reorderImports from 'utils/reorderImports';
 
 var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 
@@ -10,12 +11,7 @@ export default function amd ( mod, body, options ) {
 		i;
 
 	// ensure empty imports are at the end
-	i = mod.imports.length;
-	while ( i-- ) {
-		if ( !mod.imports[i].specifiers.length ) {
-			mod.imports.splice( mod.imports.length - 1, 0, mod.imports.splice( i, 1 )[0] );
-		}
-	}
+	reorderImports( mod.imports );
 
 	// gather imports, and remove import declarations
 	mod.imports.forEach( ( x, i ) => {
