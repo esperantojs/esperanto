@@ -9,7 +9,11 @@ export default function getExportBlock ( bundle, entry, indentStr ) {
 
 	// create an export block
 	if ( entry.defaultExport ) {
-		exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
+		var defaultName = name;
+		if ( bundle.conflicts.hasOwnProperty( name ) ) {
+			defaultName += '__default';
+		}
+		exportBlock = indentStr + 'exports[\'default\'] = ' + defaultName + ';';
 	}
 
 	entry.exports.forEach( x => {
@@ -18,12 +22,18 @@ export default function getExportBlock ( bundle, entry, indentStr ) {
 		}
 
 		if ( x.declaration ) {
-			statements.push( indentStr + `__export('${x.name}', function () { return ${name}__${x.name}; });`  );
+			var declName = bundle.conflicts.hasOwnProperty( x.name ) ?
+				name + '__' + x.name :
+				x.name;
+			statements.push( indentStr + `__export('${x.name}', function () { return ${declName}; });`  );
 		}
 
 		else {
 			x.specifiers.forEach( s => {
-				statements.push( indentStr + `__export('${s.name}', function () { return ${name}__${s.name}; });`  );
+				var declName = bundle.conflicts.hasOwnProperty( s.name ) ?
+					name + '__' + s.name :
+					s.name;
+				statements.push( indentStr + `__export('${s.name}', function () { return ${declName}; });`  );
 			});
 		}
 	});

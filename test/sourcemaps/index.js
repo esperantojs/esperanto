@@ -79,7 +79,7 @@ module.exports = function () {
 					});
 
 					smc = new SourceMapConsumer( converted.map );
-					loc = smc.originalPositionFor({ line: 5, column: 20 });
+					loc = smc.originalPositionFor({ line: 5, column: 15 });
 
 					assert.equal( loc.line, 1 );
 					assert.equal( loc.column, 15 );

@@ -2,7 +2,7 @@
 
 	'use strict';
 
-	class main__Foo {
+	class Foo {
 		constructor( str ) {
 			this.str = str;
 		}
@@ -11,8 +11,8 @@
 			return this.str;
 		}
 	}
-	var main__default = main__Foo;
+	var main = Foo;
 
-	module.exports = main__default;
+	module.exports = main;
 
 }).call(global);

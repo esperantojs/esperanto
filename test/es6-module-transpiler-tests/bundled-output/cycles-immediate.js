@@ -4,8 +4,8 @@
 
  /* jshint esnext:true */
 
- function odds__nextOdd(n) {
-   return evens__isEven(n) ? n + 1 : n + 2;
+ function nextOdd(n) {
+   return isEven(n) ? n + 1 : n + 2;
  }
 
  /**
@@ -13,23 +13,23 @@
   * ensure that both this module and the 'evens' module eagerly use something
   * from the other.
   */
- var odds__isOdd = (function(isEven) {
+ var isOdd = (function(isEven) {
    return function(n) {
      return !isEven(n);
    };
- })(evens__isEven);
+ })(isEven);
 
  /* jshint esnext:true */
 
- var evens__nextEven = (function() {
+ var nextEven = (function() {
    return function(n) {
-     var no = odds__nextOdd(n);
+     var no = nextOdd(n);
      return (no === n + 2) ?
        no - 1 : no;
    };
- })(odds__nextOdd);
+ })(nextOdd);
 
- function evens__isEven(n) {
+ function isEven(n) {
    return n % 2 === 0;
  }
 
@@ -48,11 +48,11 @@
   * function declarations are available before what would be a module's
   * "execute" step, per the spec.
   */
- assert.equal(evens__nextEven(1), 2);
- assert.equal(odds__nextOdd(1), 3);
- assert.ok(odds__isOdd(1));
- assert.ok(!odds__isOdd(0));
- assert.ok(evens__isEven(0));
- assert.ok(!evens__isEven(1));
+ assert.equal(nextEven(1), 2);
+ assert.equal(nextOdd(1), 3);
+ assert.ok(isOdd(1));
+ assert.ok(!isOdd(0));
+ assert.ok(isEven(0));
+ assert.ok(!isEven(1));
 
 }).call(global);

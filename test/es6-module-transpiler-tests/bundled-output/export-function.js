@@ -4,13 +4,13 @@
 
   /* jshint esnext:true */
 
-  function exporter__foo() {
+  function foo() {
     return 121;
   }
-  assert.equal(exporter__foo(), 121);
+  assert.equal(foo(), 121);
 
 	/* jshint esnext:true */
 
-	assert.equal(exporter__foo(), 121);
+	assert.equal(foo(), 121);
 
 }).call(global);

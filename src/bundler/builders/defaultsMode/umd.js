@@ -20,7 +20,11 @@ export default function umd ( bundle, body, options ) {
 	}
 
 	if ( x = entry.exports[0] ) {
-		exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+		var name = bundle.uniqueNames[ bundle.entry ];
+		if ( bundle.conflicts.hasOwnProperty( name ) ) {
+			name += '__default';
+		}
+		exportStatement = indentStr + 'return ' + name + ';';
 		body.append( '\n\n' + exportStatement );
 	}
 
