@@ -2,6 +2,7 @@ import packageResult from '../../../utils/packageResult';
 import template from '../../../utils/template';
 import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
+import { globalify, quote, req } from 'utils/mappers';
 
 var introTemplate;
 
@@ -40,18 +41,6 @@ export default function umd ( mod, body, options ) {
 	});
 
 	return packageResult( body, options, 'toUmd' );
-}
-
-function quote ( str ) {
-	return "'" + str + "'";
-}
-
-function req ( path ) {
-	return 'require(\'' + path + '\')';
-}
-
-function globalify ( name ) {
-	return 'global.' + name;
 }
 
 introTemplate = template( `(function (global, factory) {

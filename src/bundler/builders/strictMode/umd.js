@@ -1,6 +1,7 @@
 import template from '../../../utils/template';
 import getExportBlock from './utils/getExportBlock';
 import packageResult from '../../../utils/packageResult';
+import { getId, globalify, quote, req } from 'utils/mappers';
 
 var introTemplate;
 
@@ -60,20 +61,6 @@ export default function umd ( bundle, body, options ) {
 
 	body.prepend( intro ).trim().append( '\n\n}));' );
 	return packageResult( body, options, 'toUmd', true );
-}
-
-function getId ( m ) { return m.id; }
-
-function quote ( str ) {
-	return "'" + str + "'";
-}
-
-function req ( path ) {
-	return 'require(\'' + path + '\')';
-}
-
-function globalify ( name ) {
-	return 'global.' + name;
 }
 
 introTemplate = template( `(function (global, factory) {

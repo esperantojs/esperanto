@@ -2,6 +2,7 @@ import template from '../../../utils/template';
 import packageResult from '../../../utils/packageResult';
 import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
+import { quote } from 'utils/mappers';
 
 var introTemplate;
 
@@ -41,8 +42,4 @@ export default function amd ( mod, body, options ) {
 	});
 
 	return packageResult( body, options, 'toAmd' );
-}
-
-function quote ( str ) {
-	return "'" + str + "'";
 }

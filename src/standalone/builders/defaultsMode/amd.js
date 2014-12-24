@@ -1,6 +1,7 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from '../../../utils/packageResult';
 import reorderImports from 'utils/reorderImports';
+import { quote } from 'utils/mappers';
 
 var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
 
@@ -40,8 +41,4 @@ export default function amd ( mod, body, options ) {
 	body.indent().prepend( intro ).append( '\n\n});' );
 
 	return packageResult( body, options, 'toAmd' );
-}
-
-function quote ( str ) {
-	return "'" + str + "'";
 }
