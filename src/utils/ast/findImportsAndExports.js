@@ -1,3 +1,10 @@
+/**
+ * Inspects a module and discovers/categorises import & export declarations
+ * @param {object} mod - the module object
+ * @param {string} source - the module's original source code
+ * @param {object} ast - the result of parsing `source` with acorn
+ * @returns {array} - [ imports, exports ]
+ */
 export default function findImportsAndExports ( mod, source, ast ) {
 	var imports = [], exports = [], previousDeclaration;
 
@@ -52,6 +59,12 @@ export default function findImportsAndExports ( mod, source, ast ) {
 	return [ imports, exports ];
 }
 
+/**
+ * Generates a representation of an import declaration
+ * @param {object} node - the original AST node
+ * @param {boolean} passthrough - `true` if this is an `export { foo } from 'bar'`-style declaration
+ * @returns {object}
+ */
 function processImport ( node, passthrough ) {
 	var result = {
 		node: node,
@@ -90,6 +103,12 @@ function processImport ( node, passthrough ) {
 	return result;
 }
 
+/**
+ * Generates a representation of an export declaration
+ * @param {object} node - the original AST node
+ * @param {string} source - the original source code
+ * @returns {object}
+ */
 function processExport ( node, source ) {
 	var result, d;
 
