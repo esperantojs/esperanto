@@ -1,16 +1,16 @@
 export default function getExportNames ( exports ) {
-	var result = [];
+	var result = {};
 
 	exports.forEach( x => {
 		if ( x.default ) return;
 
 		if ( x.declaration ) {
-			result.push( x.name );
+			result[ x.name ] = x.name;
 			return;
 		}
 
 		x.specifiers.forEach( s => {
-			result.push( s.name );
+			result[ s.name ] = s.name;
 		});
 	});
 

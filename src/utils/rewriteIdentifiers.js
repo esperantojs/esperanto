@@ -5,7 +5,7 @@ export default function rewriteIdentifiers ( body, node, toRewrite, scope ) {
 		name = node.name;
 		replacement = toRewrite.hasOwnProperty( name ) && toRewrite[ name ];
 
-		if ( replacement && !scope.contains( name ) ) {
+		if ( replacement && !scope.contains( name, true ) ) {
 			// rewrite
 			body.replace( node.start, node.end, replacement );
 		}

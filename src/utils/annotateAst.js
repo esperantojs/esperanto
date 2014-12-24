@@ -12,13 +12,17 @@ Scope.prototype = {
 		this.names.push( name );
 	},
 
-	contains: function ( name ) {
+	contains: function ( name, ignoreTopLevel ) {
+		if ( ignoreTopLevel && !this.parent ) {
+			return false;
+		}
+
 		if ( ~this.names.indexOf( name ) ) {
 			return true;
 		}
 
 		if ( this.parent ) {
-			return this.parent.contains( name );
+			return this.parent.contains( name, ignoreTopLevel );
 		}
 
 		return false;

@@ -1,76 +1,27 @@
-import estraverse from 'estraverse';
-import disallowIllegalReassignment from '../../utils/disallowIllegalReassignment';
-import rewriteIdentifiers from '../../utils/rewriteIdentifiers';
+import traverseAst from '../../utils/traverseAst';
 import gatherImports from './gatherImports';
 
 export default function transformBody ( bundle, mod, body, prefix ) {
-	var scope,
-		scopeNames,
-		blockScope,
-		importedBindings = {},
+	var importedBindings = {},
 		toRewrite = {},
 		readOnly = {},
-		exportNames = [],
+		exportNames,
 		alreadyExported = {},
 		shouldExportEarly = {},
+		exportBlock,
 		defaultValue,
 		indentExclusionRanges = [];
 
-	scope = mod.ast._scope;
-	blockScope = mod.ast._blockScope;
+	mod.ast._scope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
+	mod.ast._blockScope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
 
 	gatherImports( mod.imports, bundle.externalModuleLookup, importedBindings, toRewrite, bundle.chains, bundle.uniqueNames );
 	Object.keys( toRewrite ).forEach( k => readOnly[k] = toRewrite[k] );
 
-	scope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
-
-	// remove top-level names from scope. TODO is there a cleaner way to do this?
-	scopeNames = scope.names;
-	scope.names = [];
-
 	//gatherExports( mod.exports, toRewrite, prefix );
-	//exportNames = getExportNames( mod.exports );
+	exportNames = bundle.exports[ mod.id ];
 
-	estraverse.traverse( mod.ast, {
-		enter: function ( node, parent ) {
-			// we're only interested in references, not property names etc
-			if ( node._skip ) return this.skip();
-
-			if ( node._scope ) {
-				scope = node._scope;
-			} else if ( node._blockScope ) {
-				blockScope = node._blockScope;
-			}
-
-			// Catch illegal reassignments
-			disallowIllegalReassignment( node, readOnly, scope );
-
-			// Rewrite assignments to exports
-			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~mod.ast.body.indexOf( parent ) );
-
-			// Rewrite import and export identifiers
-			rewriteIdentifiers( body, node, toRewrite, scope );
-
-			// Add multi-line strings to exclusion ranges
-			if ( node.type === 'TemplateLiteral' ) {
-				indentExclusionRanges.push([ node.start, node.end ]);
-			}
-		},
-
-		leave: function ( node ) {
-			if ( node.type === 'Program' ) {
-				return;
-			}
-
-			if ( node._scope ) {
-				scope = scope.parent;
-			} else if ( node._blockScope ) {
-				blockScope = blockScope.parent;
-			}
-		}
-	});
-
-	scope.names = scopeNames;
+	traverseAst( mod.ast, body, toRewrite, exportNames, alreadyExported, indentExclusionRanges );
 
 	// remove imports
 	mod.imports.forEach( x => {
@@ -147,37 +98,22 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		body.prepend( namespaceExportBlock );
 	}
 
+	if ( exportNames ) {
+		exportBlock = [];
+
+		Object.keys( exportNames ).forEach( name => {
+			var exportAs = exportNames[ name ],
+				replacement = toRewrite[ name ];
+
+			if ( !alreadyExported[ name ] ) {
+				exportBlock.push( `exports.${exportAs} = ${replacement};` );
+			}
+		});
+
+		if ( exportBlock.length ) {
+			body.trim().append( '\n\n' + exportBlock.join( '\n' ) );
+		}
+	}
+
 	body.trim().indent({ exclude: indentExclusionRanges });
-}
-
-function rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode ) {
-	var assignee, name;
-
-	if ( node.type === 'AssignmentExpression' ) {
-		assignee = node.left;
-	} else if ( node.type === 'UpdateExpression' ) {
-		assignee = node.argument;
-	} else {
-		return; // not an assignment
-	}
-
-	if ( assignee.type !== 'Identifier' ) {
-		return;
-	}
-
-	name = assignee.name;
-	if ( ~exports.indexOf( name ) ) {
-		// special case - increment/decrement operators
-		if ( node.operator === '++' || node.operator === '--' ) {
-			body.replace( node.end, node.end, `, exports.${name} = ${name}` );
-		} else {
-			body.replace( node.start, node.start, `exports.${name} = ` );
-		}
-
-		// keep track of what we've already exported - we don't need to
-		// export it again later
-		if ( isTopLevelNode ) {
-			alreadyExported[ name ] = true;
-		}
-	}
 }
