@@ -3,8 +3,8 @@ import getExportNames from './getExportNames';
 import traverseAst from '../../../../utils/ast/traverse';
 
 export default function transformBody ( mod, body, options ) {
-	var importedBindings = {},
-		toRewrite = {},
+	var importedBindings,
+		toRewrite,
 		exportNames = [],
 		alreadyExported = {},
 		shouldExportEarly = {},
@@ -13,7 +13,7 @@ export default function transformBody ( mod, body, options ) {
 		defaultValue,
 		indentExclusionRanges = [];
 
-	gatherImports( mod.imports, mod.getName, importedBindings, toRewrite );
+	[ importedBindings, toRewrite ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
 
 	traverseAst( mod.ast, body, toRewrite, exportNames, alreadyExported, indentExclusionRanges );

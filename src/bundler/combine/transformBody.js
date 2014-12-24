@@ -1,9 +1,11 @@
-import traverseAst from '../../utils/ast/traverse';
+import extend from 'utils/extend';
+import traverseAst from 'utils/ast/traverse';
 import gatherImports from './gatherImports';
 
 export default function transformBody ( bundle, mod, body, prefix ) {
-	var importedBindings = {},
+	var importedBindings,
 		toRewrite = {},
+		importsToRewrite,
 		readOnly = {},
 		exportNames,
 		alreadyExported = {},
@@ -15,7 +17,9 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 	mod.ast._scope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
 	mod.ast._blockScope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
 
-	gatherImports( mod.imports, bundle.externalModuleLookup, importedBindings, toRewrite, bundle.chains, bundle.uniqueNames );
+	[ importedBindings, importsToRewrite ] = gatherImports( mod.imports, bundle.externalModuleLookup, bundle.chains, bundle.uniqueNames );
+	extend( toRewrite, importsToRewrite );
+
 	Object.keys( toRewrite ).forEach( k => readOnly[k] = toRewrite[k] );
 
 	//gatherExports( mod.exports, toRewrite, prefix );

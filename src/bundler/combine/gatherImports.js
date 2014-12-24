@@ -1,5 +1,5 @@
-export default function gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames ) {
-	var replacements = {};
+export default function gatherImports ( imports, externalModuleLookup, chains, uniqueNames ) {
+	var importedBindings = {}, toRewrite = {};
 
 	imports.forEach( x => {
 		var external;
@@ -50,5 +50,5 @@ export default function gatherImports ( imports, externalModuleLookup, importedB
 		});
 	});
 
-	return replacements;
+	return [ importedBindings, toRewrite ];
 }

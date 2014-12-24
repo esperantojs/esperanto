@@ -1,5 +1,5 @@
-import template from '../../../utils/template';
-import packageResult from '../../../utils/packageResult';
+import template from 'utils/template';
+import packageResult from 'utils/packageResult';
 import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
 import { quote } from 'utils/mappers';

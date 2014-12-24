@@ -1,4 +1,6 @@
-export default function gatherImports ( imports, getName, importedBindings, toRewrite ) {
+export default function gatherImports ( imports, getName ) {
+	var importedBindings = {}, toRewrite = {};
+
 	imports.forEach( x => {
 		x.specifiers.forEach( s => {
 			var name, replacement;
@@ -26,4 +28,6 @@ export default function gatherImports ( imports, getName, importedBindings, toRe
 			}
 		});
 	});
+
+	return [ importedBindings, toRewrite ];
 }

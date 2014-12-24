@@ -1,5 +1,5 @@
-import packageResult from '../../../utils/packageResult';
-import template from '../../../utils/template';
+import packageResult from 'utils/packageResult';
+import template from 'utils/template';
 import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
 import { globalify, quote, req } from 'utils/mappers';
