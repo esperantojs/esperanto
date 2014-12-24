@@ -1,9 +1,9 @@
 import estraverse from 'estraverse';
 import disallowIllegalReassignment from './disallowIllegalReassignment';
-import rewriteIdentifiers from './rewriteIdentifiers';
+import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
 
-export default function traverseAst ( ast, body, toRewrite, exportNames, alreadyExported, indentExclusionRanges ) {
+export default function traverseAst ( ast, body, identifierReplacements, readOnlyNames, exportNames, alreadyExported, indentExclusionRanges ) {
 	var scope, blockScope, capturedUpdates;
 
 	scope = ast._scope;
@@ -36,13 +36,13 @@ export default function traverseAst ( ast, body, toRewrite, exportNames, already
 			}
 
 			// Catch illegal reassignments
-			disallowIllegalReassignment( node, toRewrite, scope );
+			disallowIllegalReassignment( node, identifierReplacements, scope );
 
 			// Rewrite assignments to exports
-			rewriteExportAssignments( body, node, exportNames, scope, toRewrite, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
+			rewriteExportAssignments( body, node, exportNames, scope, identifierReplacements, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
 
-			// Rewrite import identifiers
-			rewriteIdentifiers( body, node, toRewrite, scope );
+			// Replace identifiers
+			replaceIdentifiers( body, node, identifierReplacements, scope );
 
 			// Add multi-line strings to exclusion ranges
 			if ( node.type === 'TemplateLiteral' ) {

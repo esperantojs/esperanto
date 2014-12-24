@@ -1,9 +1,10 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from '../../../utils/packageResult';
 import reorderImports from 'utils/reorderImports';
+import template from 'utils/template';
 import { quote } from 'utils/mappers';
 
-var template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
+var introTemplate = template( 'define(<%= IMPORT_PATHS %>function (<%= IMPORT_NAMES %>) {\n\n' );
 
 export default function amd ( mod, body, options ) {
 	var importNames = [],
@@ -34,9 +35,10 @@ export default function amd ( mod, body, options ) {
 
 	body.prepend( "'use strict';\n\n" ).trim();
 
-	intro = template
-		.replace( '__IMPORT_PATHS__', importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '' )
-		.replace( '__IMPORT_NAMES__', importNames.join( ', ' ) );
+	intro = introTemplate({
+		IMPORT_PATHS: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+		IMPORT_NAMES: importNames.join( ', ' )
+	});
 
 	body.indent().prepend( intro ).append( '\n\n});' );
 

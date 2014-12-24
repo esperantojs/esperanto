@@ -1,5 +1,5 @@
-export default function disallowIllegalReassignment ( node, names, scope ) {
-	var assignee, name, replacement, message;
+export default function disallowIllegalReassignment ( node, readOnlyNames, scope ) {
+	var assignee, name, message;
 
 	if ( node.type === 'AssignmentExpression' ) {
 		assignee = node.left;
@@ -21,9 +21,8 @@ export default function disallowIllegalReassignment ( node, names, scope ) {
 	}
 
 	name = assignee.name;
-	replacement = names.hasOwnProperty( name ) && names[ name ];
 
-	if ( !!replacement && !scope.contains( name ) ) {
+	if ( readOnlyNames.hasOwnProperty( name ) && !scope.contains( name ) ) {
 		throw new Error( message + '`' + name + '`' );
 	}
 }

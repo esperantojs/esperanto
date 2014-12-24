@@ -3,10 +3,8 @@ import traverseAst from 'utils/ast/traverse';
 import gatherImports from './gatherImports';
 
 export default function transformBody ( bundle, mod, body, prefix ) {
-	var importedBindings,
-		toRewrite = {},
-		importsToRewrite,
-		readOnly = {},
+	var identifierReplacements = {},
+		importIdentifierReplacements,
 		exportNames,
 		alreadyExported = {},
 		shouldExportEarly = {},
@@ -14,18 +12,19 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		defaultValue,
 		indentExclusionRanges = [];
 
-	mod.ast._scope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
-	mod.ast._blockScope.names.forEach( n => toRewrite[n] = prefix + '__' + n );
+	// All variables declared at the top level are given a prefix,
+	// as an easy way to deconflict when two or more modules have the
+	// same variable names. TODO deconflict more elegantly (see e.g.
+	// https://github.com/Rich-Harris/esperanto/pull/24)
+	mod.ast._scope.names.forEach( n => identifierReplacements[n] = prefix + '__' + n );
+	mod.ast._blockScope.names.forEach( n => identifierReplacements[n] = prefix + '__' + n );
 
-	[ importedBindings, importsToRewrite ] = gatherImports( mod.imports, bundle.externalModuleLookup, bundle.chains, bundle.uniqueNames );
-	extend( toRewrite, importsToRewrite );
+	importIdentifierReplacements = gatherImports( mod.imports, bundle.externalModuleLookup, bundle.chains, bundle.uniqueNames );
+	extend( identifierReplacements, importIdentifierReplacements );
 
-	Object.keys( toRewrite ).forEach( k => readOnly[k] = toRewrite[k] );
-
-	//gatherExports( mod.exports, toRewrite, prefix );
 	exportNames = bundle.exports[ mod.id ];
 
-	traverseAst( mod.ast, body, toRewrite, exportNames, alreadyExported, indentExclusionRanges );
+	traverseAst( mod.ast, body, identifierReplacements, importIdentifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
 
 	// remove imports
 	mod.imports.forEach( x => {
@@ -107,7 +106,7 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 
 		Object.keys( exportNames ).forEach( name => {
 			var exportAs = exportNames[ name ],
-				replacement = toRewrite[ name ];
+				replacement = identifierReplacements[ name ];
 
 			if ( !alreadyExported[ name ] ) {
 				exportBlock.push( `exports.${exportAs} = ${replacement};` );

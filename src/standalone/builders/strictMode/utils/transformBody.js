@@ -4,7 +4,7 @@ import traverseAst from '../../../../utils/ast/traverse';
 
 export default function transformBody ( mod, body, options ) {
 	var importedBindings,
-		toRewrite,
+		identifierReplacements,
 		exportNames = [],
 		alreadyExported = {},
 		shouldExportEarly = {},
@@ -13,10 +13,10 @@ export default function transformBody ( mod, body, options ) {
 		defaultValue,
 		indentExclusionRanges = [];
 
-	[ importedBindings, toRewrite ] = gatherImports( mod.imports, mod.getName );
+	[ importedBindings, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
 
-	traverseAst( mod.ast, body, toRewrite, exportNames, alreadyExported, indentExclusionRanges );
+	traverseAst( mod.ast, body, identifierReplacements, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
 
 	// Remove import statements
 	mod.imports.forEach( x => {
