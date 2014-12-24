@@ -1,3 +1,9 @@
+/*
+	This module traverse a module's AST, attaching scope information
+	to nodes as it goes, which is later used to determine which
+	identifiers need to be rewritten to avoid collisions
+*/
+
 import estraverse from 'estraverse';
 
 var Scope = function ( options ) {
@@ -111,4 +117,3 @@ function declaresVar ( node ) {
 function declaresLet ( node ) {
 	return false; // TODO
 }
-

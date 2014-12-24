@@ -1,11 +1,11 @@
 import acorn from 'acorn';
 import MagicString from 'magic-string';
-import findImportsAndExports from '../utils/findImportsAndExports';
+import findImportsAndExports from '../utils/ast/findImportsAndExports';
 
-export default function getStandaloneModule ( mod ) {
+export default function getModule ( mod ) {
+	var imports, exports;
+
 	mod.body = new MagicString( mod.source );
-	mod.imports = [];
-	mod.exports = [];
 
 	try {
 		mod.ast = acorn.parse( mod.source, {
@@ -21,7 +21,10 @@ export default function getStandaloneModule ( mod ) {
 		throw err;
 	}
 
-	findImportsAndExports( mod, mod.source, mod.ast, mod.imports, mod.exports );
+	[ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
+
+	mod.imports = imports;
+	mod.exports = exports;
 
 	return mod;
 }

@@ -1,4 +1,4 @@
-import traverseAst from '../../utils/traverseAst';
+import traverseAst from '../../utils/ast/traverse';
 import gatherImports from './gatherImports';
 
 export default function transformBody ( bundle, mod, body, prefix ) {

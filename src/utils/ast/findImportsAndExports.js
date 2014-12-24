@@ -1,5 +1,5 @@
-export default function findImportsAndExports ( mod, source, ast, imports, exports ) {
-	var previousDeclaration;
+export default function findImportsAndExports ( mod, source, ast ) {
+	var imports = [], exports = [], previousDeclaration;
 
 	ast.body.forEach( node => {
 		var passthrough, declaration;
@@ -48,6 +48,8 @@ export default function findImportsAndExports ( mod, source, ast, imports, expor
 		previousDeclaration.next = source.length;
 		previousDeclaration.isFinal = true;
 	}
+
+	return [ imports, exports ];
 }
 
 function processImport ( node, passthrough ) {

@@ -1,7 +1,7 @@
 import estraverse from 'estraverse';
-import disallowIllegalReassignment from '../../../../utils/disallowIllegalReassignment';
-import rewriteIdentifiers from '../../../../utils/rewriteIdentifiers';
-import rewriteExportAssignments from '../../../../utils/rewriteExportAssignments';
+import disallowIllegalReassignment from './disallowIllegalReassignment';
+import rewriteIdentifiers from './rewriteIdentifiers';
+import rewriteExportAssignments from './rewriteExportAssignments';
 
 export default function traverseAst ( ast, body, toRewrite, exportNames, alreadyExported, indentExclusionRanges ) {
 	var scope, blockScope, capturedUpdates;

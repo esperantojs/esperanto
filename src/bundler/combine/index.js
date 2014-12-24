@@ -2,7 +2,7 @@ import path from 'path';
 import MagicString from 'magic-string';
 import resolveExports from './resolveExports';
 import transformBody from './transformBody';
-import annotateAst from '../../utils/annotateAst';
+import annotateAst from '../../utils/ast/annotate';
 
 export default function combine ( bundle ) {
 	var body;

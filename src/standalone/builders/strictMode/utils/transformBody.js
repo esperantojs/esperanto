@@ -1,6 +1,6 @@
 import gatherImports from './gatherImports';
 import getExportNames from './getExportNames';
-import traverseAst from '../../../../utils/traverseAst';
+import traverseAst from '../../../../utils/ast/traverse';
 
 export default function transformBody ( mod, body, options ) {
 	var importedBindings = {},

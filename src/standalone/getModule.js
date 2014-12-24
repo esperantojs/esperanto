@@ -1,11 +1,11 @@
 import acorn from 'acorn';
 import MagicString from 'magic-string';
-import annotateAst from '../utils/annotateAst';
-import findImportsAndExports from '../utils/findImportsAndExports';
+import annotateAst from '../utils/ast/annotate';
+import findImportsAndExports from '../utils/ast/findImportsAndExports';
 import getModuleNameHelper from './getModuleNameHelper';
 
 export default function getStandaloneModule ( options ) {
-	var mod, varNames;
+	var mod, varNames, imports, exports;
 
 	mod = {
 		source: options.source,
@@ -13,9 +13,7 @@ export default function getStandaloneModule ( options ) {
 		ast: acorn.parse( options.source, {
 			ecmaVersion: 6,
 			locations: true
-		}),
-		imports: [],
-		exports: []
+		})
 	};
 
 	if ( options.strict ) {
@@ -25,7 +23,10 @@ export default function getStandaloneModule ( options ) {
 
 	mod.getName = getModuleNameHelper( options.getModuleName, varNames );
 
-	findImportsAndExports( mod, mod.source, mod.ast, mod.imports, mod.exports, options.getModuleName );
+	[ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
+
+	mod.imports = imports;
+	mod.exports = exports;
 
 	return mod;
 }
