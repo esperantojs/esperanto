@@ -1,13 +1,13 @@
 import template from '../../../utils/template';
 import getExportBlock from './utils/getExportBlock';
 import packageResult from '../../../utils/packageResult';
+import { getId, globalify, quote, req } from 'utils/mappers';
 
 var introTemplate;
 
 export default function umd ( bundle, body, options ) {
 	var defaultsBlock,
 		entry = bundle.entryModule,
-		exportBlock,
 		importPaths,
 		importNames,
 		amdDeps,
@@ -41,8 +41,9 @@ export default function umd ( bundle, body, options ) {
 		globals = [ options.name ].concat( importNames ).map( globalify ).join( ', ' );
 		names   = [ 'exports' ].concat( importNames ).join( ', ' );
 
-		exportBlock = getExportBlock( bundle, entry, indentStr );
-		body.append( '\n\n' + exportBlock );
+		if ( entry.defaultExport ) {
+			body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
+		}
 	} else {
 		amdDeps = importPaths.map( quote ).join( ', ' );
 		cjsDeps = importPaths.map( req ).join( ', ' );
@@ -60,20 +61,6 @@ export default function umd ( bundle, body, options ) {
 
 	body.prepend( intro ).trim().append( '\n\n}));' );
 	return packageResult( body, options, 'toUmd', true );
-}
-
-function getId ( m ) { return m.id; }
-
-function quote ( str ) {
-	return "'" + str + "'";
-}
-
-function req ( path ) {
-	return 'require(\'' + path + '\')';
-}
-
-function globalify ( name ) {
-	return 'global.' + name;
 }
 
 introTemplate = template( `(function (global, factory) {

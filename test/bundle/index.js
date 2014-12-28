@@ -112,12 +112,13 @@ module.exports = function () {
 			{ dir: '2', description: 'bundles modules in index.js files' },
 			{ dir: '3', description: 'allows external imports' },
 			{ dir: '4', description: 'exports a default export' },
-			{ dir: '5', description: 'exports named exports', 'strict': true },
+			{ dir: '5', description: 'exports named exports', strict: true },
 			{ dir: '6', description: 'gives legal names to nested imports' },
 			{ dir: '7', description: 'modules can be skipped' },
 			{ dir: '8', description: 'external module names are guessed (affects UMD only)' },
 			{ dir: '9', description: 'external module names can be specified (affects UMD only)' },
 			{ dir: '10', description: 'does not affect ES6 classes' },
+			{ dir: '11', description: 'exports chains correctly in strict mode', strict: true }
 		];
 
 		profiles.forEach( function ( profile ) {

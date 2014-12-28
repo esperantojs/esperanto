@@ -4,7 +4,6 @@ import packageResult from '../../../utils/packageResult';
 export default function cjs ( bundle, body, options ) {
 	var importBlock,
 		entry = bundle.entryModule,
-		exportBlock,
 		intro,
 		indentStr;
 
@@ -21,9 +20,8 @@ export default function cjs ( bundle, body, options ) {
 		body.prepend( importBlock + '\n\n' );
 	}
 
-	if ( entry.exports.length ) {
-		exportBlock = getExportBlock( bundle, entry, indentStr );
-		body.append( '\n\n' + exportBlock );
+	if ( entry.defaultExport ) {
+		body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
 	}
 
 	intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";

@@ -1,5 +1,5 @@
-import resolve from '../../utils/resolve';
-import sanitize from '../../utils/sanitize';
+import resolve from 'utils/resolve';
+import sanitize from 'utils/sanitize';
 
 // TODO use sensible names, inferring from defaults where poss
 export default function getUniqueNames ( modules, userNames ) {

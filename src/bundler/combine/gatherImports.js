@@ -1,8 +1,12 @@
-export default function gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames ) {
-	var replacements = {};
+export default function gatherImports ( imports, externalModuleLookup, chains, uniqueNames ) {
+	var importIdentifierReplacements = {};
 
 	imports.forEach( x => {
 		var external;
+
+		if ( x.passthrough ) {
+			return;
+		}
 
 		if ( externalModuleLookup.hasOwnProperty( x.path ) ) {
 			external = true;
@@ -42,13 +46,9 @@ export default function gatherImports ( imports, externalModuleLookup, importedB
 				}
 			}
 
-			importedBindings[ name ] = replacement;
-
-			if ( !x.passthrough ) {
-				toRewrite[ name ] = replacement;
-			}
+			importIdentifierReplacements[ name ] = replacement;
 		});
 	});
 
-	return replacements;
+	return importIdentifierReplacements;
 }

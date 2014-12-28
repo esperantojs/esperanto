@@ -1,15 +1,16 @@
-import packageResult from '../../../utils/packageResult';
-import template from '../../../utils/template';
-import reorderImports from './utils/reorderImports';
+import packageResult from 'utils/packageResult';
+import template from 'utils/template';
+import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
+import getImportSummary from './utils/getImportSummary';
+import { globalify, quote, req } from 'utils/mappers';
 
 var introTemplate;
 
 export default function umd ( mod, body, options ) {
-	var importPaths = [],
-		importNames = [],
-		intro,
-		i;
+	var importPaths,
+		importNames,
+		intro;
 
 	if ( !options.name ) {
 		throw new Error( 'You must supply a `name` option for UMD modules' );
@@ -17,14 +18,7 @@ export default function umd ( mod, body, options ) {
 
 	reorderImports( mod.imports );
 
-	// gather imports, and remove import declarations
-	mod.imports.forEach( ( x, i ) => {
-		importPaths[i] = x.path;
-
-		if ( x.specifiers.length ) {
-			importNames[i] = mod.getName( x );
-		}
-	});
+	[ importPaths, importNames ] = getImportSummary( mod );
 
 	intro = introTemplate({
 		amdDeps: [ 'exports' ].concat( importPaths ).map( quote ).join( ', ' ),
@@ -40,18 +34,6 @@ export default function umd ( mod, body, options ) {
 	});
 
 	return packageResult( body, options, 'toUmd' );
-}
-
-function quote ( str ) {
-	return "'" + str + "'";
-}
-
-function req ( path ) {
-	return 'require(\'' + path + '\')';
-}
-
-function globalify ( name ) {
-	return 'global.' + name;
 }
 
 introTemplate = template( `(function (global, factory) {

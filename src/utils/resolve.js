@@ -1,3 +1,9 @@
+/**
+ * Resolves an importPath relative to the module that is importing it
+ * @param {string} importPath - the (possibly relative) path of an imported module
+ * @param {string} importerPath - the (relative to `base`) path of the importing module
+ * @returns {string}
+ */
 export default function resolve ( importPath, importerPath ) {
 	var resolved, importerParts, importParts;
 

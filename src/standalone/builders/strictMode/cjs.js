@@ -1,4 +1,4 @@
-import packageResult from '../../../utils/packageResult';
+import packageResult from 'utils/packageResult';
 import transformBody from './utils/transformBody';
 
 var intro = '(function () {\n\n\t\'use strict\';\n\n';

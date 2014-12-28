@@ -1,3 +1,9 @@
+/*
+	This module traverse a module's AST, attaching scope information
+	to nodes as it goes, which is later used to determine which
+	identifiers need to be rewritten to avoid collisions
+*/
+
 import estraverse from 'estraverse';
 
 var Scope = function ( options ) {
@@ -12,13 +18,17 @@ Scope.prototype = {
 		this.names.push( name );
 	},
 
-	contains: function ( name ) {
+	contains: function ( name, ignoreTopLevel ) {
+		if ( ignoreTopLevel && !this.parent ) {
+			return false;
+		}
+
 		if ( ~this.names.indexOf( name ) ) {
 			return true;
 		}
 
 		if ( this.parent ) {
-			return this.parent.contains( name );
+			return this.parent.contains( name, ignoreTopLevel );
 		}
 
 		return false;
@@ -107,4 +117,3 @@ function declaresVar ( node ) {
 function declaresLet ( node ) {
 	return false; // TODO
 }
-

@@ -5,7 +5,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 
 	// First pass - resolving intra-module chains
 	modules.forEach( mod => {
-		var origin = {}, namespaceExporter;
+		var origin = {};
 
 		mod.imports.forEach( x => {
 			x.specifiers.forEach( s => {

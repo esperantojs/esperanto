@@ -1,6 +1,6 @@
-import sanitize from '../utils/sanitize';
+import sanitize from 'utils/sanitize';
 
-export default function moduleNameHelper ( userFn, varNames ) {
+export default function getModuleNameHelper ( userFn, varNames ) {
 	var nameById = {}, usedNames = {}, getModuleName;
 
 	if ( varNames ) {

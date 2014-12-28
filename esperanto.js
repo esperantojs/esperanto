@@ -1,12 +1,18 @@
 (function () {
 
-	'use strict';
+ 'use strict';
 
-	var acorn__default = require('acorn');
-	var MagicString__default = require('magic-string');
-	var path__default = require('path');
-	var sander__default = require('sander');
-	var estraverse__default = require('estraverse');
+ var acorn__default = require('acorn');
+ var MagicString__default = require('magic-string');
+ var path__default = require('path');
+ var sander__default = require('sander');
+ var estraverse__default = require('estraverse');
+
+	/*
+		This module traverse a module's AST, attaching scope information
+		to nodes as it goes, which is later used to determine which
+		identifiers need to be rewritten to avoid collisions
+	*/
 
 	var annotateAst__Scope = function ( options ) {
 		options = options || {};
@@ -20,13 +26,17 @@
 			this.names.push( name );
 		},
 
-		contains: function ( name ) {
+		contains: function ( name, ignoreTopLevel ) {
+			if ( ignoreTopLevel && !this.parent ) {
+				return false;
+			}
+
 			if ( ~this.names.indexOf( name ) ) {
 				return true;
 			}
 
 			if ( this.parent ) {
-				return this.parent.contains( name );
+				return this.parent.contains( name, ignoreTopLevel );
 			}
 
 			return false;
@@ -117,8 +127,15 @@
 		return false; // TODO
 	}
 
-	function findImportsAndExports__findImportsAndExports ( mod, source, ast, imports, exports ) {
-		var previousDeclaration;
+	/**
+	 * Inspects a module and discovers/categorises import & export declarations
+	 * @param {object} mod - the module object
+	 * @param {string} source - the module's original source code
+	 * @param {object} ast - the result of parsing `source` with acorn
+	 * @returns {array} - [ imports, exports ]
+	 */
+	function findImportsAndExports__findImportsAndExports ( mod, source, ast ) {
+		var imports = [], exports = [], previousDeclaration;
 
 		ast.body.forEach( function(node ) {
 			var passthrough, declaration;
@@ -167,9 +184,17 @@
 			previousDeclaration.next = source.length;
 			previousDeclaration.isFinal = true;
 		}
+
+		return [ imports, exports ];
 	}
 	var findImportsAndExports__default = findImportsAndExports__findImportsAndExports;
 
+	/**
+	 * Generates a representation of an import declaration
+	 * @param {object} node - the original AST node
+	 * @param {boolean} passthrough - `true` if this is an `export { foo } from 'bar'`-style declaration
+	 * @returns {object}
+	 */
 	function findImportsAndExports__processImport ( node, passthrough ) {
 		var result = {
 			node: node,
@@ -208,6 +233,12 @@
 		return result;
 	}
 
+	/**
+	 * Generates a representation of an export declaration
+	 * @param {object} node - the original AST node
+	 * @param {string} source - the original source code
+	 * @returns {object}
+	 */
 	function findImportsAndExports__processExport ( node, source ) {
 		var result, d;
 
@@ -295,6 +326,11 @@
 
 	var sanitize__reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
 
+	/**
+	 * Generates a sanitized (i.e. valid identifier) name from a module ID
+	 * @param {string} id - a module ID, or part thereof
+	 * @returns {string}
+	 */
 	function sanitize__sanitize ( name ) {
 		name = name.replace( /[^a-zA-Z0-9_$]/g, '_' );
 		if ( /[^a-zA-Z_$]/.test( name[0] ) ) {
@@ -309,7 +345,7 @@
 	}
 	var sanitize__default = sanitize__sanitize;
 
-	function getModuleNameHelper__moduleNameHelper ( userFn, varNames ) {
+	function getModuleNameHelper__getModuleNameHelper ( userFn, varNames ) {
 		var nameById = {}, usedNames = {}, getModuleName;
 
 		if ( varNames ) {
@@ -370,10 +406,10 @@
 
 		return getModuleName;
 	}
-	var getModuleNameHelper__default = getModuleNameHelper__moduleNameHelper;
+	var getModuleNameHelper__default = getModuleNameHelper__getModuleNameHelper;
 
-	function getStandaloneModule__getStandaloneModule ( options ) {
-		var mod, varNames;
+	function getStandaloneModule__getStandaloneModule ( options ) {var $D$0;
+		var mod, varNames, imports, exports;
 
 		mod = {
 			source: options.source,
@@ -381,9 +417,7 @@
 			ast: acorn__default.parse( options.source, {
 				ecmaVersion: 6,
 				locations: true
-			}),
-			imports: [],
-			exports: []
+			})
 		};
 
 		if ( options.strict ) {
@@ -393,12 +427,21 @@
 
 		mod.getName = getModuleNameHelper__default( options.getModuleName, varNames );
 
-		findImportsAndExports__default( mod, mod.source, mod.ast, mod.imports, mod.exports, options.getModuleName );
+		imports = ($D$0 = findImportsAndExports__default( mod, mod.source, mod.ast ))[0], exports = $D$0[1], $D$0;
+
+		mod.imports = imports;
+		mod.exports = exports;
 
 		return mod;
-	}
+	;$D$0 = void 0}
 	var getStandaloneModule__default = getStandaloneModule__getStandaloneModule;
 
+	/**
+	 * Resolves an importPath relative to the module that is importing it
+	 * @param {string} importPath - the (possibly relative) path of an imported module
+	 * @param {string} importerPath - the (relative to `base`) path of the importing module
+	 * @returns {string}
+	 */
 	function resolve__resolve ( importPath, importerPath ) {
 		var resolved, importerParts, importParts;
 
@@ -457,7 +500,7 @@
 
 		// First pass - resolving intra-module chains
 		modules.forEach( function(mod ) {
-			var origin = {}, namespaceExporter;
+			var origin = {};
 
 			mod.imports.forEach( function(x ) {
 				x.specifiers.forEach( function(s ) {
@@ -549,8 +592,67 @@
 	}
 	var getUniqueNames__default = getUniqueNames__getUniqueNames;
 
-	function disallowIllegalReassignment__disallowIllegalReassignment ( node, names, scope ) {
-		var assignee, name, replacement, message;
+	function resolveExports__resolveExports ( bundle ) {
+		var bundleExports = {};
+
+		bundle.entryModule.exports.forEach( function(x ) {
+			var name;
+
+			if ( x.specifiers ) {
+				x.specifiers.forEach( function(s ) {
+					var hash = bundle.entryModule.id + '@' + s.name,
+						split,
+						moduleId,
+						name;
+
+					while ( bundle.chains[ hash ] ) {
+						hash = bundle.chains[ hash ];
+					}
+
+					split = hash.split( '@' );
+					moduleId = split[0];
+					name = split[1];
+
+					addExport( moduleId, name, s.name );
+
+					// if ( !bundleExports[ moduleId ] ) {
+					// 	bundleExports[ moduleId ] = {};
+					// }
+
+					// bundleExports[ moduleId ][ name ] = s.name;
+				});
+			}
+
+			else if ( !x.default && ( name = x.name ) ) {
+				addExport( bundle.entry, name, name );
+			}
+		});
+
+		function addExport ( moduleId, name, as ) {
+			if ( !bundleExports[ moduleId ] ) {
+				bundleExports[ moduleId ] = {};
+			}
+
+			bundleExports[ moduleId ][ name ] = as;
+		}
+
+		return bundleExports;
+	}
+	var resolveExports__default = resolveExports__resolveExports;
+
+	function extend__extend ( target ) {var SLICE$0 = Array.prototype.slice;var sources = SLICE$0.call(arguments, 1);
+		sources.forEach( function(source ) {
+			Object.keys( source ).forEach( function(key ) {
+				target[ key ] = source[ key ];
+			});
+		});
+
+		return target;
+	}
+	var extend__default = extend__extend;
+
+	function disallowIllegalReassignment__disallowIllegalReassignment ( node, readOnlyNames, scope ) {
+		var assignee, name, message;
 
 		if ( node.type === 'AssignmentExpression' ) {
 			assignee = node.left;
@@ -572,34 +674,145 @@
 		}
 
 		name = assignee.name;
-		replacement = names.hasOwnProperty( name ) && names[ name ];
 
-		if ( !!replacement && !scope.contains( name ) ) {
+		if ( readOnlyNames.hasOwnProperty( name ) && !scope.contains( name ) ) {
 			throw new Error( message + '`' + name + '`' );
 		}
 	}
 	var disallowIllegalReassignment__default = disallowIllegalReassignment__disallowIllegalReassignment;
 
-	function rewriteIdentifiers__rewriteIdentifiers ( body, node, toRewrite, scope ) {
+	function replaceIdentifiers__rewriteIdentifiers ( body, node, toRewrite, scope ) {
 		var name, replacement;
 
 		if ( node.type === 'Identifier' ) {
 			name = node.name;
 			replacement = toRewrite.hasOwnProperty( name ) && toRewrite[ name ];
 
-			if ( replacement && !scope.contains( name ) ) {
+			if ( replacement && !scope.contains( name, true ) ) {
 				// rewrite
 				body.replace( node.start, node.end, replacement );
 			}
 		}
 	}
-	var rewriteIdentifiers__default = rewriteIdentifiers__rewriteIdentifiers;
+	var replaceIdentifiers__default = replaceIdentifiers__rewriteIdentifiers;
 
-	function gatherImports__gatherImports ( imports, externalModuleLookup, importedBindings, toRewrite, chains, uniqueNames ) {
-		var replacements = {};
+	function rewriteExportAssignments__rewriteExportAssignments ( body, node, exports, scope, toRewrite, alreadyExported, isTopLevelNode, capturedUpdates ) {
+		var assignee, name, exportAs;
+
+		if ( node.type === 'AssignmentExpression' ) {
+			assignee = node.left;
+		} else if ( node.type === 'UpdateExpression' ) {
+			assignee = node.argument;
+		} else {
+			return; // not an assignment
+		}
+
+		if ( assignee.type !== 'Identifier' ) {
+			return;
+		}
+
+		name = assignee.name;
+		if ( exports && ( exportAs = exports[ name ] ) ) {
+			if ( !!capturedUpdates ) {
+				capturedUpdates.push({
+					name: name,
+					exportAs: exportAs
+				});
+				return;
+			}
+
+			// special case - increment/decrement operators
+			if ( node.operator === '++' || node.operator === '--' ) {
+				body.replace( node.end, node.end, ((", exports." + exportAs) + (" = " + name) + "") );
+			} else {
+				body.replace( node.start, node.start, (("exports." + exportAs) + " = ") );
+			}
+
+			// keep track of what we've already exported - we don't need to
+			// export it again later
+			if ( isTopLevelNode ) {
+				alreadyExported[ name ] = true;
+			}
+		}
+	}
+	var rewriteExportAssignments__default = rewriteExportAssignments__rewriteExportAssignments;
+
+	function traverseAst__traverseAst ( ast, body, identifierReplacements, readOnlyNames, exportNames, alreadyExported, indentExclusionRanges ) {
+		var scope, blockScope, capturedUpdates;
+
+		scope = ast._scope;
+		blockScope = ast._blockScope;
+
+		capturedUpdates = null;
+
+		// scope is now the global scope
+		estraverse__default.traverse( ast, {
+			enter: function ( node, parent ) {
+				// we're only interested in references, not property names etc
+				if ( node._skip ) return this.skip();
+
+				if ( node._scope ) {
+					scope = node._scope;
+				} else if ( node._blockScope ) {
+					blockScope = node._blockScope;
+				}
+
+				// Special case: if you have a variable declaration that updates existing
+				// bindings as a side-effect, e.g. `var a = b++`, where `b` is an exported
+				// value, we can't simply append `exports.b = b` to the update (as we
+				// normally would) because that would be syntactically invalid. Instead,
+				// we capture the change and update the export (and any others) after the
+				// variable declaration
+				if ( node.type === 'VariableDeclaration' ) {
+					var previous = capturedUpdates;
+					capturedUpdates = [];
+					capturedUpdates.previous = previous;
+				}
+
+				// Catch illegal reassignments
+				disallowIllegalReassignment__default( node, readOnlyNames, scope );
+
+				// Rewrite assignments to exports
+				rewriteExportAssignments__default( body, node, exportNames, scope, identifierReplacements, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
+
+				// Replace identifiers
+				replaceIdentifiers__default( body, node, identifierReplacements, scope );
+
+				// Add multi-line strings to exclusion ranges
+				if ( node.type === 'TemplateLiteral' ) {
+					indentExclusionRanges.push([ node.start, node.end ]);
+				}
+			},
+
+			leave: function ( node ) {
+				// Special case - see above
+				if ( node.type === 'VariableDeclaration' ) {
+					if ( capturedUpdates.length ) {
+						body.replace( node.end, node.end, capturedUpdates.map( function(c ) {return ((" exports." + (c.name)) + (" = " + (c.exportAs)) + ";")} ).join( '' ) );
+					}
+
+					capturedUpdates = capturedUpdates.previous;
+				}
+
+				if ( node._scope ) {
+					scope = scope.parent;
+				} else if ( node._blockScope ) {
+					blockScope = blockScope.parent;
+				}
+			}
+		});
+	}
+	var traverseAst__default = traverseAst__traverseAst;
+
+	function gatherImports__gatherImports ( imports, externalModuleLookup, chains, uniqueNames ) {
+		var importIdentifierReplacements = {};
 
 		imports.forEach( function(x ) {
 			var external;
+
+			if ( x.passthrough ) {
+				return;
+			}
 
 			if ( externalModuleLookup.hasOwnProperty( x.path ) ) {
 				external = true;
@@ -639,86 +852,37 @@
 					}
 				}
 
-				importedBindings[ name ] = replacement;
-
-				if ( !x.passthrough ) {
-					toRewrite[ name ] = replacement;
-				}
+				importIdentifierReplacements[ name ] = replacement;
 			});
 		});
 
-		return replacements;
+		return importIdentifierReplacements;
 	}
 	var gatherImports__default = gatherImports__gatherImports;
 
 	function transformBody__transformBody ( bundle, mod, body, prefix ) {
-		var scope,
-			scopeNames,
-			blockScope,
-			importedBindings = {},
-			toRewrite = {},
-			readOnly = {},
-			exportNames = [],
+		var identifierReplacements = {},
+			importIdentifierReplacements,
+			exportNames,
 			alreadyExported = {},
 			shouldExportEarly = {},
+			exportBlock,
 			defaultValue,
 			indentExclusionRanges = [];
 
-		scope = mod.ast._scope;
-		blockScope = mod.ast._blockScope;
+		// All variables declared at the top level are given a prefix,
+		// as an easy way to deconflict when two or more modules have the
+		// same variable names. TODO deconflict more elegantly (see e.g.
+		// https://github.com/Rich-Harris/esperanto/pull/24)
+		mod.ast._scope.names.forEach( function(n ) {return identifierReplacements[n] = prefix + '__' + n} );
+		mod.ast._blockScope.names.forEach( function(n ) {return identifierReplacements[n] = prefix + '__' + n} );
 
-		gatherImports__default( mod.imports, bundle.externalModuleLookup, importedBindings, toRewrite, bundle.chains, bundle.uniqueNames );
-		Object.keys( toRewrite ).forEach( function(k ) {return readOnly[k] = toRewrite[k]} );
+		importIdentifierReplacements = gatherImports__default( mod.imports, bundle.externalModuleLookup, bundle.chains, bundle.uniqueNames );
+		extend__default( identifierReplacements, importIdentifierReplacements );
 
-		scope.names.forEach( function(n ) {return toRewrite[n] = prefix + '__' + n} );
+		exportNames = bundle.exports[ mod.id ];
 
-		// remove top-level names from scope. TODO is there a cleaner way to do this?
-		scopeNames = scope.names;
-		scope.names = [];
-
-		//gatherExports( mod.exports, toRewrite, prefix );
-		//exportNames = getExportNames( mod.exports );
-
-		estraverse__default.traverse( mod.ast, {
-			enter: function ( node, parent ) {
-				// we're only interested in references, not property names etc
-				if ( node._skip ) return this.skip();
-
-				if ( node._scope ) {
-					scope = node._scope;
-				} else if ( node._blockScope ) {
-					blockScope = node._blockScope;
-				}
-
-				// Catch illegal reassignments
-				disallowIllegalReassignment__default( node, readOnly, scope );
-
-				// Rewrite assignments to exports
-				transformBody__rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~mod.ast.body.indexOf( parent ) );
-
-				// Rewrite import and export identifiers
-				rewriteIdentifiers__default( body, node, toRewrite, scope );
-
-				// Add multi-line strings to exclusion ranges
-				if ( node.type === 'TemplateLiteral' ) {
-					indentExclusionRanges.push([ node.start, node.end ]);
-				}
-			},
-
-			leave: function ( node ) {
-				if ( node.type === 'Program' ) {
-					return;
-				}
-
-				if ( node._scope ) {
-					scope = scope.parent;
-				} else if ( node._blockScope ) {
-					blockScope = blockScope.parent;
-				}
-			}
-		});
-
-		scope.names = scopeNames;
+		traverseAst__default( mod.ast, body, identifierReplacements, importIdentifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
 
 		// remove imports
 		mod.imports.forEach( function(x ) {
@@ -732,7 +896,7 @@
 			var name;
 
 			if ( x.default ) {
-				if ( x.node.declaration && x.node.declaration.id && ( name = x.node.declaration.id.name ) ) {
+				if ( x.type === 'namedFunction' || x.type === 'namedClass' ) {
 					// if you have a default export like
 					//
 					//     export default function foo () {...}
@@ -743,25 +907,29 @@
 					//     exports.default = foo;
 					//
 					// as the `foo` reference may be used elsewhere
-					defaultValue = body.slice( x.valueStart, x.end ); // in case rewrites occured inside the function body
+
+					// remove the `export default `, keep the rest
 					body.remove( x.start, x.valueStart );
-					body.replace( x.end, x.end, '\nvar ' + prefix + '__default = ' + prefix + '__' + name + ';' );
-				} else {
-					// TODO this is a bit convoluted...
-					if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
-						defaultValue = prefix + '__' + name;
-						body.replace( x.start, x.end, 'var ' + prefix + '__default = ' + defaultValue + ';' );
-					} else {
-						body.replace( x.start, x.valueStart, 'var ' + prefix + '__default = ' );
-					}
+
+					// export the function for other modules to use (TODO this shouldn't be necessary)
+					body.replace( x.end, x.end, (("\nvar " + prefix) + ("__default = " + prefix) + ("__" + (x.name)) + ";") );
+				}
+
+				else if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
+					defaultValue = prefix + '__' + name;
+					body.replace( x.start, x.end, (("var " + prefix) + ("__default = " + defaultValue) + ";") );
+				}
+
+				else {
+					body.replace( x.start, x.valueStart, (("var " + prefix) + "__default = ") );
 				}
 
 				return;
 			}
 
 			if ( x.declaration ) {
-				if ( x.node.declaration.type === 'FunctionDeclaration' ) {
-					shouldExportEarly[ x.node.declaration.id.name ] = true; // TODO what about `function foo () {}; export { foo }`?
+				if ( x.type === 'namedFunction' ) {
+					shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
 				}
 
 				body.remove( x.start, x.valueStart );
@@ -771,21 +939,21 @@
 		});
 
 		if ( mod._exportsNamespace ) {
-			var namespaceExportBlock = 'var ' + prefix + ' = {\n',
+			var namespaceExportBlock = (("var " + prefix) + " = {\n"),
 				namespaceExports = [];
 
 			mod.exports.forEach( function(x ) {
 				if ( x.declaration ) {
-					namespaceExports.push( body.indentStr + 'get ' + x.name + ' () { return ' + prefix + '__' + x.name + '; }' );
+					namespaceExports.push( body.indentStr + (("get " + (x.name)) + (" () { return " + prefix) + ("__" + (x.name)) + "; }") );
 				}
 
 				else if ( x.default ) {
-					namespaceExports.push( body.indentStr + 'get default () { return ' + prefix + '__default; }' );
+					namespaceExports.push( body.indentStr + (("get default () { return " + prefix) + "__default; }") );
 				}
 
 				else {
 					x.specifiers.forEach( function(s ) {
-						namespaceExports.push( body.indentStr + 'get ' + s.name + ' () { return ' + s.name + '; }' );
+						namespaceExports.push( body.indentStr + (("get " + (s.name)) + (" () { return " + (s.name)) + "; }") );
 					});
 				}
 			});
@@ -795,46 +963,35 @@
 			body.prepend( namespaceExportBlock );
 		}
 
+		if ( exportNames ) {
+			exportBlock = [];
+
+			Object.keys( exportNames ).forEach( function(name ) {
+				var exportAs;
+
+				if ( !alreadyExported[ name ] ) {
+					exportAs = exportNames[ name ];
+					exportBlock.push( (("exports." + exportAs) + (" = " + prefix) + ("__" + name) + ";") );
+				}
+			});
+
+			if ( exportBlock.length ) {
+				body.trim().append( '\n\n' + exportBlock.join( '\n' ) );
+			}
+		}
+
 		body.trim().indent({ exclude: indentExclusionRanges });
 	}
 	var transformBody__default = transformBody__transformBody;
 
-	function transformBody__rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode ) {
-		var assignee, name;
-
-		if ( node.type === 'AssignmentExpression' ) {
-			assignee = node.left;
-		} else if ( node.type === 'UpdateExpression' ) {
-			assignee = node.argument;
-		} else {
-			return; // not an assignment
-		}
-
-		if ( assignee.type !== 'Identifier' ) {
-			return;
-		}
-
-		name = assignee.name;
-		if ( ~exports.indexOf( name ) ) {
-			// special case - increment/decrement operators
-			if ( node.operator === '++' || node.operator === '--' ) {
-				body.replace( node.end, node.end, ((", exports." + name) + (" = " + name) + "") );
-			} else {
-				body.replace( node.start, node.start, (("exports." + name) + " = ") );
-			}
-
-			// keep track of what we've already exported - we don't need to
-			// export it again later
-			if ( isTopLevelNode ) {
-				alreadyExported[ name ] = true;
-			}
-		}
-	}
-
 	function combine__combine ( bundle ) {
-		var body = new MagicString__default.Bundle({
+		var body;
+
+		body = new MagicString__default.Bundle({
 			separator: '\n\n'
 		});
+
+		bundle.exports = resolveExports__default( bundle );
 
 		bundle.modules.forEach( function(mod ) {
 			var modBody = mod.body.clone(),
@@ -853,10 +1010,10 @@
 	}
 	var combine__default = combine__combine;
 
-	function getModule__getStandaloneModule ( mod ) {
+	function getModule__getModule ( mod ) {var $D$1;
+		var imports, exports;
+
 		mod.body = new MagicString__default( mod.source );
-		mod.imports = [];
-		mod.exports = [];
 
 		try {
 			mod.ast = acorn__default.parse( mod.source, {
@@ -872,11 +1029,14 @@
 			throw err;
 		}
 
-		findImportsAndExports__default( mod, mod.source, mod.ast, mod.imports, mod.exports );
+		imports = ($D$1 = findImportsAndExports__default( mod, mod.source, mod.ast ))[0], exports = $D$1[1], $D$1;
+
+		mod.imports = imports;
+		mod.exports = exports;
 
 		return mod;
-	}
-	var getModule__default = getModule__getStandaloneModule;
+	;$D$1 = void 0}
+	var getModule__default = getModule__getModule;
 
 	var getBundle__Promise = sander__default.Promise;
 
@@ -1105,7 +1265,52 @@
 		}
 	}
 
-	var amd__template = 'define(__IMPORT_PATHS__function (__IMPORT_NAMES__) {\n\n';
+	function reorderImports__reorderImports ( imports ) {
+		var i;
+
+		// ensure empty imports are at the end
+		i = imports.length;
+		while ( i-- ) {
+			if ( !imports[i].specifiers.length ) {
+				imports.splice( imports.length - 1, 0, imports.splice( i, 1 )[0] );
+			}
+		}
+	}
+	var reorderImports__default = reorderImports__reorderImports;
+
+ /**
+  * Creates a template function from a template string. The template
+    may have `<%= someVar %>` interpolators, and the returned function
+    should be called with a data object e.g. `{ someVar: 'someData' }`
+  * @param {string} str - the template string
+  * @returns {function}
+  */
+ function template__template ( str ) {
+ 	return function ( data ) {
+ 		return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
+ 			return $1 in data ? data[ $1 ] : match;
+ 		});
+ 	};
+ }
+ var template__default = template__template;
+
+	function mappers__getId ( m ) {
+		return m.id;
+	}
+
+	function mappers__quote ( str ) {
+		return "'" + str + "'";
+	}
+
+	function mappers__req ( path ) {
+		return 'require(\'' + path + '\')';
+	}
+
+	function mappers__globalify ( name ) {
+		return 'global.' + name;
+	}
+
+	var amd__introTemplate = template__default( 'define(<%= IMPORT_PATHS %>function (<%= IMPORT_NAMES %>) {\n\n' );
 
 	function amd__amd ( mod, body, options ) {
 		var importNames = [],
@@ -1114,12 +1319,7 @@
 			i;
 
 		// ensure empty imports are at the end
-		i = mod.imports.length;
-		while ( i-- ) {
-			if ( !mod.imports[i].specifiers.length ) {
-				mod.imports.splice( mod.imports.length - 1, 0, mod.imports.splice( i, 1 )[0] );
-			}
-		}
+		reorderImports__default( mod.imports );
 
 		// gather imports, and remove import declarations
 		mod.imports.forEach( function( x, i )  {
@@ -1141,19 +1341,16 @@
 
 		body.prepend( "'use strict';\n\n" ).trim();
 
-		intro = amd__template
-			.replace( '__IMPORT_PATHS__', importPaths.length ? '[' + importPaths.map( amd__quote ).join( ', ' ) + '], ' : '' )
-			.replace( '__IMPORT_NAMES__', importNames.join( ', ' ) );
+		intro = amd__introTemplate({
+			IMPORT_PATHS: importPaths.length ? '[' + importPaths.map( mappers__quote ).join( ', ' ) + '], ' : '',
+			IMPORT_NAMES: importNames.join( ', ' )
+		});
 
 		body.indent().prepend( intro ).append( '\n\n});' );
 
 		return packageResult__default( body, options, 'toAmd' );
 	}
 	var amd__default = amd__amd;
-
-	function amd__quote ( str ) {
-		return "'" + str + "'";
-	}
 
 	function cjs__cjs ( mod, body, options ) {
 		var replacement, exportDeclaration;
@@ -1203,15 +1400,6 @@
 	}
 	var cjs__default = cjs__cjs;
 
-	function template__template ( str ) {
-		return function ( data ) {
-			return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
-				return $1 in data ? data[ $1 ] : match;
-			});
-		};
-	}
-	var template__default = template__template;
-
 	var umd__introTemplate;
 
 	function umd__umd ( mod, body, options ) {
@@ -1225,12 +1413,7 @@
 		}
 
 		// ensure empty imports are at the end
-		i = mod.imports.length;
-		while ( i-- ) {
-			if ( !mod.imports[i].specifiers.length ) {
-				mod.imports.splice( mod.imports.length - 1, 0, mod.imports.splice( i, 1 )[0] );
-			}
-		}
+		reorderImports__default( mod.imports );
 
 		// gather imports, and remove import declarations
 		mod.imports.forEach( function( x, i )  {
@@ -1253,9 +1436,9 @@
 		body.prepend( "'use strict';\n\n" ).trim();
 
 		intro = umd__introTemplate({
-			AMD_DEPS: importPaths.length ? '[' + importPaths.map( umd__quote ).join( ', ' ) + '], ' : '',
-			CJS_DEPS: importPaths.map( umd__req ).join( ', ' ),
-			GLOBAL_DEPS: importNames.map( umd__globalify ).join( ', ' ),
+			AMD_DEPS: importPaths.length ? '[' + importPaths.map( mappers__quote ).join( ', ' ) + '], ' : '',
+			CJS_DEPS: importPaths.map( mappers__req ).join( ', ' ),
+			GLOBAL_DEPS: importNames.map( mappers__globalify ).join( ', ' ),
 			IMPORT_NAMES: importNames.join( ', ' ),
 			NAME: options.name
 		}).replace( /\t/g, body.indentStr );
@@ -1265,18 +1448,6 @@
 		return packageResult__default( body, options, 'toUmd' );
 	}
 	var umd__default = umd__umd;
-
-	function umd__quote ( str ) {
-		return "'" + str + "'";
-	}
-
-	function umd__req ( path ) {
-		return (("require('" + path) + "')");
-	}
-
-	function umd__globalify ( name ) {
-		return ("global." + name);
-	}
 
 	umd__introTemplate = template__default( ("(function (global, factory) {\
 \n\
@@ -1303,20 +1474,9 @@
 		umd: umd__default
 	};
 
-	function reorderImports__reorderImports ( imports ) {
-		var i;
+	function utils_gatherImports__gatherImports ( imports, getName ) {
+		var importedBindings = {}, identifierReplacements = {};
 
-		// ensure empty imports are at the end
-		i = imports.length;
-		while ( i-- ) {
-			if ( !imports[i].specifiers.length ) {
-				imports.splice( imports.length - 1, 0, imports.splice( i, 1 )[0] );
-			}
-		}
-	}
-	var reorderImports__default = reorderImports__reorderImports;
-
-	function utils_gatherImports__gatherImports ( imports, getName, importedBindings, toRewrite ) {
 		imports.forEach( function(x ) {
 			x.specifiers.forEach( function(s ) {
 				var name, replacement;
@@ -1340,26 +1500,28 @@
 				importedBindings[ name ] = replacement;
 
 				if ( !x.passthrough ) {
-					toRewrite[ name ] = replacement;
+					identifierReplacements[ name ] = replacement;
 				}
 			});
 		});
+
+		return [ importedBindings, identifierReplacements ];
 	}
 	var utils_gatherImports__default = utils_gatherImports__gatherImports;
 
 	function getExportNames__getExportNames ( exports ) {
-		var result = [];
+		var result = {};
 
 		exports.forEach( function(x ) {
 			if ( x.default ) return;
 
 			if ( x.declaration ) {
-				result.push( x.name );
+				result[ x.name ] = x.name;
 				return;
 			}
 
 			x.specifiers.forEach( function(s ) {
-				result.push( s.name );
+				result[ s.name ] = s.name;
 			});
 		});
 
@@ -1367,82 +1529,21 @@
 	}
 	var getExportNames__default = getExportNames__getExportNames;
 
-	function utils_transformBody__transformBody ( mod, body, options ) {
-		var scope,
-			blockScope,
-			importedBindings = {},
-			toRewrite = {},
+	function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
+		var importedBindings,
+			identifierReplacements,
 			exportNames = [],
 			alreadyExported = {},
 			shouldExportEarly = {},
 			earlyExports,
 			lateExports,
 			defaultValue,
-			capturedUpdates = null,
 			indentExclusionRanges = [];
 
-		scope = mod.ast._scope;
-		blockScope = mod.ast._blockScope;
-
-		utils_gatherImports__default( mod.imports, mod.getName, importedBindings, toRewrite );
+		importedBindings = ($D$2 = utils_gatherImports__default( mod.imports, mod.getName ))[0], identifierReplacements = $D$2[1], $D$2;
 		exportNames = getExportNames__default( mod.exports );
 
-		// scope is now the global scope
-		estraverse__default.traverse( mod.ast, {
-			enter: function ( node, parent ) {
-				// we're only interested in references, not property names etc
-				if ( node._skip ) return this.skip();
-
-				if ( node._scope ) {
-					scope = node._scope;
-				} else if ( node._blockScope ) {
-					blockScope = node._blockScope;
-				}
-
-				// Special case: if you have a variable declaration that updates existing
-				// bindings as a side-effect, e.g. `var a = b++`, where `b` is an exported
-				// value, we can't simply append `exports.b = b` to the update (as we
-				// normally would) because that would be syntactically invalid. Instead,
-				// we capture the change and update the export (and any others) after the
-				// variable declaration
-				if ( node.type === 'VariableDeclaration' ) {
-					var previous = capturedUpdates;
-					capturedUpdates = [];
-					capturedUpdates.previous = previous;
-				}
-
-				// Catch illegal reassignments
-				disallowIllegalReassignment__default( node, toRewrite, scope );
-
-				// Rewrite assignments to exports
-				utils_transformBody__rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~mod.ast.body.indexOf( parent ), capturedUpdates );
-
-				// Rewrite import identifiers
-				rewriteIdentifiers__default( body, node, toRewrite, scope );
-
-				// Add multi-line strings to exclusion ranges
-				if ( node.type === 'TemplateLiteral' ) {
-					indentExclusionRanges.push([ node.start, node.end ]);
-				}
-			},
-
-			leave: function ( node ) {
-				// Special case - see above
-				if ( node.type === 'VariableDeclaration' ) {
-					if ( capturedUpdates.length ) {
-						body.replace( node.end, node.end, capturedUpdates.map( function(n ) {return ((" exports." + n) + (" = " + n) + ";")} ).join( '' ) );
-					}
-
-					capturedUpdates = capturedUpdates.previous;
-				}
-
-				if ( node._scope ) {
-					scope = scope.parent;
-				} else if ( node._blockScope ) {
-					blockScope = blockScope.parent;
-				}
-			}
-		});
+		traverseAst__default( mod.ast, body, identifierReplacements, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
 
 		// Remove import statements
 		mod.imports.forEach( function(x ) {
@@ -1495,16 +1596,18 @@
 		earlyExports = [];
 		lateExports = [];
 
-		exportNames.forEach( function(name ) {
-			var chain;
+		Object.keys( exportNames ).forEach( function(name ) {
+			var exportAs, chain;
+
+			exportAs = exportNames[ name ];
 
 			if ( chain = importedBindings[ name ] ) {
 				// special case - a binding from another module
-				earlyExports.push( (("Object.defineProperty(exports, '" + name) + ("', { get: function () { return " + chain) + "; }});") );
+				earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { get: function () { return " + chain) + "; }});") );
 			} else if ( shouldExportEarly[ name ] ) {
-				earlyExports.push( (("exports." + name) + (" = " + name) + ";") );
+				earlyExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
 			} else if ( !alreadyExported[ name ] ) {
-				lateExports.push( (("exports." + name) + (" = " + name) + ";") );
+				lateExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
 			}
 		});
 
@@ -1525,60 +1628,12 @@
 		body.trim().indent({
 			exclude: indentExclusionRanges.length ? indentExclusionRanges : null
 		}).prepend( options.intro ).trim().append( options.outro );
-	}
+	;$D$2 = void 0}
 	var utils_transformBody__default = utils_transformBody__transformBody;
 
-	function utils_transformBody__rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode, capturedUpdates ) {
-		var assignee, name;
+	function getImportSummary__getImportSummary ( mod ) {
+		var importPaths = [], importNames = [];
 
-		if ( node.type === 'AssignmentExpression' ) {
-			assignee = node.left;
-		} else if ( node.type === 'UpdateExpression' ) {
-			assignee = node.argument;
-		} else {
-			return; // not an assignment
-		}
-
-		if ( assignee.type !== 'Identifier' ) {
-			return;
-		}
-
-		name = assignee.name;
-		if ( ~exports.indexOf( name ) ) {
-			if ( !!capturedUpdates ) {
-				capturedUpdates.push( name );
-				return;
-			}
-
-			// special case - increment/decrement operators
-			if ( node.operator === '++' || node.operator === '--' ) {
-				body.replace( node.end, node.end, ((", exports." + name) + (" = " + name) + "") );
-			} else {
-				body.replace( node.start, node.start, (("exports." + name) + " = ") );
-			}
-
-			// keep track of what we've already exported - we don't need to
-			// export it again later
-			if ( isTopLevelNode ) {
-				alreadyExported[ name ] = true;
-			}
-		}
-	}
-
-	var strictMode_amd__introTemplate;
-
-	strictMode_amd__introTemplate = template__default( 'define(<%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
-
-	function strictMode_amd__amd ( mod, body, options ) {
-		var importPaths = [],
-			importNames = [],
-			intro,
-			i;
-
-		// ensure empty imports are at the end
-		reorderImports__default( mod.imports );
-
-		// gather imports, and remove import declarations
 		mod.imports.forEach( function( x, i )  {
 			importPaths[i] = x.path;
 
@@ -1587,13 +1642,31 @@
 			}
 		});
 
+		return [ importPaths, importNames ];
+	}
+	var getImportSummary__default = getImportSummary__getImportSummary;
+
+	var strictMode_amd__introTemplate;
+
+	strictMode_amd__introTemplate = template__default( 'define(<%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
+
+	function strictMode_amd__amd ( mod, body, options ) {var $D$3;
+		var importPaths,
+			importNames,
+			intro;
+
+		// ensure empty imports are at the end
+		reorderImports__default( mod.imports );
+
+		importPaths = ($D$3 = getImportSummary__default( mod ))[0], importNames = $D$3[1], $D$3;
+
 		if ( mod.exports.length ) {
 			importPaths.unshift( 'exports' );
 			importNames.unshift( 'exports' );
 		}
 
 		intro = strictMode_amd__introTemplate({
-			paths: importPaths.length ? '[' + importPaths.map( strictMode_amd__quote ).join( ', ' ) + '], ' : '',
+			paths: importPaths.length ? '[' + importPaths.map( mappers__quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
 		}).replace( /\t/g, body.indentStr );
 
@@ -1603,12 +1676,8 @@
 		});
 
 		return packageResult__default( body, options, 'toAmd' );
-	}
+	;$D$3 = void 0}
 	var strictMode_amd__default = strictMode_amd__amd;
-
-	function strictMode_amd__quote ( str ) {
-		return "'" + str + "'";
-	}
 
 	var strictMode_cjs__intro = '(function () {\n\n\t\'use strict\';\n\n';
 	var strictMode_cjs__outro = '\n\n}).call(global);';
@@ -1645,11 +1714,10 @@
 
 	var strictMode_umd__introTemplate;
 
-	function strictMode_umd__umd ( mod, body, options ) {
-		var importPaths = [],
-			importNames = [],
-			intro,
-			i;
+	function strictMode_umd__umd ( mod, body, options ) {var $D$4;
+		var importPaths,
+			importNames,
+			intro;
 
 		if ( !options.name ) {
 			throw new Error( 'You must supply a `name` option for UMD modules' );
@@ -1657,19 +1725,12 @@
 
 		reorderImports__default( mod.imports );
 
-		// gather imports, and remove import declarations
-		mod.imports.forEach( function( x, i )  {
-			importPaths[i] = x.path;
-
-			if ( x.specifiers.length ) {
-				importNames[i] = mod.getName( x );
-			}
-		});
+		importPaths = ($D$4 = getImportSummary__default( mod ))[0], importNames = $D$4[1], $D$4;
 
 		intro = strictMode_umd__introTemplate({
-			amdDeps: [ 'exports' ].concat( importPaths ).map( strictMode_umd__quote ).join( ', ' ),
-			cjsDeps: [ 'exports' ].concat( importPaths.map( strictMode_umd__req ) ).join( ', ' ),
-			globals: [ ("global." + (options.name)) ].concat( importNames.map( strictMode_umd__globalify ) ).join( ', ' ),
+			amdDeps: [ 'exports' ].concat( importPaths ).map( mappers__quote ).join( ', ' ),
+			cjsDeps: [ 'exports' ].concat( importPaths.map( mappers__req ) ).join( ', ' ),
+			globals: [ ("global." + (options.name)) ].concat( importNames.map( mappers__globalify ) ).join( ', ' ),
 			names: [ 'exports' ].concat( importNames ).join( ', ' ),
 			name: options.name
 		}).replace( /\t/g, body.indentStr );
@@ -1680,20 +1741,8 @@
 		});
 
 		return packageResult__default( body, options, 'toUmd' );
-	}
+	;$D$4 = void 0}
 	var strictMode_umd__default = strictMode_umd__umd;
-
-	function strictMode_umd__quote ( str ) {
-		return "'" + str + "'";
-	}
-
-	function strictMode_umd__req ( path ) {
-		return 'require(\'' + path + '\')';
-	}
-
-	function strictMode_umd__globalify ( name ) {
-		return 'global.' + name;
-	}
 
 	strictMode_umd__introTemplate = template__default( ("(function (global, factory) {\
 \n\
@@ -1865,10 +1914,8 @@
 		umd: defaultsMode_umd__default
 	};
 
-	var getExportBlock__outroTemplate;
-
 	function getExportBlock__getExportBlock ( bundle, entry, indentStr ) {
-		var exportBlock = '', statements = [], name;
+		var exportBlock = '', name;
 
 		name = bundle.uniqueNames[ bundle.entry ];
 
@@ -1877,85 +1924,41 @@
 			exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
 		}
 
-		entry.exports.forEach( function(x ) {
-			if ( x.default ) {
-				return;
-			}
-
-			if ( x.declaration ) {
-				statements.push( indentStr + (("__export('" + (x.name)) + ("', function () { return " + name) + ("__" + (x.name)) + "; });")  );
-			}
-
-			else {
-				x.specifiers.forEach( function(s ) {
-					statements.push( indentStr + (("__export('" + (s.name)) + ("', function () { return " + name) + ("__" + (s.name)) + "; });")  );
-				});
-			}
-		});
-
-		if ( statements.length ) {
-			if ( exportBlock ) {
-				exportBlock += '\n\n';
-			}
-
-			exportBlock += getExportBlock__outroTemplate({
-				exportStatements: statements.join( '\n' )
-			}).replace( /\t/g, indentStr );
-		}
-
 		return exportBlock;
 	}
 	var getExportBlock__default = getExportBlock__getExportBlock;
-
-	getExportBlock__outroTemplate = template__default( ("\
-\n\
-\n	(function (__export) {\
-\n	<%= exportStatements %>\
-\n	}(function (prop, get) {\
-\n		Object.defineProperty(exports, prop, {\
-\n			enumerable: true,\
-\n			get: get\
-\n		});\
-\n	}));\
-\n\
-\n") );
 
 	var builders_strictMode_amd__introTemplate;
 
 	function builders_strictMode_amd__amd ( bundle, body, options ) {
 		var defaultsBlock,
 			entry = bundle.entryModule,
-			exportBlock,
-			externalModules = bundle.externalModules,
-			importPaths,
-			importNames,
+			importIds = bundle.externalModules.map( mappers__getId ),
+			importNames = importIds.map( function(id ) {return bundle.uniqueNames[ id ]} ),
 			intro,
 			indentStr;
 
 		indentStr = body.getIndentString();
 
-		defaultsBlock = externalModules.map( function(x ) {
-			var name = bundle.uniqueNames[ x.id ];
-			return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
-		}).join( '\n' );
+		if ( importNames.length ) {
+			defaultsBlock = importNames.map( function(name ) {
+				return indentStr + (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+			}).join( '\n' );
 
-		if ( defaultsBlock ) {
 			body.prepend( defaultsBlock + '\n\n' );
 		}
 
 		if ( entry.exports.length ) {
-			importPaths = [ 'exports' ].concat( externalModules.map( builders_strictMode_amd__getPath ) );
-			importNames = [ 'exports' ].concat( externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} ) );
+			importIds.unshift( 'exports' );
+			importNames.unshift( 'exports' );
 
-			exportBlock = getExportBlock__default( bundle, entry, indentStr );
-			body.append( '\n\n' + exportBlock );
-		} else {
-			importPaths = externalModules.map( builders_strictMode_amd__getPath );
-			importNames = externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} );
+			if ( entry.defaultExport ) {
+				body.append( '\n\n' + getExportBlock__default( bundle, entry, indentStr ) );
+			}
 		}
 
 		intro = builders_strictMode_amd__introTemplate({
-			amdDeps: importPaths.length ? '[' + importPaths.map( builders_strictMode_amd__quote ).join( ', ' ) + '], ' : '',
+			amdDeps: importIds.length ? '[' + importIds.map( mappers__quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
 		}).replace( /\t/g, indentStr );
 
@@ -1964,18 +1967,11 @@
 	}
 	var builders_strictMode_amd__default = builders_strictMode_amd__amd;
 
-	function builders_strictMode_amd__quote ( str ) {
-		return "'" + str + "'";
-	}
-
-	function builders_strictMode_amd__getPath ( m ) { return m.id; }
-
 	builders_strictMode_amd__introTemplate = template__default( 'define(<%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 	function builders_strictMode_cjs__cjs ( bundle, body, options ) {
 		var importBlock,
 			entry = bundle.entryModule,
-			exportBlock,
 			intro,
 			indentStr;
 
@@ -1992,9 +1988,8 @@
 			body.prepend( importBlock + '\n\n' );
 		}
 
-		if ( entry.exports.length ) {
-			exportBlock = getExportBlock__default( bundle, entry, indentStr );
-			body.append( '\n\n' + exportBlock );
+		if ( entry.defaultExport ) {
+			body.append( '\n\n' + getExportBlock__default( bundle, entry, indentStr ) );
 		}
 
 		intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";
@@ -2009,7 +2004,6 @@
 	function builders_strictMode_umd__umd ( bundle, body, options ) {
 		var defaultsBlock,
 			entry = bundle.entryModule,
-			exportBlock,
 			importPaths,
 			importNames,
 			amdDeps,
@@ -2034,21 +2028,22 @@
 			body.prepend( defaultsBlock + '\n\n' );
 		}
 
-		importPaths = bundle.externalModules.map( builders_strictMode_umd__getId );
+		importPaths = bundle.externalModules.map( mappers__getId );
 		importNames = bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} );
 
 		if ( entry.exports.length ) {
-			amdDeps = [ 'exports' ].concat( importPaths ).map( builders_strictMode_umd__quote ).join( ', ' );
-			cjsDeps = [ 'exports' ].concat( importPaths.map( builders_strictMode_umd__req ) ).join( ', ' );
-			globals = [ options.name ].concat( importNames ).map( builders_strictMode_umd__globalify ).join( ', ' );
+			amdDeps = [ 'exports' ].concat( importPaths ).map( mappers__quote ).join( ', ' );
+			cjsDeps = [ 'exports' ].concat( importPaths.map( mappers__req ) ).join( ', ' );
+			globals = [ options.name ].concat( importNames ).map( mappers__globalify ).join( ', ' );
 			names   = [ 'exports' ].concat( importNames ).join( ', ' );
 
-			exportBlock = getExportBlock__default( bundle, entry, indentStr );
-			body.append( '\n\n' + exportBlock );
+			if ( entry.defaultExport ) {
+				body.append( '\n\n' + getExportBlock__default( bundle, entry, indentStr ) );
+			}
 		} else {
-			amdDeps = importPaths.map( builders_strictMode_umd__quote ).join( ', ' );
-			cjsDeps = importPaths.map( builders_strictMode_umd__req ).join( ', ' );
-			globals = importNames.map( builders_strictMode_umd__globalify ).join( ', ' );
+			amdDeps = importPaths.map( mappers__quote ).join( ', ' );
+			cjsDeps = importPaths.map( mappers__req ).join( ', ' );
+			globals = importNames.map( mappers__globalify ).join( ', ' );
 			names   = importNames.join( ', ' );
 		}
 
@@ -2064,20 +2059,6 @@
 		return packageResult__default( body, options, 'toUmd', true );
 	}
 	var builders_strictMode_umd__default = builders_strictMode_umd__umd;
-
-	function builders_strictMode_umd__getId ( m ) { return m.id; }
-
-	function builders_strictMode_umd__quote ( str ) {
-		return "'" + str + "'";
-	}
-
-	function builders_strictMode_umd__req ( path ) {
-		return 'require(\'' + path + '\')';
-	}
-
-	function builders_strictMode_umd__globalify ( name ) {
-		return 'global.' + name;
-	}
 
 	builders_strictMode_umd__introTemplate = template__default( ("(function (global, factory) {\
 \n\
@@ -2221,7 +2202,7 @@
 		}
 	};
 
-	module.exports = esperanto__default;
+ module.exports = esperanto__default;
 
 }).call(global);
 //# sourceMappingURL=./esperanto.js.map

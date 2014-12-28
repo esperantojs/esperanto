@@ -1,6 +1,8 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from '../../../utils/packageResult';
 import template from '../../../utils/template';
+import reorderImports from 'utils/reorderImports';
+import { globalify, quote, req } from 'utils/mappers';
 
 var introTemplate;
 
@@ -15,12 +17,7 @@ export default function umd ( mod, body, options ) {
 	}
 
 	// ensure empty imports are at the end
-	i = mod.imports.length;
-	while ( i-- ) {
-		if ( !mod.imports[i].specifiers.length ) {
-			mod.imports.splice( mod.imports.length - 1, 0, mod.imports.splice( i, 1 )[0] );
-		}
-	}
+	reorderImports( mod.imports );
 
 	// gather imports, and remove import declarations
 	mod.imports.forEach( ( x, i ) => {
@@ -53,18 +50,6 @@ export default function umd ( mod, body, options ) {
 	body.indent().prepend( intro ).append( '\n\n}));' );
 
 	return packageResult( body, options, 'toUmd' );
-}
-
-function quote ( str ) {
-	return "'" + str + "'";
-}
-
-function req ( path ) {
-	return `require('${path}')`;
-}
-
-function globalify ( name ) {
-	return `global.${name}`;
 }
 
 introTemplate = template( `(function (global, factory) {
