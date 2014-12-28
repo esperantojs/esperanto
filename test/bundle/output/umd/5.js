@@ -26,17 +26,9 @@
 	var main__five = numbers__two + 3;
 	var main__six = numbers__three + 3;
 
+	exports.four = main__four = 99;
 
-
-	(function (__export) {
-		__export('four', function () { return main__four; });
-	__export('five', function () { return main__five; });
-	__export('six', function () { return main__six; });
-	}(function (prop, get) {
-		Object.defineProperty(exports, prop, {
-			enumerable: true,
-			get: get
-		});
-	}));
+	exports.five = main__five;
+	exports.six = main__six;
 
 }));

@@ -16,15 +16,6 @@
 	assert.equal(second__b, 9);
 	assert.equal(second__c, 'c');
 
-
-
-	(function (__export) {
-		__export('b', function () { return second__b; });
-	}(function (prop, get) {
-		Object.defineProperty(exports, prop, {
-			enumerable: true,
-			get: get
-		});
-	}));
+	exports.b = second__b;
 
 }).call(global);
