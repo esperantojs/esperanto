@@ -8,7 +8,6 @@ var introTemplate;
 export default function amd ( bundle, body, options ) {
 	var defaultsBlock,
 		entry = bundle.entryModule,
-		exportBlock,
 		importIds = bundle.externalModules.map( getId ),
 		importNames = importIds.map( id => bundle.uniqueNames[ id ] ),
 		intro,
@@ -28,8 +27,9 @@ export default function amd ( bundle, body, options ) {
 		importIds.unshift( 'exports' );
 		importNames.unshift( 'exports' );
 
-		exportBlock = getExportBlock( bundle, entry, indentStr );
-		body.append( '\n\n' + exportBlock );
+		if ( entry.defaultExport ) {
+			body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
+		}
 	}
 
 	intro = introTemplate({

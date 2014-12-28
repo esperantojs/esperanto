@@ -38,7 +38,7 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		var name;
 
 		if ( x.default ) {
-			if ( x.node.declaration && x.node.declaration.id && ( name = x.node.declaration.id.name ) ) {
+			if ( x.type === 'namedFunction' || x.type === 'namedClass' ) {
 				// if you have a default export like
 				//
 				//     export default function foo () {...}
@@ -49,25 +49,29 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 				//     exports.default = foo;
 				//
 				// as the `foo` reference may be used elsewhere
-				defaultValue = body.slice( x.valueStart, x.end ); // in case rewrites occured inside the function body
+
+				// remove the `export default `, keep the rest
 				body.remove( x.start, x.valueStart );
-				body.replace( x.end, x.end, '\nvar ' + prefix + '__default = ' + prefix + '__' + name + ';' );
-			} else {
-				// TODO this is a bit convoluted...
-				if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
-					defaultValue = prefix + '__' + name;
-					body.replace( x.start, x.end, 'var ' + prefix + '__default = ' + defaultValue + ';' );
-				} else {
-					body.replace( x.start, x.valueStart, 'var ' + prefix + '__default = ' );
-				}
+
+				// export the function for other modules to use (TODO this shouldn't be necessary)
+				body.replace( x.end, x.end, `\nvar ${prefix}__default = ${prefix}__${x.name};` );
+			}
+
+			else if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
+				defaultValue = prefix + '__' + name;
+				body.replace( x.start, x.end, `var ${prefix}__default = ${defaultValue};` );
+			}
+
+			else {
+				body.replace( x.start, x.valueStart, `var ${prefix}__default = ` );
 			}
 
 			return;
 		}
 
 		if ( x.declaration ) {
-			if ( x.node.declaration.type === 'FunctionDeclaration' ) {
-				shouldExportEarly[ x.node.declaration.id.name ] = true; // TODO what about `function foo () {}; export { foo }`?
+			if ( x.type === 'namedFunction' ) {
+				shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
 			}
 
 			body.remove( x.start, x.valueStart );
@@ -77,21 +81,21 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 	});
 
 	if ( mod._exportsNamespace ) {
-		let namespaceExportBlock = 'var ' + prefix + ' = {\n',
+		let namespaceExportBlock = `var ${prefix} = {\n`,
 			namespaceExports = [];
 
 		mod.exports.forEach( x => {
 			if ( x.declaration ) {
-				namespaceExports.push( body.indentStr + 'get ' + x.name + ' () { return ' + prefix + '__' + x.name + '; }' );
+				namespaceExports.push( body.indentStr + `get ${x.name} () { return ${prefix}__${x.name}; }` );
 			}
 
 			else if ( x.default ) {
-				namespaceExports.push( body.indentStr + 'get default () { return ' + prefix + '__default; }' );
+				namespaceExports.push( body.indentStr + `get default () { return ${prefix}__default; }` );
 			}
 
 			else {
 				x.specifiers.forEach( s => {
-					namespaceExports.push( body.indentStr + 'get ' + s.name + ' () { return ' + s.name + '; }' );
+					namespaceExports.push( body.indentStr + `get ${s.name} () { return ${s.name}; }` );
 				});
 			}
 		});
@@ -105,11 +109,11 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		exportBlock = [];
 
 		Object.keys( exportNames ).forEach( name => {
-			var exportAs = exportNames[ name ],
-				replacement = identifierReplacements[ name ];
+			var exportAs;
 
 			if ( !alreadyExported[ name ] ) {
-				exportBlock.push( `exports.${exportAs} = ${replacement};` );
+				exportAs = exportNames[ name ];
+				exportBlock.push( `exports.${exportAs} = ${prefix}__${name};` );
 			}
 		});
 

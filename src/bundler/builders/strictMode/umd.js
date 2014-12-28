@@ -8,7 +8,6 @@ var introTemplate;
 export default function umd ( bundle, body, options ) {
 	var defaultsBlock,
 		entry = bundle.entryModule,
-		exportBlock,
 		importPaths,
 		importNames,
 		amdDeps,
@@ -42,8 +41,9 @@ export default function umd ( bundle, body, options ) {
 		globals = [ options.name ].concat( importNames ).map( globalify ).join( ', ' );
 		names   = [ 'exports' ].concat( importNames ).join( ', ' );
 
-		exportBlock = getExportBlock( bundle, entry, indentStr );
-		body.append( '\n\n' + exportBlock );
+		if ( entry.defaultExport ) {
+			body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
+		}
 	} else {
 		amdDeps = importPaths.map( quote ).join( ', ' );
 		cjsDeps = importPaths.map( req ).join( ', ' );

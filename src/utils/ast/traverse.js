@@ -36,7 +36,7 @@ export default function traverseAst ( ast, body, identifierReplacements, readOnl
 			}
 
 			// Catch illegal reassignments
-			disallowIllegalReassignment( node, identifierReplacements, scope );
+			disallowIllegalReassignment( node, readOnlyNames, scope );
 
 			// Rewrite assignments to exports
 			rewriteExportAssignments( body, node, exportNames, scope, identifierReplacements, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
@@ -54,7 +54,6 @@ export default function traverseAst ( ast, body, identifierReplacements, readOnl
 			// Special case - see above
 			if ( node.type === 'VariableDeclaration' ) {
 				if ( capturedUpdates.length ) {
-					console.log( 'capturedUpdates', capturedUpdates );
 					body.replace( node.end, node.end, capturedUpdates.map( c => ` exports.${c.name} = ${c.exportAs};` ).join( '' ) );
 				}
 

@@ -5,9 +5,7 @@ export default function rewriteExportAssignments ( body, node, exports, scope, t
 		assignee = node.left;
 	} else if ( node.type === 'UpdateExpression' ) {
 		assignee = node.argument;
-	} /*else if ( node.type === 'VariableDeclarator' && node.init ) {
-		assignee = node.id;
-	}*/ else {
+	} else {
 		return; // not an assignment
 	}
 
