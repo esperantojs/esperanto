@@ -2,7 +2,7 @@ import resolve from 'utils/resolve';
 import sanitize from 'utils/sanitize';
 
 // TODO use sensible names, inferring from defaults where poss
-export default function getUniqueNames ( modules, userNames ) {
+export default function getUniqueNames ( modules, externalModules, userNames ) {
 	var names = {}, used = {};
 
 	// copy user-specified names
@@ -28,7 +28,7 @@ export default function getUniqueNames ( modules, userNames ) {
 
 	// for the rest, make names as compact as possible without
 	// introducing conflicts
-	modules.forEach( mod => {
+	modules.concat( externalModules ).forEach( mod => {
 		var parts, i, name;
 
 		// is this already named?

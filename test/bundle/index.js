@@ -123,17 +123,14 @@ module.exports = function () {
 			{ dir: '13', description: 'throw error with file and location error if acorn cannot parse', error: function ( err ) {
 				return err.file === path.resolve( 'bundle/input/13/main.js' ) && err.loc.line === 1 && err.loc.column === 4;
 			}},
-			{ dir: '14', description: 'exports external modules correctly in strict mode', strict: true }
+			{ dir: '14', description: 'handles default imports from external modules correctly' },
+			{ dir: '15', description: 'handles named imports from external modules correctly', strict: true }
 		];
 
 		profiles.forEach( function ( profile ) {
 			describe( profile.description + ':', function () {
 				tests.forEach( function ( t ) {
 					var config;
-
-					if ( t.strict && ( !profile.options || !profile.options.strict ) ) {
-						return;
-					}
 
 					try {
 						config = require( './input/' + t.dir + '/_config' );
@@ -162,6 +159,10 @@ module.exports = function () {
 									throw new Error( 'No error was raised' );
 								}
 
+								if ( t.strict && !options.strict ) {
+									throw new Error( 'Test should fail in non-strict mode' );
+								}
+
 								assert.equal( actual, expected, 'Expected\n>\n' +
 									makeWhitespaceVisible( actual ) +
 								'\n>\n\nto match\n\n>\n' +
@@ -169,6 +170,11 @@ module.exports = function () {
 								'\n>' );
 							});
 						}).catch( function ( err ) {
+							// strict mode tests should fail
+							if ( /strict mode/.test( err.message ) && t.strict ) {
+								return;
+							}
+
 							if ( !t.error ) {
 								throw err;
 							}

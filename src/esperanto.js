@@ -68,6 +68,14 @@ export default {
 						throw new Error( 'Entry module can only have named exports in strict mode (pass `strict: true`)' );
 					}
 
+					bundle.modules.forEach( mod => {
+						mod.imports.forEach( x => {
+							if ( bundle.externalModuleLookup[ x.id ] && !x.default ) {
+								throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
+							}
+						});
+					});
+
 					builder = bundleBuilders.defaultsMode[ format ];
 				} else {
 					builder = bundleBuilders.strictMode[ format ];

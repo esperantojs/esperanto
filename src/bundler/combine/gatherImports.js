@@ -8,7 +8,7 @@ export default function gatherImports ( imports, externalModuleLookup, chains, u
 			return;
 		}
 
-		if ( externalModuleLookup.hasOwnProperty( x.path ) ) {
+		if ( externalModuleLookup.hasOwnProperty( x.id ) ) {
 			external = true;
 		}
 
