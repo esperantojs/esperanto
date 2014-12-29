@@ -26,5 +26,28 @@ export default function getModule ( mod ) {
 	mod.imports = imports;
 	mod.exports = exports;
 
+	// collect exports by name, for quick lookup when verifying
+	// that this module exports a given identifier
+	mod.doesExport = {};
+	exports.forEach( x => {
+		if ( x.default ) {
+			mod.doesExport.default = true;
+		}
+
+		else if ( x.name ) {
+			mod.doesExport[ x.name ] = true;
+		}
+
+		else if ( x.specifiers ) {
+			x.specifiers.forEach( s => {
+				mod.doesExport[ s.name ] = true;
+			});
+		}
+
+		else {
+			throw new Error( 'Unexpected export type' );
+		}
+	});
+
 	return mod;
 }
