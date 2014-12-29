@@ -16,7 +16,7 @@ export default function transformBody ( mod, body, options ) {
 	[ importedBindings, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
 
-	traverseAst( mod.ast, body, identifierReplacements, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
+	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
 
 	// Remove import statements
 	mod.imports.forEach( x => {

@@ -1,6 +1,7 @@
 import acorn from 'acorn';
 import MagicString from 'magic-string';
-import findImportsAndExports from '../utils/ast/findImportsAndExports';
+import findImportsAndExports from 'utils/ast/findImportsAndExports';
+import annotateAst from 'utils/ast/annotate';
 
 export default function getModule ( mod ) {
 	var imports, exports;
@@ -12,6 +13,8 @@ export default function getModule ( mod ) {
 			ecmaVersion: 6,
 			locations: true
 		});
+
+		annotateAst( mod.ast );
 	} catch ( err ) {
 		// If there's a parse error, attach file info
 		if ( err.loc ) {

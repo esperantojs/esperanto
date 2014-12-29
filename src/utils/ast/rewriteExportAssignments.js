@@ -1,4 +1,4 @@
-export default function rewriteExportAssignments ( body, node, exports, scope, toRewrite, alreadyExported, isTopLevelNode, capturedUpdates ) {
+export default function rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode, capturedUpdates ) {
 	var assignee, name, exportAs;
 
 	if ( node.type === 'AssignmentExpression' ) {

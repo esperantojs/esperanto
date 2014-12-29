@@ -3,7 +3,7 @@ import disallowIllegalReassignment from './disallowIllegalReassignment';
 import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
 
-export default function traverseAst ( ast, body, identifierReplacements, readOnlyNames, exportNames, alreadyExported, indentExclusionRanges ) {
+export default function traverseAst ( ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges ) {
 	var scope, blockScope, capturedUpdates;
 
 	scope = ast._scope;
@@ -36,10 +36,10 @@ export default function traverseAst ( ast, body, identifierReplacements, readOnl
 			}
 
 			// Catch illegal reassignments
-			disallowIllegalReassignment( node, readOnlyNames, scope );
+			disallowIllegalReassignment( node, identifierReplacements, scope );
 
 			// Rewrite assignments to exports
-			rewriteExportAssignments( body, node, exportNames, scope, identifierReplacements, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
+			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
 
 			// Replace identifiers
 			replaceIdentifiers( body, node, identifierReplacements, scope );

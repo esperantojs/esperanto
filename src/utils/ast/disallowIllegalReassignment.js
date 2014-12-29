@@ -1,4 +1,4 @@
-export default function disallowIllegalReassignment ( node, readOnlyNames, scope ) {
+export default function disallowIllegalReassignment ( node, names, scope ) {
 	var assignee, name, message;
 
 	if ( node.type === 'AssignmentExpression' ) {
@@ -22,7 +22,7 @@ export default function disallowIllegalReassignment ( node, readOnlyNames, scope
 
 	name = assignee.name;
 
-	if ( readOnlyNames.hasOwnProperty( name ) && !scope.contains( name ) ) {
+	if ( names.hasOwnProperty( name ) && names[ name ].readOnly && !scope.contains( name ) ) {
 		throw new Error( message + '`' + name + '`' );
 	}
 }

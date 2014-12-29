@@ -24,7 +24,10 @@ export default function gatherImports ( imports, getName ) {
 			importedBindings[ name ] = replacement;
 
 			if ( !x.passthrough ) {
-				identifierReplacements[ name ] = replacement;
+				identifierReplacements[ name ] = {
+					name: replacement,
+					readOnly: true
+				};
 			}
 		});
 	});

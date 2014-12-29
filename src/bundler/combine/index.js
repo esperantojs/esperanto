@@ -1,8 +1,8 @@
 import path from 'path';
 import MagicString from 'magic-string';
+import getIdentifierReplacements from './getIdentifierReplacements';
 import resolveExports from './resolveExports';
 import transformBody from './transformBody';
-import annotateAst from '../../utils/ast/annotate';
 
 export default function combine ( bundle ) {
 	var body;
@@ -10,6 +10,8 @@ export default function combine ( bundle ) {
 	body = new MagicString.Bundle({
 		separator: '\n\n'
 	});
+
+	bundle.identifierReplacements = getIdentifierReplacements( bundle );
 
 	bundle.exports = resolveExports( bundle );
 
@@ -36,7 +38,6 @@ export default function combine ( bundle ) {
 			});
 		});
 
-		annotateAst( mod.ast );
 		transformBody( bundle, mod, modBody, prefix );
 
 		body.addSource({

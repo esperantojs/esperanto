@@ -1,10 +1,7 @@
-import extend from 'utils/extend';
 import traverseAst from 'utils/ast/traverse';
-import gatherImports from './gatherImports';
 
 export default function transformBody ( bundle, mod, body, prefix ) {
-	var identifierReplacements = {},
-		importIdentifierReplacements,
+	var identifierReplacements,
 		exportNames,
 		alreadyExported = {},
 		shouldExportEarly = {},
@@ -12,19 +9,11 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		defaultValue,
 		indentExclusionRanges = [];
 
-	// All variables declared at the top level are given a prefix,
-	// as an easy way to deconflict when two or more modules have the
-	// same variable names. TODO deconflict more elegantly (see e.g.
-	// https://github.com/Rich-Harris/esperanto/pull/24)
-	mod.ast._scope.names.forEach( n => identifierReplacements[n] = prefix + '__' + n );
-	mod.ast._blockScope.names.forEach( n => identifierReplacements[n] = prefix + '__' + n );
-
-	importIdentifierReplacements = gatherImports( mod.imports, bundle.externalModuleLookup, bundle.chains, bundle.uniqueNames );
-	extend( identifierReplacements, importIdentifierReplacements );
+	identifierReplacements = bundle.identifierReplacements[ mod.id ];
 
 	exportNames = bundle.exports[ mod.id ];
 
-	traverseAst( mod.ast, body, identifierReplacements, importIdentifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
+	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
 
 	// remove imports
 	mod.imports.forEach( x => {
