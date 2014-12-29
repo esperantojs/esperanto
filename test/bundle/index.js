@@ -118,7 +118,12 @@ module.exports = function () {
 			{ dir: '8', description: 'external module names are guessed (affects UMD only)' },
 			{ dir: '9', description: 'external module names can be specified (affects UMD only)' },
 			{ dir: '10', description: 'does not affect ES6 classes' },
-			{ dir: '11', description: 'exports chains correctly in strict mode', strict: true }
+			{ dir: '11', description: 'exports chains correctly in strict mode', strict: true },
+			{ dir: '12', description: 'throws an error if a non-exported identifier is imported', error: /does not export/ },
+			{ dir: '13', description: 'throw error with file and location error if acorn cannot parse', error: function ( err ) {
+				return err.file === path.resolve( 'bundle/input/13/main.js' ) && err.loc.line === 1 && err.loc.column === 4;
+			}},
+			{ dir: '14', description: 'exports external modules correctly in strict mode', strict: true }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -153,28 +158,30 @@ module.exports = function () {
 							}).code;
 
 							return sander.readFile( 'bundle/output/', profile.outputdir, t.dir + '.js' ).then( String ).then( function ( expected ) {
+								if ( t.error ) {
+									throw new Error( 'No error was raised' );
+								}
+
 								assert.equal( actual, expected, 'Expected\n>\n' +
 									makeWhitespaceVisible( actual ) +
 								'\n>\n\nto match\n\n>\n' +
 									makeWhitespaceVisible( expected ) +
 								'\n>' );
 							});
+						}).catch( function ( err ) {
+							if ( !t.error ) {
+								throw err;
+							}
+
+							if ( t.error instanceof RegExp ) {
+								if ( !t.error.test( err.message ) ) {
+									throw err;
+								}
+							} else if ( !t.error( err ) ) {
+								throw err;
+							}
 						});
 					});
-				});
-			});
-		});
-
-		describe( 'parse error', function () {
-			it( 'contains file and location info', function () {
-				return esperanto.bundle({
-					base: path.resolve( 'bundle/error-sample' ),
-					entry: 'main'
-				}).then( function () {
-					assert.ok( false );
-				}).catch( function ( err ) {
-					assert.equal( err.file, path.resolve( 'bundle/error-sample/main.js' ) );
-					assert.deepEqual( err.loc, { line: 1, column: 4 });
 				});
 			});
 		});
