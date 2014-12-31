@@ -24,31 +24,30 @@ export default function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return fetchModule( entry )
-		.then( () => {
-			var entryModule, bundle;
+	return fetchModule( entry ).then( () => {
+		var entryModule, bundle;
 
-			entryModule = moduleLookup[ entry ];
-			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
+		entryModule = moduleLookup[ entry ];
+		modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
-			bundle = {
-				entry: entry,
-				entryModule: entryModule,
-				base: base,
-				modules: modules,
-				moduleLookup: moduleLookup,
-				externalModules: externalModules,
-				externalModuleLookup: externalModuleLookup,
-				skip: skip,
-				names: names,
-				uniqueNames: getUniqueNames( modules, externalModules, options.names ),
-				chains: resolveChains( modules, moduleLookup )
-			};
+		bundle = {
+			entry: entry,
+			entryModule: entryModule,
+			base: base,
+			modules: modules,
+			moduleLookup: moduleLookup,
+			externalModules: externalModules,
+			externalModuleLookup: externalModuleLookup,
+			skip: skip,
+			names: names,
+			uniqueNames: getUniqueNames( modules, externalModules, options.names ),
+			chains: resolveChains( modules, moduleLookup )
+		};
 
-			combine( bundle );
+		combine( bundle );
 
-			return bundle;
-		});
+		return bundle;
+	});
 
 	function fetchModule ( moduleId ) {
 		var modulePath;

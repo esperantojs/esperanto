@@ -16,9 +16,6 @@ export default function combine ( bundle ) {
 	bundle.exports = resolveExports( bundle );
 
 	bundle.modules.forEach( mod => {
-		var modBody = mod.body.clone(),
-			prefix = bundle.uniqueNames[ mod.id ];
-
 		// verify that this module doesn't import non-exported identifiers
 		mod.imports.forEach( x => {
 			var importedModule = bundle.moduleLookup[ x.id ];
@@ -38,11 +35,11 @@ export default function combine ( bundle ) {
 			});
 		});
 
-		transformBody( bundle, mod, modBody, prefix );
+		//transformBody( bundle, mod, modBody );
 
 		body.addSource({
 			filename: path.resolve( bundle.base, mod.file ),
-			content: modBody
+			content: transformBody( bundle, mod, mod.body.clone() )
 		});
 	});
 

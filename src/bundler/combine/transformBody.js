@@ -111,5 +111,5 @@ export default function transformBody ( bundle, mod, body ) {
 		}
 	}
 
-	body.trim().indent({ exclude: indentExclusionRanges });
+	return body.trim().indent({ exclude: indentExclusionRanges });
 }
