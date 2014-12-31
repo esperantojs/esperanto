@@ -1,6 +1,6 @@
 import traverseAst from 'utils/ast/traverse';
 
-export default function transformBody ( bundle, mod, body, prefix ) {
+export default function transformBody ( bundle, mod, body ) {
 	var identifierReplacements,
 		exportNames,
 		alreadyExported = {},
@@ -42,15 +42,15 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 				body.remove( x.start, x.valueStart );
 
 				// export the function for other modules to use (TODO this shouldn't be necessary)
-				body.replace( x.end, x.end, `\nvar ${prefix}__default = ${identifierReplacements[x.name].name};` );
+				body.replace( x.end, x.end, `\nvar ${identifierReplacements.default.name} = ${identifierReplacements[x.name].name};` );
 			}
 
 			else if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
-				body.replace( x.start, x.end, `var ${prefix}__default = ${identifierReplacements[name].name};` );
+				body.replace( x.start, x.end, `var ${identifierReplacements.default.name} = ${identifierReplacements[name].name};` );
 			}
 
 			else {
-				body.replace( x.start, x.valueStart, `var ${prefix}__default = ` );
+				body.replace( x.start, x.valueStart, `var ${identifierReplacements.default.name} = ` );
 			}
 
 			return;
@@ -68,7 +68,8 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 	});
 
 	if ( mod._exportsNamespace ) {
-		let namespaceExportBlock = `var ${prefix} = {\n`,
+		let prefix = bundle.uniqueNames[ mod.id ],
+			namespaceExportBlock = `var ${prefix} = {\n`,
 			namespaceExports = [];
 
 		mod.exports.forEach( x => {
@@ -77,7 +78,7 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 			}
 
 			else if ( x.default ) {
-				namespaceExports.push( body.indentStr + `get default () { return ${prefix}__default; }` );
+				namespaceExports.push( body.indentStr + `get default () { return ${identifierReplacements.default.name}; }` );
 			}
 
 			else {
