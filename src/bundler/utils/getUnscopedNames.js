@@ -1,7 +1,7 @@
 import estraverse from 'estraverse';
 
 export default function getUnscopedNames ( mod ) {
-	var unscoped = {}, importedNames, scope;
+	var unscoped = [], importedNames, scope;
 
 	function imported ( name ) {
 		if (!importedNames) {
@@ -26,8 +26,9 @@ export default function getUnscopedNames ( mod ) {
 
 			if ( node.type === 'Identifier' &&
 					 !scope.contains( node.name ) &&
-					 !imported( node.name ) ) {
-				unscoped[ node.name ] = true;
+					 !imported( node.name ) &&
+					 !~unscoped.indexOf( node.name ) ) {
+				unscoped.push( node.name );
 			}
 		},
 

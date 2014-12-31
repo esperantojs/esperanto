@@ -19,17 +19,16 @@ export default function getIdentifiers ( bundle ) {
 
 		identifiers[ mod.id ] = moduleIdentifiers = {};
 
-		// All variables declared at the top level are given a prefix,
-		// as an easy way to deconflict when two or more modules have the
-		// same variable names. TODO deconflict more elegantly (see e.g.
-		// https://github.com/Rich-Harris/esperanto/pull/24)
-		mod.ast._scope.names.forEach( n => moduleIdentifiers[n] = {
-			name: prefix + '__' + n
-		});
+		function addName ( n ) {
+			moduleIdentifiers[n] = {
+				name: conflicts.hasOwnProperty( n ) ?
+					prefix + '__' + n :
+					n
+			};
+		}
 
-		mod.ast._blockScope.names.forEach( n => moduleIdentifiers[n] = {
-			name: prefix + '__' + n
-		});
+		mod.ast._scope.names.forEach( addName );
+		mod.ast._blockScope.names.forEach( addName );
 
 		mod.imports.forEach( x => {
 			var external;
@@ -69,8 +68,12 @@ export default function getIdentifiers ( bundle ) {
 
 					moduleName = bundle.uniqueNames[ moduleId ];
 
-					if ( !external || specifierName === 'default' ) {
-						replacement = moduleName + '__' + specifierName;
+					if ( specifierName === 'default' ) {
+						replacement = moduleName + '__default';
+					} else if ( !external ) {
+						replacement = conflicts.hasOwnProperty( specifierName ) ?
+							moduleName + '__' + specifierName :
+							specifierName;
 					} else {
 						replacement = moduleName + '.' + specifierName;
 					}
@@ -82,6 +85,10 @@ export default function getIdentifiers ( bundle ) {
 				};
 			});
 		});
+
+		moduleIdentifiers.default = {
+			name: prefix + '__default'
+		};
 	});
 
 	return identifiers;

@@ -4,12 +4,12 @@
 
 	/* jshint esnext:true */
 
-	var first__value = 42;
+	var value = 42;
 
 	/* jshint esnext:true */
 
 	/* jshint esnext:true */
 
-	assert.equal(first__value, 42);
+	assert.equal(value, 42);
 
 }).call(global);

@@ -2,16 +2,16 @@
 
   'use strict';
 
-  function exporter__foo() {
+  function foo() {
     return 1;
   }
-  var exporter__default = exporter__foo;
+  var exporter__default = foo;
 
-  function exporter__callsFoo() {
-    return exporter__foo();
+  function callsFoo() {
+    return foo();
   }
 
 	assert.strictEqual(exporter__default(), 1);
-	assert.strictEqual(exporter__callsFoo(), 1);
+	assert.strictEqual(callsFoo(), 1);
 
 }).call(global);

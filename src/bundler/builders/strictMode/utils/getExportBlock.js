@@ -1,12 +1,5 @@
 export default function getExportBlock ( bundle, entry, indentStr ) {
-	var exportBlock = '', name;
+	var name = bundle.uniqueNames[ bundle.entry ];
 
-	name = bundle.uniqueNames[ bundle.entry ];
-
-	// create an export block
-	if ( entry.defaultExport ) {
-		exportBlock = indentStr + 'exports[\'default\'] = ' + name + '__default;';
-	}
-
-	return exportBlock;
+	return indentStr + 'exports[\'default\'] = ' + name + '__default;';
 }

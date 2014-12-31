@@ -2,13 +2,13 @@
 
   'use strict';
 
-  var mod__a = 1;
+  var a = 1;
 
-  assert.equal(mod__a, 1);
-  assert.equal(mod__getA(), 1);
+  assert.equal(a, 1);
+  assert.equal(getA(), 1);
 
-  function mod__getA() {
-    return mod__a;
+  function getA() {
+    return a;
   }
 
 }).call(global);

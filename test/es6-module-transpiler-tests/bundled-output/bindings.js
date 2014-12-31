@@ -4,16 +4,16 @@
 
   /* jshint esnext:true */
 
-  var exporter__count = 0;
+  var count = 0;
 
-  function exporter__incr() {
-    exporter__count++;
+  function incr() {
+    count++;
   }
 
 	/* jshint esnext:true */
 
-	assert.equal(exporter__count, 0);
-	exporter__incr();
-	assert.equal(exporter__count, 1);
+	assert.equal(count, 0);
+	incr();
+	assert.equal(count, 1);
 
 }).call(global);

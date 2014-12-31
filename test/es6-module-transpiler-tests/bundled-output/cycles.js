@@ -4,7 +4,7 @@
 
   /* jshint esnext:true */
 
-  function b__geta() {
+  function geta() {
     return a__a;
   }
 
@@ -12,7 +12,7 @@
 
   /* jshint esnext:true */
 
-  function a__getb() {
+  function getb() {
     return b__b;
   }
 
@@ -20,9 +20,9 @@
 
 	/* jshint esnext:true */
 
-	assert.equal(b__geta(), 1);
+	assert.equal(geta(), 1);
 	assert.equal(a__a, 1);
-	assert.equal(a__getb(), 2);
+	assert.equal(getb(), 2);
 	assert.equal(b__b, 2);
 
 }).call(global);

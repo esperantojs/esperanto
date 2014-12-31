@@ -6,7 +6,6 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 		alreadyExported = {},
 		shouldExportEarly = {},
 		exportBlock,
-		defaultValue,
 		indentExclusionRanges = [];
 
 	identifierReplacements = bundle.identifierReplacements[ mod.id ];
@@ -43,12 +42,11 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 				body.remove( x.start, x.valueStart );
 
 				// export the function for other modules to use (TODO this shouldn't be necessary)
-				body.replace( x.end, x.end, `\nvar ${prefix}__default = ${prefix}__${x.name};` );
+				body.replace( x.end, x.end, `\nvar ${prefix}__default = ${identifierReplacements[x.name].name};` );
 			}
 
 			else if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
-				defaultValue = prefix + '__' + name;
-				body.replace( x.start, x.end, `var ${prefix}__default = ${defaultValue};` );
+				body.replace( x.start, x.end, `var ${prefix}__default = ${identifierReplacements[name].name};` );
 			}
 
 			else {
@@ -75,7 +73,7 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 
 		mod.exports.forEach( x => {
 			if ( x.declaration ) {
-				namespaceExports.push( body.indentStr + `get ${x.name} () { return ${prefix}__${x.name}; }` );
+				namespaceExports.push( body.indentStr + `get ${x.name} () { return ${identifierReplacements[x.name].name}; }` );
 			}
 
 			else if ( x.default ) {
@@ -102,7 +100,8 @@ export default function transformBody ( bundle, mod, body, prefix ) {
 
 			if ( !alreadyExported[ name ] ) {
 				exportAs = exportNames[ name ];
-				exportBlock.push( `exports.${exportAs} = ${prefix}__${name};` );
+
+				exportBlock.push( `exports.${exportAs} = ${identifierReplacements[name].name};` );
 			}
 		});
 
