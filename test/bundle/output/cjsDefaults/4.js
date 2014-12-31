@@ -2,9 +2,9 @@
 
 	'use strict';
 
-	var foo__answer = 42;
+	var answer = 42;
 
-	var main__default = foo__answer * 2;
+	var main__default = answer * 2;
 
 	module.exports = main__default;
 

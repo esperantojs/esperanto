@@ -2,8 +2,8 @@ define(['external'], function (external__default) {
 
 	'use strict';
 
-	var foo__bar = 'yes';
-	var foo__default = foo__bar;
+	var bar = 'yes';
+	var foo__default = bar;
 
 	console.log( external__default( foo__default ) );
 

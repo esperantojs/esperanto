@@ -4,11 +4,11 @@ define(function () {
 
 	var foo__default = 'this is foo';
 
-	function main__logFoo () {
+	function logFoo () {
 		console.log( foo__default );
 	}
 
-	function main__logBar () {
+	function logBar () {
 		console.log( bar__default );
 	}
 

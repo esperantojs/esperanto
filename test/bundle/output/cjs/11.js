@@ -2,18 +2,18 @@
 
 	'use strict';
 
-	var a__foo = 1;
-	var a__bar = 2;
+	var foo = 1;
+	var bar = 2;
 
-	exports.foo = a__foo = 3;
+	exports.foo = foo = 3;
 
-	exports.bar = a__bar;
+	exports.bar = bar;
 
 	var baz__default = 4;
 
 	exports.baz = baz__default;
 
-	var main__qux = 5;
-	exports.qux = main__qux = 6;
+	var qux = 5;
+	exports.qux = qux = 6;
 
 }).call(global);
