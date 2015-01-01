@@ -27,7 +27,8 @@ module.exports = function () {
 			{ file: 'multipleImports', description: 'transpiles multiple imports' },
 			{ file: 'renamedImport', description: 'transpiles renamed imports' },
 			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
-			{ file: 'clashingNames', description: 'avoids naming collisions' }
+			{ file: 'clashingNames', description: 'avoids naming collisions' },
+			{ file: 'shadowedImport', description: 'handles shadowed imports' }
 		];
 
 		tests.forEach( function ( t ) {
