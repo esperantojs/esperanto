@@ -4,15 +4,14 @@
 
   /* jshint esnext:true */
 
-  function hi__hi() {
+  function hi() {
     return 'hi';
   }
-  var hi__default = hi__hi;
 
 	/* jshint esnext:true */
 
 	/* jshint esnext:true */
 
-	assert.equal(hi__default(), 'hi');
+	assert.equal(hi(), 'hi');
 
 }).call(global);

@@ -11,8 +11,7 @@ define(function () {
 			return this.str;
 		}
 	}
-	var main = Foo;
 
-	return main;
+	return Foo;
 
 });

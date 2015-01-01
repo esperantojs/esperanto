@@ -11,8 +11,7 @@ define(['exports'], function (exports) {
 			return this.str;
 		}
 	}
-	var main = Foo;
 
-	exports['default'] = main;
+	exports['default'] = Foo;
 
 });
