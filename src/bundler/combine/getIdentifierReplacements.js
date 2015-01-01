@@ -13,7 +13,7 @@ export default function getIdentifiers ( bundle ) {
 	conflicts = topLevelScopeConflicts( bundle );
 
 	bundle.modules.forEach( mod => {
-		var prefix, moduleIdentifiers;
+		var prefix, moduleIdentifiers, x;
 
 		prefix = bundle.uniqueNames[ mod.id ];
 
@@ -70,14 +70,21 @@ export default function getIdentifiers ( bundle ) {
 					moduleName = bundle.uniqueNames[ moduleId ];
 
 					if ( specifierName === 'default' ) {
-						// if it's an external module, always use __default. Otherwise,
-						// only in case of conflict
-						if ( bundle.externalModuleLookup[ moduleId ] || conflicts.hasOwnProperty( moduleName ) ) {
+						// if it's an external module, always use __default
+						if ( bundle.externalModuleLookup[ moduleId ] ) {
 							replacement = moduleName + '__default';
-						} else if ( mod && mod.defaultExport && mod.defaultExport.declaration && mod.defaultExport.name ) {
-							replacement = mod.defaultExport.name;
-						} else {
-							replacement = moduleName;
+						}
+
+						else if ( mod && mod.defaultExport && mod.defaultExport.declaration && mod.defaultExport.name ) {
+							replacement = conflicts.hasOwnProperty( mod.defaultExport.name ) ?
+								moduleName + '__' + mod.defaultExport.name :
+								mod.defaultExport.name;
+						}
+
+						else {
+							replacement = conflicts.hasOwnProperty( moduleName ) ?
+								moduleName + '__default' :
+								moduleName;
 						}
 					} else if ( !external ) {
 						replacement = conflicts.hasOwnProperty( specifierName ) ?
@@ -95,11 +102,23 @@ export default function getIdentifiers ( bundle ) {
 			});
 		});
 
-		moduleIdentifiers.default = {
-			name: conflicts.hasOwnProperty( prefix ) ?
-				prefix + '__default' :
-				prefix
-		};
+		// TODO is this necessary? Or only necessary in with default
+		// exports that are expressions?
+		if ( x = mod.defaultExport ) {
+			if ( x.declaration && x.name ) {
+				moduleIdentifiers.default = {
+					name: conflicts.hasOwnProperty( x.name ) ?
+						prefix + '__' + x.name :
+						x.name
+				};
+			} else {
+				moduleIdentifiers.default = {
+					name: conflicts.hasOwnProperty( prefix ) ?
+						prefix + '__default' :
+						prefix
+				};
+			}
+		}
 	});
 
 	return identifiers;
