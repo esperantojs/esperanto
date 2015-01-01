@@ -124,7 +124,8 @@ module.exports = function () {
 				return err.file === path.resolve( 'bundle/input/13/main.js' ) && err.loc.line === 1 && err.loc.column === 4;
 			}},
 			{ dir: '14', description: 'handles default imports from external modules correctly' },
-			{ dir: '15', description: 'handles named imports from external modules correctly', strict: true }
+			{ dir: '15', description: 'handles named imports from external modules correctly', strict: true },
+			{ dir: '16', description: 'handles conflicting imports' }
 		];
 
 		profiles.forEach( function ( profile ) {
