@@ -10,6 +10,7 @@
 		"module": true,
 		"exports": true,
 		"require": true,
-		"console": true
+		"console": true,
+		"define": true
 	}
 }
