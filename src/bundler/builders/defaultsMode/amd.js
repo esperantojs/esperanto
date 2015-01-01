@@ -1,20 +1,17 @@
 import template from '../../../utils/template';
 import packageResult from '../../../utils/packageResult';
+import getExportName from './utils/getExportName';
 
 var introTemplate = template( 'define(<%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( bundle, body, options ) {
-	var entry = bundle.entryModule,
-		x,
-		exportStatement,
-		intro,
+	var intro,
 		indentStr;
 
 	indentStr = body.getIndentString();
 
-	if ( x = entry.exports[0] ) {
-		exportStatement = indentStr + `return ${bundle.identifierReplacements[ bundle.entry ].default.name};`;
-		body.append( '\n\n' + exportStatement );
+	if ( bundle.entryModule.defaultExport ) {
+		body.append( `\n\n${indentStr}return ${getExportName(bundle)};` );
 	}
 
 	intro = introTemplate({

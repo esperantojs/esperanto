@@ -1,10 +1,9 @@
 import packageResult from '../../../utils/packageResult';
+import getExportName from './utils/getExportName';
 
 export default function cjs ( bundle, body, options ) {
 	var importBlock,
-		entry = bundle.entryModule,
 		x,
-		exportStatement,
 		intro,
 		indentStr;
 
@@ -19,9 +18,8 @@ export default function cjs ( bundle, body, options ) {
 		body.prepend( importBlock + '\n\n' );
 	}
 
-	if ( x = entry.exports[0] ) {
-		exportStatement = indentStr + `module.exports = ${bundle.identifierReplacements[ bundle.entry ].default.name};`;
-		body.append( '\n\n' + exportStatement );
+	if ( bundle.entryModule.defaultExport ) {
+		body.append( `\n\n${indentStr}module.exports = ${getExportName(bundle)};` );
 	}
 
 	intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";

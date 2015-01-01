@@ -1,13 +1,11 @@
 import template from '../../../utils/template';
 import packageResult from '../../../utils/packageResult';
+import getExportName from './utils/getExportName';
 
 var introTemplate;
 
 export default function umd ( bundle, body, options ) {
-	var x,
-		entry = bundle.entryModule,
-		exportStatement,
-		amdDeps,
+	var amdDeps,
 		cjsDeps,
 		globals,
 		intro,
@@ -19,9 +17,8 @@ export default function umd ( bundle, body, options ) {
 		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
 	}
 
-	if ( x = entry.exports[0] ) {
-		exportStatement = indentStr + `return ${bundle.identifierReplacements[ bundle.entry ].default.name};`;
-		body.append( '\n\n' + exportStatement );
+	if ( bundle.entryModule.defaultExport ) {
+		body.append( `\n\n${indentStr}return ${getExportName(bundle)};` );
 	}
 
 	amdDeps = bundle.externalModules.map( quoteId ).join( ', ' );

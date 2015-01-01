@@ -7,7 +7,7 @@ export default function topLevelScopeConflicts ( bundle ) {
 		var names =
 
 			// bundle name is in top scope
-			[ bundle.uniqueNames[ mod.id ] ]
+			[ /*bundle.uniqueNames[ mod.id ]*/ ]
 
 			// all top defined identifiers are in top scope
 			.concat( mod.ast._scope.names )
@@ -16,7 +16,8 @@ export default function topLevelScopeConflicts ( bundle ) {
 			.concat( getUnscopedNames( mod ) );
 
 		if ( mod._exportsNamespace ) {
-			names.push( bundle.uniqueNames[ mod.id ] );
+			//names.push( bundle.uniqueNames[ mod.id ] );
+			conflicts[ bundle.uniqueNames[ mod.id ] ] = true;
 		}
 
 		// merge this module's top scope with bundle top scope

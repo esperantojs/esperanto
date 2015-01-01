@@ -42,9 +42,10 @@ export default function getIdentifiers ( bundle ) {
 			}
 
 			x.specifiers.forEach( s => {
-				var moduleId, moduleName, specifierName, name, replacement, hash, isChained, separatorIndex;
+				var moduleId, mod, moduleName, specifierName, name, replacement, hash, isChained, separatorIndex;
 
 				moduleId = x.id;
+				mod = bundle.moduleLookup[ moduleId ];
 
 				if ( s.batch ) {
 					name = s.name;
@@ -73,6 +74,8 @@ export default function getIdentifiers ( bundle ) {
 						// only in case of conflict
 						if ( bundle.externalModuleLookup[ moduleId ] || conflicts.hasOwnProperty( moduleName ) ) {
 							replacement = moduleName + '__default';
+						} else if ( mod && mod.defaultExport && mod.defaultExport.declaration && mod.defaultExport.name ) {
+							replacement = mod.defaultExport.name;
 						} else {
 							replacement = moduleName;
 						}

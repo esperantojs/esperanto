@@ -42,7 +42,7 @@ export default function transformBody ( bundle, mod, body ) {
 				body.remove( x.start, x.valueStart );
 
 				// export the function for other modules to use (TODO this shouldn't be necessary)
-				body.replace( x.end, x.end, `\nvar ${identifierReplacements.default.name} = ${identifierReplacements[x.name].name};` );
+				//body.replace( x.end, x.end, `\nvar ${identifierReplacements.default.name} = ${identifierReplacements[x.name].name};` );
 			}
 
 			else if ( x.node.declaration && ( name = x.node.declaration.name ) ) {
