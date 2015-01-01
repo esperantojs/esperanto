@@ -4,8 +4,8 @@
 
 	var external__default = require('utils/external');
 
-	var message__default = 'this is a message';
+	var message = 'this is a message';
 
-	console.log( message__default );
+	console.log( message );
 
 }).call(global);

@@ -69,7 +69,13 @@ export default function getIdentifiers ( bundle ) {
 					moduleName = bundle.uniqueNames[ moduleId ];
 
 					if ( specifierName === 'default' ) {
-						replacement = moduleName + '__default';
+						// if it's an external module, always use __default. Otherwise,
+						// only in case of conflict
+						if ( bundle.externalModuleLookup[ moduleId ] || conflicts.hasOwnProperty( moduleName ) ) {
+							replacement = moduleName + '__default';
+						} else {
+							replacement = moduleName;
+						}
 					} else if ( !external ) {
 						replacement = conflicts.hasOwnProperty( specifierName ) ?
 							moduleName + '__' + specifierName :
@@ -87,7 +93,9 @@ export default function getIdentifiers ( bundle ) {
 		});
 
 		moduleIdentifiers.default = {
-			name: prefix + '__default'
+			name: conflicts.hasOwnProperty( prefix ) ?
+				prefix + '__default' :
+				prefix
 		};
 	});
 

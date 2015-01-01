@@ -11,8 +11,8 @@
 			return this.str;
 		}
 	}
-	var main__default = Foo;
+	var main = Foo;
 
-	module.exports = main__default;
+	module.exports = main;
 
 }).call(global);

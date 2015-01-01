@@ -27,8 +27,8 @@
 			return this.str;
 		}
 	}
-	var main__default = Foo;
+	var main = Foo;
 
-	exports['default'] = main__default;
+	exports['default'] = main;
 
 }));

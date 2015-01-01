@@ -15,6 +15,10 @@ export default function topLevelScopeConflicts ( bundle ) {
 			// all unattributed identifiers could collide with top scope
 			.concat( getUnscopedNames( mod ) );
 
+		if ( mod._exportsNamespace ) {
+			names.push( bundle.uniqueNames[ mod.id ] );
+		}
+
 		// merge this module's top scope with bundle top scope
 		names.forEach( name => {
 			if ( inBundle.hasOwnProperty( name ) ) {

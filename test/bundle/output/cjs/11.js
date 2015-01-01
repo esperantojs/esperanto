@@ -9,9 +9,9 @@
 
 	exports.bar = bar;
 
-	var baz__default = 4;
+	var baz = 4;
 
-	exports.baz = baz__default;
+	exports.baz = baz;
 
 	var qux = 5;
 	exports.qux = qux = 6;

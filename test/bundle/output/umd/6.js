@@ -20,8 +20,8 @@
 
 	var external__default = ('default' in external ? external['default'] : external);
 
-	var message__default = 'this is a message';
+	var message = 'this is a message';
 
-	console.log( message__default );
+	console.log( message );
 
 }));

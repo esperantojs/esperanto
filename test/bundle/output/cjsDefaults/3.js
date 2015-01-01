@@ -5,8 +5,8 @@
 	var external__default = require('external');
 
 	var bar = 'yes';
-	var foo__default = bar;
+	var foo = bar;
 
-	console.log( external__default( foo__default ) );
+	console.log( external__default( foo ) );
 
 }).call(global);

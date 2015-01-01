@@ -4,8 +4,8 @@
 
 	var answer = 42;
 
-	var main__default = answer * 2;
+	var main = answer * 2;
 
-	module.exports = main__default;
+	module.exports = main;
 
 }).call(global);

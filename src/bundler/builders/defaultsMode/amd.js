@@ -13,7 +13,7 @@ export default function amd ( bundle, body, options ) {
 	indentStr = body.getIndentString();
 
 	if ( x = entry.exports[0] ) {
-		exportStatement = indentStr + 'return ' + bundle.uniqueNames[ bundle.entry ] + '__default;';
+		exportStatement = indentStr + `return ${bundle.identifierReplacements[ bundle.entry ].default.name};`;
 		body.append( '\n\n' + exportStatement );
 	}
 

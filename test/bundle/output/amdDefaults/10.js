@@ -11,8 +11,8 @@ define(function () {
 			return this.str;
 		}
 	}
-	var main__default = Foo;
+	var main = Foo;
 
-	return main__default;
+	return main;
 
 });

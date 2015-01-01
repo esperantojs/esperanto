@@ -11,7 +11,7 @@
   }
 
   assert.equal(a, 42);
-  var value__default = a;
+  var value = a;
 
   // Any replacement for the `export default` above needs to happen in the same
   // location. It cannot be done, say, at the end of the file. Otherwise the new
@@ -21,11 +21,11 @@
 
   /* jshint esnext:true */
 
-  assert.equal(value__default, 42);
+  assert.equal(value, 42);
 
   change();
   assert.equal(
-    value__default,
+    value,
     42,
     'default export should not be bound'
   );

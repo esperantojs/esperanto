@@ -4,8 +4,8 @@ define(function () {
 
 	var answer = 42;
 
-	var main__default = answer * 2;
+	var main = answer * 2;
 
-	return main__default;
+	return main;
 
 });

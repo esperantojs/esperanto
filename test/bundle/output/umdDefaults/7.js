@@ -17,14 +17,14 @@
 
 	'use strict';
 
-	var foo__default = 'this is foo';
+	var foo = 'this is foo';
 
 	function logFoo () {
-		console.log( foo__default );
+		console.log( foo );
 	}
 
 	function logBar () {
-		console.log( bar__default );
+		console.log( bar );
 	}
 
 }));

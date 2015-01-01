@@ -6,12 +6,12 @@
 
 	var a = 'a';
 	var b = 'b';
-	var exporter__default = 'DEF';
+	var exporter = 'DEF';
 
 	/* jshint esnext:true */
 
 	assert.equal(a, 'a');
 	assert.equal(b, 'b');
-	assert.equal(exporter__default, 'DEF');
+	assert.equal(exporter, 'DEF');
 
 }).call(global);
