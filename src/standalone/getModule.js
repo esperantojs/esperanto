@@ -5,10 +5,9 @@ import findImportsAndExports from '../utils/ast/findImportsAndExports';
 import getModuleNameHelper from './getModuleNameHelper';
 
 export default function getStandaloneModule ( options ) {
-	var mod, varNames, imports, exports;
+	var mod, imports, exports;
 
 	mod = {
-		source: options.source,
 		body: new MagicString( options.source ),
 		ast: acorn.parse( options.source, {
 			ecmaVersion: 6,
@@ -18,12 +17,11 @@ export default function getStandaloneModule ( options ) {
 
 	if ( options.strict ) {
 		annotateAst( mod.ast );
-		varNames = mod.ast._scope.names.concat( mod.ast._blockScope.names );
 	}
 
-	mod.getName = getModuleNameHelper( options.getModuleName, varNames );
+	mod.getName = getModuleNameHelper( options.getModuleName, mod.ast._declared );
 
-	[ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
+	[ imports, exports ] = findImportsAndExports( mod, options.source, mod.ast );
 
 	mod.imports = imports;
 	mod.exports = exports;

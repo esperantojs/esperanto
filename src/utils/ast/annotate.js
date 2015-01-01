@@ -36,7 +36,7 @@ Scope.prototype = {
 };
 
 export default function annotateAst ( ast ) {
-	var scope = new Scope(), blockScope = new Scope();
+	var scope = new Scope(), blockScope = new Scope(), declared = {};
 
 	estraverse.traverse( ast, {
 		enter: function ( node ) {
@@ -51,6 +51,7 @@ export default function annotateAst ( ast ) {
 			if ( createsScope( node ) ) {
 				if ( node.id ) {
 					scope.add( node.id.name );
+					declared[ node.id.name ] = true;
 				}
 
 				scope = node._scope = new Scope({
@@ -67,10 +68,12 @@ export default function annotateAst ( ast ) {
 
 			if ( declaresVar( node ) ) {
 				scope.add( node.id.name );
+				declared[ node.id.name ] = true;
 			}
 
 			else if ( declaresLet( node ) ) {
 				blockScope.add( node.id.name );
+				declared[ node.id.name ] = true;
 			}
 
 			// Make a note of which children we should skip
@@ -95,6 +98,7 @@ export default function annotateAst ( ast ) {
 
 	ast._scope = scope;
 	ast._blockScope = blockScope;
+	ast._declared = declared;
 }
 
 function createsScope ( node ) {

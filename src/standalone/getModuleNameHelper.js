@@ -1,11 +1,7 @@
 import sanitize from 'utils/sanitize';
 
-export default function getModuleNameHelper ( userFn, varNames ) {
-	var nameById = {}, usedNames = {}, getModuleName;
-
-	if ( varNames ) {
-		varNames.forEach( n => usedNames[n] = true );
-	}
+export default function getModuleNameHelper ( userFn, usedNames = {} ) {
+	var nameById = {}, getModuleName;
 
 	getModuleName = x => {
 		var moduleId, parts, i, prefix = '', name, candidate, specifier;
