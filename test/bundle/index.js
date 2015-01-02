@@ -100,11 +100,11 @@ module.exports = function () {
 
 		profiles = [
 			{ description: 'bundle.toAmd()', method: 'toAmd', outputdir: 'amdDefaults' },
-			{ description: 'bundle.toCjs()', method: 'toCjs', outputdir: 'cjsDefaults' },
 			{ description: 'bundle.toUmd()', method: 'toUmd', outputdir: 'umdDefaults', options: { name: 'myModule' } },
+			{ description: 'bundle.toCjs()', method: 'toCjs', outputdir: 'cjsDefaults' },
 			{ description: 'bundle.toAmd({ strict: true })', method: 'toAmd', outputdir: 'amd', options: { strict: true } },
-			{ description: 'bundle.toCjs({ strict: true })', method: 'toCjs', outputdir: 'cjs', options: { strict: true } },
-			{ description: 'bundle.toUmd({ strict: true })', method: 'toUmd', outputdir: 'umd', options: { strict: true, name: 'myModule' } }
+			{ description: 'bundle.toUmd({ strict: true })', method: 'toUmd', outputdir: 'umd', options: { strict: true, name: 'myModule' } },
+			{ description: 'bundle.toCjs({ strict: true })', method: 'toCjs', outputdir: 'cjs', options: { strict: true } }
 		];
 
 		tests = [
@@ -126,7 +126,10 @@ module.exports = function () {
 			{ dir: '14', description: 'handles default imports from external modules correctly' },
 			{ dir: '15', description: 'handles named imports from external modules correctly', strict: true },
 			{ dir: '16', description: 'handles conflicting imports' },
-			{ dir: '17', description: 'handles shadowed renamed imports' }
+			{ dir: '17', description: 'handles shadowed renamed imports' },
+			{ dir: '18', description: 'renames imports that conflict with existing variable names' },
+			{ dir: '19', description: 'handles hasOwnProperty edge case (default imports)' },
+			{ dir: '20', description: 'handles hasOwnProperty edge case (named imports)' }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -140,7 +143,7 @@ module.exports = function () {
 						config = {};
 					}
 
-					it( t.description, function () {
+					( t.only ? it.only : it )( t.description, function () {
 						return esperanto.bundle({
 							base: path.resolve( 'bundle/input', t.dir ),
 							entry: t.entry || 'main',

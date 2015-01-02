@@ -1,4 +1,5 @@
-import resolve from '../../utils/resolve';
+import hasOwnProp from 'utils/hasOwnProp';
+import resolve from 'utils/resolve';
 
 export default function resolveChains ( modules, moduleLookup ) {
 	var chains = {};
@@ -14,7 +15,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 				if ( s.batch ) {
 					// if this is an internal module, we need to tell that module that
 					// it needs to export an object full of getters
-					if ( moduleLookup.hasOwnProperty( moduleId ) ) {
+					if ( hasOwnProp.call( moduleLookup, moduleId ) ) {
 						moduleLookup[ moduleId ]._exportsNamespace = true;
 					}
 
@@ -29,7 +30,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 			if ( !x.specifiers ) return;
 
 			x.specifiers.forEach( s => {
-				if ( origin.hasOwnProperty( s.name ) ) {
+				if ( hasOwnProp.call( origin, s.name ) ) {
 					chains[ mod.id + '@' + s.name ] = origin[ s.name ];
 				}
 			});

@@ -1,4 +1,5 @@
 import path from 'path';
+import hasOwnProp from 'utils/hasOwnProp';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
 import getUniqueNames from './utils/getUniqueNames';
@@ -54,7 +55,7 @@ export default function getBundle ( options ) {
 
 		modulePath = path.resolve( base, moduleId + '.js' );
 
-		if ( !promiseById.hasOwnProperty( moduleId ) ) {
+		if ( !hasOwnProp.call( promiseById, moduleId ) ) {
 			promiseById[ moduleId ] = sander.readFile( modulePath ).catch( function ( err ) {
 				if ( err.code === 'ENOENT' ) {
 					modulePath = modulePath.replace( /\.js$/, '/index.js' );
@@ -86,7 +87,7 @@ export default function getBundle ( options ) {
 					}
 
 					// short-circuit cycles
-					if ( promiseById[ importId ] ) {
+					if ( hasOwnProp.call( promiseById, importId ) ) {
 						return;
 					}
 
@@ -103,7 +104,7 @@ export default function getBundle ( options ) {
 					}
 
 					// Most likely an external module
-					if ( !externalModuleLookup.hasOwnProperty( moduleId ) ) {
+					if ( !hasOwnProp.call( externalModuleLookup, moduleId ) ) {
 						externalModule = {
 							id: moduleId
 						};

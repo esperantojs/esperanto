@@ -1,4 +1,5 @@
 import estraverse from 'estraverse';
+import hasOwnProp from 'utils/hasOwnProp';
 
 export default function getUnscopedNames ( mod ) {
 	var unscoped = [], importedNames, scope;
@@ -12,7 +13,7 @@ export default function getUnscopedNames ( mod ) {
 				});
 			});
 		}
-		return importedNames.hasOwnProperty( name );
+		return hasOwnProp.call( importedNames, name );
 	}
 
 	estraverse.traverse( mod.ast, {

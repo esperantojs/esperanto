@@ -1,4 +1,5 @@
-import resolve from '../../utils/resolve';
+import hasOwnProp from 'utils/hasOwnProp';
+import resolve from 'utils/resolve';
 
 export default function sortModules ( entry, moduleLookup ) {
 	var seen = {},
@@ -7,7 +8,7 @@ export default function sortModules ( entry, moduleLookup ) {
 	function visit ( mod ) {
 		// ignore external modules, and modules we've
 		// already included
-		if ( !mod || seen.hasOwnProperty( mod.id ) ) {
+		if ( !mod || hasOwnProp.call( seen, mod.id ) ) {
 			return;
 		}
 

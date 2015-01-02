@@ -44,7 +44,7 @@
 	};
 
 	function annotateAst ( ast ) {
-		var scope = new Scope(), blockScope = new Scope();
+		var scope = new Scope(), blockScope = new Scope(), declared = {};
 
 		estraverse__default.traverse( ast, {
 			enter: function ( node ) {
@@ -59,6 +59,7 @@
 				if ( createsScope( node ) ) {
 					if ( node.id ) {
 						scope.add( node.id.name );
+						declared[ node.id.name ] = true;
 					}
 
 					scope = node._scope = new Scope({
@@ -75,10 +76,12 @@
 
 				if ( declaresVar( node ) ) {
 					scope.add( node.id.name );
+					declared[ node.id.name ] = true;
 				}
 
 				else if ( declaresLet( node ) ) {
 					blockScope.add( node.id.name );
+					declared[ node.id.name ] = true;
 				}
 
 				// Make a note of which children we should skip
@@ -103,6 +106,7 @@
 
 		ast._scope = scope;
 		ast._blockScope = blockScope;
+		ast._declared = declared;
 	}
 
 	function createsScope ( node ) {
@@ -322,6 +326,8 @@
 		return result;
 	}
 
+	var hasOwnProp = Object.prototype.hasOwnProperty;
+
 	var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
 
 	/**
@@ -342,12 +348,8 @@
 		return name;
 	}
 
-	function getModuleNameHelper ( userFn, varNames ) {
-		var nameById = {}, usedNames = {}, getModuleName;
-
-		if ( varNames ) {
-			varNames.forEach( function(n ) {return usedNames[n] = true} );
-		}
+	function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNames === void 0)usedNames = {};
+		var nameById = {}, getModuleName;
 
 		getModuleName = function(x ) {
 			var moduleId, parts, i, prefix = '', name, candidate, specifier;
@@ -355,7 +357,7 @@
 			moduleId = x.path;
 
 			// use existing value
-			if ( nameById.hasOwnProperty( moduleId ) ) {
+			if ( hasOwnProp.call( nameById, moduleId ) ) {
 				return nameById[ moduleId ];
 			}
 
@@ -363,7 +365,7 @@
 			if ( userFn && ( name = userFn( moduleId ) ) ) {
 				name = sanitize( name );
 
-				if ( usedNames.hasOwnProperty( name ) ) {
+				if ( hasOwnProp.call( usedNames, name ) ) {
 					// TODO write a test for this
 					throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
 				}
@@ -385,7 +387,7 @@
 					while ( i-- ) {
 						candidate = prefix + sanitize( parts.slice( i ).join( '__' ) );
 
-						if ( !usedNames.hasOwnProperty( candidate ) ) {
+						if ( !hasOwnProp.call( usedNames, candidate ) ) {
 							name = candidate;
 							break;
 						}
@@ -405,10 +407,9 @@
 	}
 
 	function getStandaloneModule ( options ) {var $D$0;
-		var mod, varNames, imports, exports;
+		var mod, imports, exports;
 
 		mod = {
-			source: options.source,
 			body: new MagicString__default( options.source ),
 			ast: acorn__default.parse( options.source, {
 				ecmaVersion: 6,
@@ -418,12 +419,11 @@
 
 		if ( options.strict ) {
 			annotateAst( mod.ast );
-			varNames = mod.ast._scope.names.concat( mod.ast._blockScope.names );
 		}
 
-		mod.getName = getModuleNameHelper( options.getModuleName, varNames );
+		mod.getName = getModuleNameHelper( options.getModuleName, mod.ast._declared );
 
-		imports = ($D$0 = findImportsAndExports( mod, mod.source, mod.ast ))[0], exports = $D$0[1], $D$0;
+		imports = ($D$0 = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = $D$0[1], $D$0;
 
 		mod.imports = imports;
 		mod.exports = exports;
@@ -469,7 +469,7 @@
 		function visit ( mod ) {
 			// ignore external modules, and modules we've
 			// already included
-			if ( !mod || seen.hasOwnProperty( mod.id ) ) {
+			if ( !mod || hasOwnProp.call( seen, mod.id ) ) {
 				return;
 			}
 
@@ -502,7 +502,7 @@
 					if ( s.batch ) {
 						// if this is an internal module, we need to tell that module that
 						// it needs to export an object full of getters
-						if ( moduleLookup.hasOwnProperty( moduleId ) ) {
+						if ( hasOwnProp.call( moduleLookup, moduleId ) ) {
 							moduleLookup[ moduleId ]._exportsNamespace = true;
 						}
 
@@ -517,7 +517,7 @@
 				if ( !x.specifiers ) return;
 
 				x.specifiers.forEach( function(s ) {
-					if ( origin.hasOwnProperty( s.name ) ) {
+					if ( hasOwnProp.call( origin, s.name ) ) {
 						chains[ mod.id + '@' + s.name ] = origin[ s.name ];
 					}
 				});
@@ -544,7 +544,7 @@
 				var id = resolve( x.path, mod.file );
 				x.id = id;
 
-				if ( x.default && !names.hasOwnProperty( id ) && !used.hasOwnProperty( x.name ) ) {
+				if ( x.default && !hasOwnProp.call( names, id ) && !hasOwnProp.call( used, x.name ) ) {
 					names[ id ] = x.name;
 					used[ x.name ] = true;
 				}
@@ -557,7 +557,7 @@
 			var parts, i, name;
 
 			// is this already named?
-			if ( names.hasOwnProperty( mod.id ) ) {
+			if ( hasOwnProp.call( names, mod.id ) ) {
 				return;
 			}
 
@@ -567,12 +567,12 @@
 			while ( i-- ) {
 				name = sanitize( parts.slice( i ).join( '_' ) );
 
-				if ( !used.hasOwnProperty( name ) ) {
+				if ( !hasOwnProp.call( used, name ) ) {
 					break;
 				}
 			}
 
-			while ( used.hasOwnProperty( name ) ) {
+			while ( hasOwnProp.call( used, name ) ) {
 				name = '_' + name;
 			}
 
@@ -595,7 +595,7 @@
 					});
 				});
 			}
-			return importedNames.hasOwnProperty( name );
+			return hasOwnProp.call( importedNames, name );
 		}
 
 		estraverse__default.traverse( mod.ast, {
@@ -629,29 +629,43 @@
 		return unscoped;
 	}
 
+	function getRenamedImports ( mod ) {
+		var renamed = [];
+
+		mod.imports.forEach( function(x ) {
+			if ( x.specifiers ) {
+				x.specifiers.forEach( function(s ) {
+					if ( s.name !== s.as && !~renamed.indexOf( s.name ) ) {
+						renamed.push( s.name );
+					}
+				});
+			}
+		});
+
+		return renamed;
+	}
+
 	function topLevelScopeConflicts ( bundle ) {
 		var conflicts = {}, inBundle = {};
 
 		bundle.modules.forEach( function(mod ) {
 			var names =
 
-				// bundle name is in top scope
-				[ /*bundle.uniqueNames[ mod.id ]*/ ]
-
 				// all top defined identifiers are in top scope
-				.concat( mod.ast._scope.names )
+				mod.ast._scope.names
 
 				// all unattributed identifiers could collide with top scope
-				.concat( getUnscopedNames( mod ) );
+				.concat( getUnscopedNames( mod ) )
+
+				.concat( getRenamedImports( mod ) );
 
 			if ( mod._exportsNamespace ) {
-				//names.push( bundle.uniqueNames[ mod.id ] );
 				conflicts[ bundle.uniqueNames[ mod.id ] ] = true;
 			}
 
 			// merge this module's top scope with bundle top scope
 			names.forEach( function(name ) {
-				if ( inBundle.hasOwnProperty( name ) ) {
+				if ( hasOwnProp.call( inBundle, name ) ) {
 					conflicts[ name ] = true;
 				} else {
 					inBundle[ name ] = true;
@@ -662,7 +676,7 @@
 		return conflicts;
 	}
 
-	function getIdentifiers ( bundle ) {
+	function getIdentifierReplacements ( bundle ) {
 		var conflicts, identifiers = {};
 
 		// first, discover conflicts
@@ -677,7 +691,7 @@
 
 			function addName ( n ) {
 				moduleIdentifiers[n] = {
-					name: conflicts.hasOwnProperty( n ) ?
+					name: hasOwnProp.call( conflicts, n ) ?
 						prefix + '__' + n :
 						n
 				};
@@ -693,9 +707,7 @@
 					return;
 				}
 
-				if ( bundle.externalModuleLookup.hasOwnProperty( x.id ) ) {
-					external = true;
-				}
+				external = hasOwnProp.call( bundle.externalModuleLookup, x.id );
 
 				x.specifiers.forEach( function(s ) {
 					var moduleId, mod, moduleName, specifierName, name, replacement, hash, isChained, separatorIndex;
@@ -712,7 +724,7 @@
 
 						// If this is a chained import, get the origin
 						hash = moduleId + '@' + specifierName;
-						while ( bundle.chains.hasOwnProperty( hash ) ) {
+						while ( hasOwnProp.call( bundle.chains, hash ) ) {
 							hash = bundle.chains[ hash ];
 							isChained = true;
 						}
@@ -732,18 +744,18 @@
 							}
 
 							else if ( mod && mod.defaultExport && mod.defaultExport.declaration && mod.defaultExport.name ) {
-								replacement = conflicts.hasOwnProperty( mod.defaultExport.name ) ?
+								replacement = hasOwnProp.call( conflicts, mod.defaultExport.name ) ?
 									moduleName + '__' + mod.defaultExport.name :
 									mod.defaultExport.name;
 							}
 
 							else {
-								replacement = conflicts.hasOwnProperty( moduleName ) ?
+								replacement = hasOwnProp.call( conflicts, moduleName ) || otherModulesDeclare( bundle.moduleLookup[ moduleId ], moduleName ) ?
 									moduleName + '__default' :
 									moduleName;
 							}
 						} else if ( !external ) {
-							replacement = conflicts.hasOwnProperty( specifierName ) ?
+							replacement = hasOwnProp.call( conflicts, specifierName ) ?
 								moduleName + '__' + specifierName :
 								specifierName;
 						} else {
@@ -763,19 +775,36 @@
 			if ( x = mod.defaultExport ) {
 				if ( x.declaration && x.name ) {
 					moduleIdentifiers.default = {
-						name: conflicts.hasOwnProperty( x.name ) ?
+						name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( null, prefix ) ?
 							prefix + '__' + x.name :
 							x.name
 					};
 				} else {
 					moduleIdentifiers.default = {
-						name: conflicts.hasOwnProperty( prefix ) ?
+						name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( null, prefix ) ?
 							prefix + '__default' :
 							prefix
 					};
 				}
 			}
 		});
+
+		function otherModulesDeclare ( mod, replacement ) {
+			var i, otherMod;
+
+			i = bundle.modules.length;
+			while ( i-- ) {
+				otherMod = bundle.modules[i];
+
+				if ( mod === otherMod ) {
+					continue;
+				}
+
+				if ( hasOwnProp.call( otherMod.ast._declared, replacement ) ) {
+					return true;
+				}
+			}
+		}
 
 		return identifiers;
 	}
@@ -851,7 +880,7 @@
 
 		name = assignee.name;
 
-		if ( names.hasOwnProperty( name ) && names[ name ].readOnly && !scope.contains( name ) ) {
+		if ( hasOwnProp.call( names, name ) && names[ name ].readOnly && !scope.contains( name ) ) {
 			throw new Error( message + '`' + name + '`' );
 		}
 	}
@@ -861,7 +890,7 @@
 
 		if ( node.type === 'Identifier' ) {
 			name = node.name;
-			replacement = identifierReplacements.hasOwnProperty( name ) && identifierReplacements[ name ].name;
+			replacement = hasOwnProp.call( identifierReplacements, name ) && identifierReplacements[ name ].name;
 
 			if ( replacement && !scope.contains( name, true ) ) {
 				// rewrite
@@ -1098,7 +1127,7 @@
 			separator: '\n\n'
 		});
 
-		bundle.identifierReplacements = getIdentifiers( bundle );
+		bundle.identifierReplacements = getIdentifierReplacements( bundle );
 
 		bundle.exports = resolveExports( bundle );
 
@@ -1232,7 +1261,7 @@
 
 			modulePath = path__default.resolve( base, moduleId + '.js' );
 
-			if ( !promiseById.hasOwnProperty( moduleId ) ) {
+			if ( !hasOwnProp.call( promiseById, moduleId ) ) {
 				promiseById[ moduleId ] = sander__default.readFile( modulePath ).catch( function ( err ) {
 					if ( err.code === 'ENOENT' ) {
 						modulePath = modulePath.replace( /\.js$/, '/index.js' );
@@ -1264,7 +1293,7 @@
 						}
 
 						// short-circuit cycles
-						if ( promiseById[ importId ] ) {
+						if ( hasOwnProp.call( promiseById, importId ) ) {
 							return;
 						}
 
@@ -1281,7 +1310,7 @@
 						}
 
 						// Most likely an external module
-						if ( !externalModuleLookup.hasOwnProperty( moduleId ) ) {
+						if ( !hasOwnProp.call( externalModuleLookup, moduleId ) ) {
 							externalModule = {
 								id: moduleId
 							};

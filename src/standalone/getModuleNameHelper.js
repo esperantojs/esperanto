@@ -1,3 +1,4 @@
+import hasOwnProp from 'utils/hasOwnProp';
 import sanitize from 'utils/sanitize';
 
 export default function getModuleNameHelper ( userFn, usedNames = {} ) {
@@ -9,7 +10,7 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 		moduleId = x.path;
 
 		// use existing value
-		if ( nameById.hasOwnProperty( moduleId ) ) {
+		if ( hasOwnProp.call( nameById, moduleId ) ) {
 			return nameById[ moduleId ];
 		}
 
@@ -17,7 +18,7 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 		if ( userFn && ( name = userFn( moduleId ) ) ) {
 			name = sanitize( name );
 
-			if ( usedNames.hasOwnProperty( name ) ) {
+			if ( hasOwnProp.call( usedNames, name ) ) {
 				// TODO write a test for this
 				throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
 			}
@@ -39,7 +40,7 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 				while ( i-- ) {
 					candidate = prefix + sanitize( parts.slice( i ).join( '__' ) );
 
-					if ( !usedNames.hasOwnProperty( candidate ) ) {
+					if ( !hasOwnProp.call( usedNames, candidate ) ) {
 						name = candidate;
 						break;
 					}

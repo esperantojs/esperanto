@@ -1,3 +1,4 @@
+import hasOwnProp from 'utils/hasOwnProp';
 import resolve from 'utils/resolve';
 import sanitize from 'utils/sanitize';
 
@@ -19,7 +20,7 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 			var id = resolve( x.path, mod.file );
 			x.id = id;
 
-			if ( x.default && !names.hasOwnProperty( id ) && !used.hasOwnProperty( x.name ) ) {
+			if ( x.default && !hasOwnProp.call( names, id ) && !hasOwnProp.call( used, x.name ) ) {
 				names[ id ] = x.name;
 				used[ x.name ] = true;
 			}
@@ -32,7 +33,7 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 		var parts, i, name;
 
 		// is this already named?
-		if ( names.hasOwnProperty( mod.id ) ) {
+		if ( hasOwnProp.call( names, mod.id ) ) {
 			return;
 		}
 
@@ -42,12 +43,12 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 		while ( i-- ) {
 			name = sanitize( parts.slice( i ).join( '_' ) );
 
-			if ( !used.hasOwnProperty( name ) ) {
+			if ( !hasOwnProp.call( used, name ) ) {
 				break;
 			}
 		}
 
-		while ( used.hasOwnProperty( name ) ) {
+		while ( hasOwnProp.call( used, name ) ) {
 			name = '_' + name;
 		}
 

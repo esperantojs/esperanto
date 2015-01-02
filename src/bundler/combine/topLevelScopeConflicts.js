@@ -1,3 +1,4 @@
+import hasOwnProp from 'utils/hasOwnProp';
 import getUnscopedNames from './getUnscopedNames';
 import getRenamedImports from './getRenamedImports';
 
@@ -21,7 +22,7 @@ export default function topLevelScopeConflicts ( bundle ) {
 
 		// merge this module's top scope with bundle top scope
 		names.forEach( name => {
-			if ( inBundle.hasOwnProperty( name ) ) {
+			if ( hasOwnProp.call( inBundle, name ) ) {
 				conflicts[ name ] = true;
 			} else {
 				inBundle[ name ] = true;

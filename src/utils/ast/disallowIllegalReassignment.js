@@ -1,3 +1,5 @@
+import hasOwnProp from 'utils/hasOwnProp';
+
 export default function disallowIllegalReassignment ( node, names, scope ) {
 	var assignee, name, message;
 
@@ -22,7 +24,7 @@ export default function disallowIllegalReassignment ( node, names, scope ) {
 
 	name = assignee.name;
 
-	if ( names.hasOwnProperty( name ) && names[ name ].readOnly && !scope.contains( name ) ) {
+	if ( hasOwnProp.call( names, name ) && names[ name ].readOnly && !scope.contains( name ) ) {
 		throw new Error( message + '`' + name + '`' );
 	}
 }

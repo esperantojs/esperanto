@@ -1,3 +1,4 @@
+import hasOwnProp from 'utils/hasOwnProp';
 import topLevelScopeConflicts from './topLevelScopeConflicts';
 
 /**
@@ -6,7 +7,7 @@ import topLevelScopeConflicts from './topLevelScopeConflicts';
  * @param {object} bundle - the bundle
  * @returns {object}
  */
-export default function getIdentifiers ( bundle ) {
+export default function getIdentifierReplacements ( bundle ) {
 	var conflicts, identifiers = {};
 
 	// first, discover conflicts
@@ -21,7 +22,7 @@ export default function getIdentifiers ( bundle ) {
 
 		function addName ( n ) {
 			moduleIdentifiers[n] = {
-				name: conflicts.hasOwnProperty( n ) ?
+				name: hasOwnProp.call( conflicts, n ) ?
 					prefix + '__' + n :
 					n
 			};
@@ -37,9 +38,7 @@ export default function getIdentifiers ( bundle ) {
 				return;
 			}
 
-			if ( bundle.externalModuleLookup.hasOwnProperty( x.id ) ) {
-				external = true;
-			}
+			external = hasOwnProp.call( bundle.externalModuleLookup, x.id );
 
 			x.specifiers.forEach( s => {
 				var moduleId, mod, moduleName, specifierName, name, replacement, hash, isChained, separatorIndex;
@@ -56,7 +55,7 @@ export default function getIdentifiers ( bundle ) {
 
 					// If this is a chained import, get the origin
 					hash = moduleId + '@' + specifierName;
-					while ( bundle.chains.hasOwnProperty( hash ) ) {
+					while ( hasOwnProp.call( bundle.chains, hash ) ) {
 						hash = bundle.chains[ hash ];
 						isChained = true;
 					}
@@ -76,18 +75,18 @@ export default function getIdentifiers ( bundle ) {
 						}
 
 						else if ( mod && mod.defaultExport && mod.defaultExport.declaration && mod.defaultExport.name ) {
-							replacement = conflicts.hasOwnProperty( mod.defaultExport.name ) ?
+							replacement = hasOwnProp.call( conflicts, mod.defaultExport.name ) ?
 								moduleName + '__' + mod.defaultExport.name :
 								mod.defaultExport.name;
 						}
 
 						else {
-							replacement = conflicts.hasOwnProperty( moduleName ) ?
+							replacement = hasOwnProp.call( conflicts, moduleName ) || otherModulesDeclare( bundle.moduleLookup[ moduleId ], moduleName ) ?
 								moduleName + '__default' :
 								moduleName;
 						}
 					} else if ( !external ) {
-						replacement = conflicts.hasOwnProperty( specifierName ) ?
+						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							moduleName + '__' + specifierName :
 							specifierName;
 					} else {
@@ -107,19 +106,36 @@ export default function getIdentifiers ( bundle ) {
 		if ( x = mod.defaultExport ) {
 			if ( x.declaration && x.name ) {
 				moduleIdentifiers.default = {
-					name: conflicts.hasOwnProperty( x.name ) ?
+					name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( null, prefix ) ?
 						prefix + '__' + x.name :
 						x.name
 				};
 			} else {
 				moduleIdentifiers.default = {
-					name: conflicts.hasOwnProperty( prefix ) ?
+					name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( null, prefix ) ?
 						prefix + '__default' :
 						prefix
 				};
 			}
 		}
 	});
+
+	function otherModulesDeclare ( mod, replacement ) {
+		var i, otherMod;
+
+		i = bundle.modules.length;
+		while ( i-- ) {
+			otherMod = bundle.modules[i];
+
+			if ( mod === otherMod ) {
+				continue;
+			}
+
+			if ( hasOwnProp.call( otherMod.ast._declared, replacement ) ) {
+				return true;
+			}
+		}
+	}
 
 	return identifiers;
 }
