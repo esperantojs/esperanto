@@ -10,13 +10,12 @@ export default function transformBody ( mod, body, options ) {
 		shouldExportEarly = {},
 		earlyExports,
 		lateExports,
-		defaultValue,
-		indentExclusionRanges = [];
+		defaultValue;
 
 	[ importedBindings, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
 
-	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
+	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
 	// Remove import statements
 	mod.imports.forEach( x => {
@@ -99,6 +98,6 @@ export default function transformBody ( mod, body, options ) {
 	}
 
 	body.trim().indent({
-		exclude: indentExclusionRanges.length ? indentExclusionRanges : null
+		exclude: mod.ast._templateLiteralRanges
 	}).prepend( options.intro ).trim().append( options.outro );
 }

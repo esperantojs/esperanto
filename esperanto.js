@@ -1,12 +1,12 @@
 (function () {
 
- 'use strict';
+	'use strict';
 
- var acorn__default = require('acorn');
- var MagicString__default = require('magic-string');
- var path__default = require('path');
- var sander__default = require('sander');
- var estraverse__default = require('estraverse');
+	var acorn__default = require('acorn');
+	var MagicString__default = require('magic-string');
+	var path__default = require('path');
+	var sander__default = require('sander');
+	var estraverse__default = require('estraverse');
 
 	/*
 		This module traverse a module's AST, attaching scope information
@@ -44,7 +44,7 @@
 	};
 
 	function annotateAst ( ast ) {
-		var scope = new Scope(), blockScope = new Scope(), declared = {};
+		var scope = new Scope(), blockScope = new Scope(), declared = {}, templateLiteralRanges = [];
 
 		estraverse__default.traverse( ast, {
 			enter: function ( node ) {
@@ -92,6 +92,12 @@
 				else if ( node.type === 'Property' ) {
 					node.key._skip = true;
 				}
+
+				// make a note of template literals - we want to prevent multiline
+				// strings from being indented with everything else
+				if ( node.type === 'TemplateLiteral' ) {
+					templateLiteralRanges.push([ node.start, node.end ]);
+				}
 			},
 			leave: function ( node ) {
 				if ( createsScope( node ) ) {
@@ -107,6 +113,7 @@
 		ast._scope = scope;
 		ast._blockScope = blockScope;
 		ast._declared = declared;
+		ast._templateLiteralRanges = templateLiteralRanges;
 	}
 
 	function createsScope ( node ) {
@@ -327,6 +334,7 @@
 	}
 
 	var hasOwnProp = Object.prototype.hasOwnProperty;
+	var hasOwnProp__default = hasOwnProp;
 
 	var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
 
@@ -939,7 +947,7 @@
 		}
 	}
 
-	function traverseAst ( ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges ) {
+	function traverseAst ( ast, body, identifierReplacements, exportNames, alreadyExported ) {
 		var scope, blockScope, capturedUpdates;
 
 		scope = ast._scope;
@@ -979,11 +987,6 @@
 
 				// Replace identifiers
 				rewriteIdentifiers( body, node, identifierReplacements, scope );
-
-				// Add multi-line strings to exclusion ranges
-				if ( node.type === 'TemplateLiteral' ) {
-					indentExclusionRanges.push([ node.start, node.end ]);
-				}
 			},
 
 			leave: function ( node ) {
@@ -1010,14 +1013,13 @@
 			exportNames,
 			alreadyExported = {},
 			shouldExportEarly = {},
-			exportBlock,
-			indentExclusionRanges = [];
+			exportBlock;
 
 		identifierReplacements = bundle.identifierReplacements[ mod.id ];
 
 		exportNames = bundle.exports[ mod.id ];
 
-		traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
+		traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
 		// remove imports
 		mod.imports.forEach( function(x ) {
@@ -1117,7 +1119,7 @@
 			}
 		}
 
-		return body.trim().indent({ exclude: indentExclusionRanges });
+		return body.trim();
 	}
 
 	function combine ( bundle ) {
@@ -1151,15 +1153,14 @@
 				});
 			});
 
-			//transformBody( bundle, mod, modBody );
-
 			body.addSource({
 				filename: path__default.resolve( bundle.base, mod.file ),
-				content: transformBody__transformBody( bundle, mod, mod.body.clone() )
+				content: transformBody__transformBody( bundle, mod, mod.body.clone() ),
+				indentExclusionRanges: mod.ast._templateLiteralRanges
 			});
 		});
 
-		bundle.body = body;
+		bundle.body = body.indent();
 	}
 
 	function getModule ( mod ) {var $D$1;
@@ -1449,20 +1450,20 @@
 		}
 	}
 
- /**
-  * Creates a template function from a template string. The template
-    may have `<%= someVar %>` interpolators, and the returned function
-    should be called with a data object e.g. `{ someVar: 'someData' }`
-  * @param {string} str - the template string
-  * @returns {function}
-  */
- function template ( str ) {
- 	return function ( data ) {
- 		return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
- 			return $1 in data ? data[ $1 ] : match;
- 		});
- 	};
- }
+	/**
+	 * Creates a template function from a template string. The template
+	   may have `<%= someVar %>` interpolators, and the returned function
+	   should be called with a data object e.g. `{ someVar: 'someData' }`
+	 * @param {string} str - the template string
+	 * @returns {function}
+	 */
+	function template ( str ) {
+		return function ( data ) {
+			return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
+				return $1 in data ? data[ $1 ] : match;
+			});
+		};
+	}
 
 	function getId ( m ) {
 		return m.id;
@@ -2362,7 +2363,7 @@
 		}
 	};
 
- module.exports = esperanto;
+	module.exports = esperanto;
 
 }).call(global);
 //# sourceMappingURL=./esperanto.js.map

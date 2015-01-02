@@ -8,9 +8,9 @@
     return 1;
   }
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	assert.equal(fn1(), 1);
-	assert.equal(fn1(), 1);
+  assert.equal(fn1(), 1);
+  assert.equal(fn1(), 1);
 
 }).call(global);

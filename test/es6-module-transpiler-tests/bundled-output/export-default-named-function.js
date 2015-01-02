@@ -10,7 +10,7 @@
     return foo();
   }
 
-	assert.strictEqual(foo(), 1);
-	assert.strictEqual(callsFoo(), 1);
+  assert.strictEqual(foo(), 1);
+  assert.strictEqual(callsFoo(), 1);
 
 }).call(global);

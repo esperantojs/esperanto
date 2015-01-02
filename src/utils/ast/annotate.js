@@ -36,7 +36,7 @@ Scope.prototype = {
 };
 
 export default function annotateAst ( ast ) {
-	var scope = new Scope(), blockScope = new Scope(), declared = {};
+	var scope = new Scope(), blockScope = new Scope(), declared = {}, templateLiteralRanges = [];
 
 	estraverse.traverse( ast, {
 		enter: function ( node ) {
@@ -84,6 +84,12 @@ export default function annotateAst ( ast ) {
 			else if ( node.type === 'Property' ) {
 				node.key._skip = true;
 			}
+
+			// make a note of template literals - we want to prevent multiline
+			// strings from being indented with everything else
+			if ( node.type === 'TemplateLiteral' ) {
+				templateLiteralRanges.push([ node.start, node.end ]);
+			}
 		},
 		leave: function ( node ) {
 			if ( createsScope( node ) ) {
@@ -99,6 +105,7 @@ export default function annotateAst ( ast ) {
 	ast._scope = scope;
 	ast._blockScope = blockScope;
 	ast._declared = declared;
+	ast._templateLiteralRanges = templateLiteralRanges;
 }
 
 function createsScope ( node ) {

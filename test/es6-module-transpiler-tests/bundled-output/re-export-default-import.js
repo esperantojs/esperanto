@@ -8,10 +8,10 @@
     return 'hi';
   }
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	assert.equal(hi(), 'hi');
+  assert.equal(hi(), 'hi');
 
 }).call(global);

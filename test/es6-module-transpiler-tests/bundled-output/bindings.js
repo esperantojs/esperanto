@@ -10,10 +10,10 @@
     count++;
   }
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	assert.equal(count, 0);
-	incr();
-	assert.equal(count, 1);
+  assert.equal(count, 0);
+  incr();
+  assert.equal(count, 1);
 
 }).call(global);

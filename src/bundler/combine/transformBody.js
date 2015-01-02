@@ -5,14 +5,13 @@ export default function transformBody ( bundle, mod, body ) {
 		exportNames,
 		alreadyExported = {},
 		shouldExportEarly = {},
-		exportBlock,
-		indentExclusionRanges = [];
+		exportBlock;
 
 	identifierReplacements = bundle.identifierReplacements[ mod.id ];
 
 	exportNames = bundle.exports[ mod.id ];
 
-	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
+	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
 	// remove imports
 	mod.imports.forEach( x => {
@@ -112,5 +111,5 @@ export default function transformBody ( bundle, mod, body ) {
 		}
 	}
 
-	return body.trim().indent({ exclude: indentExclusionRanges });
+	return body.trim();
 }

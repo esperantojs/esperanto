@@ -3,7 +3,7 @@ import disallowIllegalReassignment from './disallowIllegalReassignment';
 import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
 
-export default function traverseAst ( ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges ) {
+export default function traverseAst ( ast, body, identifierReplacements, exportNames, alreadyExported ) {
 	var scope, blockScope, capturedUpdates;
 
 	scope = ast._scope;
@@ -43,11 +43,6 @@ export default function traverseAst ( ast, body, identifierReplacements, exportN
 
 			// Replace identifiers
 			replaceIdentifiers( body, node, identifierReplacements, scope );
-
-			// Add multi-line strings to exclusion ranges
-			if ( node.type === 'TemplateLiteral' ) {
-				indentExclusionRanges.push([ node.start, node.end ]);
-			}
 		},
 
 		leave: function ( node ) {

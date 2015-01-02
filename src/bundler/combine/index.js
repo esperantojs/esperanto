@@ -35,13 +35,12 @@ export default function combine ( bundle ) {
 			});
 		});
 
-		//transformBody( bundle, mod, modBody );
-
 		body.addSource({
 			filename: path.resolve( bundle.base, mod.file ),
-			content: transformBody( bundle, mod, mod.body.clone() )
+			content: transformBody( bundle, mod, mod.body.clone() ),
+			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});
 	});
 
-	bundle.body = body;
+	bundle.body = body.indent();
 }

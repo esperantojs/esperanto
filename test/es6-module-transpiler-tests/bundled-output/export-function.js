@@ -9,8 +9,8 @@
   }
   assert.equal(foo(), 121);
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	assert.equal(foo(), 121);
+  assert.equal(foo(), 121);
 
 }).call(global);
