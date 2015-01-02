@@ -125,7 +125,8 @@ module.exports = function () {
 			}},
 			{ dir: '14', description: 'handles default imports from external modules correctly' },
 			{ dir: '15', description: 'handles named imports from external modules correctly', strict: true },
-			{ dir: '16', description: 'handles conflicting imports' }
+			{ dir: '16', description: 'handles conflicting imports' },
+			{ dir: '17', description: 'handles shadowed renamed imports' }
 		];
 
 		profiles.forEach( function ( profile ) {

@@ -1,4 +1,5 @@
-import getUnscopedNames from '../utils/getUnscopedNames';
+import getUnscopedNames from './getUnscopedNames';
+import getRenamedImports from './getRenamedImports';
 
 export default function topLevelScopeConflicts ( bundle ) {
 	var conflicts = {}, inBundle = {};
@@ -6,17 +7,15 @@ export default function topLevelScopeConflicts ( bundle ) {
 	bundle.modules.forEach( mod => {
 		var names =
 
-			// bundle name is in top scope
-			[ /*bundle.uniqueNames[ mod.id ]*/ ]
-
 			// all top defined identifiers are in top scope
-			.concat( mod.ast._scope.names )
+			mod.ast._scope.names
 
 			// all unattributed identifiers could collide with top scope
-			.concat( getUnscopedNames( mod ) );
+			.concat( getUnscopedNames( mod ) )
+
+			.concat( getRenamedImports( mod ) );
 
 		if ( mod._exportsNamespace ) {
-			//names.push( bundle.uniqueNames[ mod.id ] );
 			conflicts[ bundle.uniqueNames[ mod.id ] ] = true;
 		}
 
