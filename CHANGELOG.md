@@ -1,5 +1,16 @@
 # changelog
 
+## 0.5.0
+
+* Chained imports/exports are renamed correctly within a bundle ([#17](https://github.com/rich-harris/esperanto/issues/17))
+* Bundle exports are written at assignment time, rather than at the end of the bundle with an `Object.defineProperty` hack
+* Attempting to import a non-exported identifier within the same bundle throws an error
+* External modules are imported correctly ([#28](https://github.com/rich-harris/esperanto/issues/28))
+* Identifiers are only rewritten as necessary ([#25](https://github.com/rich-harris/esperanto/issues/25))
+* Redundant assignments in a bundle (`mod__default = mod__foo`) are avoided ([#14](https://github.com/rich-harris/esperanto/issues/14))
+* Shadowed imports are handled ([#18](https://github.com/rich-harris/esperanto/issues/18))
+* Modules are indented consistently within a bundle
+
 ## 0.4.10
 
 * Update acorn (greater ES6 coverage) and estraverse dependencies - thanks [@leebyron](https://github.com/leebyron)
