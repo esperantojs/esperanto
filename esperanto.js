@@ -923,7 +923,7 @@
 		}
 
 		name = assignee.name;
-		if ( exports && ( exportAs = exports[ name ] ) ) {
+		if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
 			if ( !!capturedUpdates ) {
 				capturedUpdates.push({
 					name: name,
@@ -1706,13 +1706,12 @@
 			shouldExportEarly = {},
 			earlyExports,
 			lateExports,
-			defaultValue,
-			indentExclusionRanges = [];
+			defaultValue;
 
 		importedBindings = ($D$2 = gatherImports( mod.imports, mod.getName ))[0], identifierReplacements = $D$2[1], $D$2;
 		exportNames = getExportNames( mod.exports );
 
-		traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported, indentExclusionRanges );
+		traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
 		// Remove import statements
 		mod.imports.forEach( function(x ) {
@@ -1795,7 +1794,7 @@
 		}
 
 		body.trim().indent({
-			exclude: indentExclusionRanges.length ? indentExclusionRanges : null
+			exclude: mod.ast._templateLiteralRanges
 		}).prepend( options.intro ).trim().append( options.outro );
 	;$D$2 = void 0}
 

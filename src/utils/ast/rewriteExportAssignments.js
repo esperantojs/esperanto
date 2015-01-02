@@ -1,3 +1,5 @@
+import hasOwnProp from 'utils/hasOwnProp';
+
 export default function rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode, capturedUpdates ) {
 	var assignee, name, exportAs;
 
@@ -14,7 +16,7 @@ export default function rewriteExportAssignments ( body, node, exports, scope, a
 	}
 
 	name = assignee.name;
-	if ( exports && ( exportAs = exports[ name ] ) ) {
+	if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
 		if ( !!capturedUpdates ) {
 			capturedUpdates.push({
 				name: name,

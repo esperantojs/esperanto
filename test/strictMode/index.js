@@ -28,7 +28,8 @@ module.exports = function () {
 			{ file: 'renamedImport', description: 'transpiles renamed imports' },
 			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
 			{ file: 'clashingNames', description: 'avoids naming collisions' },
-			{ file: 'shadowedImport', description: 'handles shadowed imports' }
+			{ file: 'shadowedImport', description: 'handles shadowed imports' },
+			{ file: 'constructor', description: 'handles `constructor` edge case' }
 		];
 
 		tests.forEach( function ( t ) {
