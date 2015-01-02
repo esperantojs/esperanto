@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.1
+
+* Identifiers that match object prototype properties are not mistakenly exported (and garbled)
+
 ## 0.5.0
 
 * Chained imports/exports are renamed correctly within a bundle ([#17](https://github.com/rich-harris/esperanto/issues/17))
