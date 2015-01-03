@@ -6,29 +6,34 @@ export default function gatherImports ( imports, getName ) {
 			var name, replacement;
 
 			if ( s.batch ) {
-				name = s.name;
-			} else {
-				name = s.as;
+				name = replacement = s.name;
+
+				if ( !x.passthrough ) {
+					identifierReplacements[ name ] = {
+						name: replacement,
+						namespace: true
+					};
+				}
 			}
 
-			if ( s.batch ) {
-				replacement = s.name;
-			} else {
+			else {
+				name = s.as;
+
 				if ( s.default ) {
 					replacement = getName( x ) + '[\'default\']';
 				} else {
 					replacement = getName( x ) + '.' + s.name;
 				}
+
+				if ( !x.passthrough ) {
+					identifierReplacements[ name ] = {
+						name: replacement,
+						readOnly: true
+					};
+				}
 			}
 
 			importedBindings[ name ] = replacement;
-
-			if ( !x.passthrough ) {
-				identifierReplacements[ name ] = {
-					name: replacement,
-					readOnly: true
-				};
-			}
 		});
 	});
 

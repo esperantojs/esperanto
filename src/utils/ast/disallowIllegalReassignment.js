@@ -1,7 +1,7 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
 export default function disallowIllegalReassignment ( node, names, scope ) {
-	var assignee, name, message;
+	var assignee, name, flag, message;
 
 	if ( node.type === 'AssignmentExpression' ) {
 		assignee = node.left;
@@ -14,8 +14,10 @@ export default function disallowIllegalReassignment ( node, names, scope ) {
 	if ( assignee.type === 'MemberExpression' ) {
 		assignee = assignee.object;
 		message = 'Cannot reassign imported binding of namespace ';
+		flag = 'namespace';
 	} else {
 		message = 'Cannot reassign imported binding ';
+		flag = 'readOnly';
 	}
 
 	if ( assignee.type !== 'Identifier' ) {
@@ -24,7 +26,7 @@ export default function disallowIllegalReassignment ( node, names, scope ) {
 
 	name = assignee.name;
 
-	if ( hasOwnProp.call( names, name ) && names[ name ].readOnly && !scope.contains( name ) ) {
+	if ( hasOwnProp.call( names, name ) && names[ name ][ flag ] && !scope.contains( name ) ) {
 		throw new Error( message + '`' + name + '`' );
 	}
 }
