@@ -81,6 +81,10 @@ export default function getBundle ( options ) {
 
 					importId = resolve( x.path, module.file );
 
+					if ( importId === moduleId ) {
+						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
+					}
+
 					// Some modules can be skipped
 					if ( skip && ~skip.indexOf( importId ) ) {
 						return;

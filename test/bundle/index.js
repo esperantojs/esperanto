@@ -131,7 +131,8 @@ module.exports = function () {
 			{ dir: '19', description: 'handles hasOwnProperty edge case (default imports)' },
 			{ dir: '20', description: 'handles hasOwnProperty edge case (named imports)' },
 			{ dir: '21', description: 'handles member assignments of named imports' },
-			{ dir: '22', description: 'handles named exports of default imports', strict: true }
+			{ dir: '22', description: 'handles named exports of default imports', strict: true },
+			{ dir: '23', description: 'throws error if module imports itself', error: /cannot import itself/ }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -175,6 +176,12 @@ module.exports = function () {
 								'\n>\n\nto match\n\n>\n' +
 									makeWhitespaceVisible( expected ) +
 								'\n>' );
+							}).catch( function ( err ) {
+								if ( err.code === 'ENOENT' ) {
+									assert.equal( actual, '', 'Expected\n>\n' +
+										makeWhitespaceVisible( actual ) +
+									'\n>\n\nto match non-existent file' );
+								}
 							});
 						}).catch( function ( err ) {
 							// strict mode tests should fail

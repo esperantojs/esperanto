@@ -334,7 +334,6 @@
 	}
 
 	var hasOwnProp = Object.prototype.hasOwnProperty;
-	var hasOwnProp__default = hasOwnProp;
 
 	var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
 
@@ -1296,6 +1295,10 @@
 						var importId;
 
 						importId = resolve( x.path, module.file );
+
+						if ( importId === moduleId ) {
+							throw new Error( 'A module (' + moduleId + ') cannot import itself' );
+						}
 
 						// Some modules can be skipped
 						if ( skip && ~skip.indexOf( importId ) ) {
