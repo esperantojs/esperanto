@@ -1,5 +1,10 @@
 # changelog
 
+## 0.5.2
+
+* Imported objects (other than namespace imports) can be assigned properties ([#29](https://github.com/rich-harris/esperanto/issues/29))
+* Default imports can be exported as named exports from the entry module in a bundle
+
 ## 0.5.1
 
 * Identifiers that match object prototype properties are not mistakenly exported (and garbled)
