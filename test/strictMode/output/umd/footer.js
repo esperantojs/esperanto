@@ -23,3 +23,4 @@
 	exports['default'] = 'someExport';
 
 }));
+/* this is a footer */

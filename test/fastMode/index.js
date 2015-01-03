@@ -18,12 +18,18 @@ module.exports = function () {
 			{ file: 'importDefault', description: 'transpiles default imports' },
 			{ file: 'multipleImports', description: 'transpiles multiple imports' },
 			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
-			{ file: 'banner', description: 'adds a banner', banner: '/* this is a banner */\n' },
-			{ file: 'footer', description: 'adds a footer', footer: '\n/* this is a footer */' },
-			{ file: 'bannerAndFooter', description: 'adds a banner and a footer', banner: '/* this is a banner */\n', footer: '\n/* this is a footer */' }
+			{ file: 'banner', description: 'adds a banner' },
+			{ file: 'footer', description: 'adds a footer' },
+			{ file: 'bannerAndFooter', description: 'adds a banner and a footer' }
 		];
 
 		tests.forEach( function ( t ) {
+			try {
+				t.config = require( '../samples/config/' + t.file );
+			} catch ( err ) {
+				t.config = {};
+			}
+
 			t.file += '.js';
 			t.source = sander.readFileSync( 'samples', t.file ).toString();
 		});
@@ -51,8 +57,8 @@ module.exports = function () {
 				it( t.description, function () {
 					var actual = esperanto[ method ]( t.source, {
 						name: t.name || 'myModule',
-						banner: t.banner,
-						footer: t.footer
+						banner: t.config.banner,
+						footer: t.config.footer
 					});
 
 					return sander.readFile( 'fastMode/output/' + dir, t.file ).then( String ).then( function ( expected ) {

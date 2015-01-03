@@ -1,3 +1,4 @@
+/* this is a banner */
 define(['exports', 'whatever'], function (exports, whatever) {
 
 	'use strict';

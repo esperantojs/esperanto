@@ -1,3 +1,4 @@
+/* this is a banner */
 define(['whatever'], function (whatever) {
 
 	'use strict';
@@ -8,3 +9,4 @@ define(['whatever'], function (whatever) {
 	return 'someExport';
 
 });
+/* this is a footer */

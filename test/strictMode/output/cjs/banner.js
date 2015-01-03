@@ -1,3 +1,4 @@
+/* this is a banner */
 (function () {
 
 	'use strict';

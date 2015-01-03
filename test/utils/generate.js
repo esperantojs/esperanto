@@ -31,10 +31,25 @@ require( './build' )().then( function ( esperanto ) {
 		}
 
 		function build ( sourceFile ) {
+			if ( sourceFile === 'config' ) return;
+
 			return sander.readFile( '../samples', sourceFile ).then( String ).then( function ( source ) {
-				var promises = profiles.map( function ( profile ) {
+				var config, promises;
+
+				try {
+					config = require( '../samples/config/' + sourceFile );
+				} catch ( err ) {
+					config = {};
+				}
+
+				promises = profiles.map( function ( profile ) {
 					try {
-						var transpiled = esperanto[ profile.method ]( source, profile.options );
+						var transpiled = esperanto[ profile.method ]( source, {
+							name: profile.options && profile.options.name,
+							strict: profile.options && profile.options.strict,
+							banner: config.banner,
+							footer: config.footer
+						});
 						return sander.writeFile( '../fastMode/output', profile.outputdir, sourceFile, transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly
@@ -65,16 +80,31 @@ require( './build' )().then( function ( esperanto ) {
 		}
 
 		function buildAll () {
-			return sander.lsr( '../samples' ).then( function ( sourceFiles ) {
+			return sander.readdir( '../samples' ).then( function ( sourceFiles ) {
 				return Promise.all( sourceFiles.map( build ) );
 			});
 		}
 
 		function build ( sourceFile ) {
+			if ( sourceFile === 'config' ) return;
+
 			return sander.readFile( '../samples', sourceFile ).then( String ).then( function ( source ) {
-				var promises = profiles.map( function ( profile ) {
+				var config, promises;
+
+				try {
+					config = require( '../samples/config/' + sourceFile );
+				} catch ( err ) {
+					config = {};
+				}
+
+				promises = profiles.map( function ( profile ) {
 					try {
-						var transpiled = esperanto[ profile.method ]( source, profile.options );
+						var transpiled = esperanto[ profile.method ]( source, {
+							name: profile.options && profile.options.name,
+							strict: profile.options && profile.options.strict,
+							banner: config.banner,
+							footer: config.footer
+						});
 						return sander.writeFile( '../strictMode/output', profile.outputdir, sourceFile, transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly
@@ -116,6 +146,8 @@ require( './build' )().then( function ( esperanto ) {
 		function build ( sourceBundle ) {
 			var config;
 
+			if ( /DS_Store/.test( sourceBundle ) ) return;
+
 			try {
 				config = require( '../bundle/input/' + sourceBundle + '/_config' );
 			} catch ( e ) {
@@ -130,7 +162,12 @@ require( './build' )().then( function ( esperanto ) {
 			}).then( function ( bundle ) {
 				var promises = profiles.map( function ( profile ) {
 					try {
-						var transpiled = bundle[ profile.method ]( profile.options );
+						var transpiled = bundle[ profile.method ]({
+							strict: profile.options && profile.options.strict,
+							name: profile.options && profile.options.name,
+							banner: config.banner,
+							footer: config.footer
+						});
 						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly

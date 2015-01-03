@@ -4,23 +4,21 @@
 
 	if (typeof define === 'function' && define.amd) {
 		// export as AMD
-		define(['whatever'], factory);
+		define(factory);
 	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
 		// node/browserify
-		module.exports = factory(require('whatever'));
+		module.exports = factory();
 	} else {
 		// browser global
-		global.myModule = factory(global.whatever);
+		global.myModule = factory();
 	}
 
-}(typeof window !== 'undefined' ? window : this, function (whatever) {
+}(typeof window !== 'undefined' ? window : this, function () {
 
 	'use strict';
 
-	whatever();
-
-
-	return 'someExport';
+	module.exports = {
+		footer: '\n/* this is a footer */'
+	};
 
 }));
-/* this is a footer */

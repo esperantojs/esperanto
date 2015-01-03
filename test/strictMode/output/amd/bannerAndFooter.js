@@ -1,3 +1,4 @@
+/* this is a banner */
 define(['exports', 'whatever'], function (exports, whatever) {
 
 	'use strict';
@@ -7,3 +8,4 @@ define(['exports', 'whatever'], function (exports, whatever) {
 	exports['default'] = 'someExport';
 
 });
+/* this is a footer */

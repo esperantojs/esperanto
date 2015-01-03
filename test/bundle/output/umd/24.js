@@ -1,3 +1,4 @@
+/* this is a banner */
 (function (global, factory) {
 
 	'use strict';
@@ -30,3 +31,4 @@
 	bar();
 
 }));
+/* this is a footer */

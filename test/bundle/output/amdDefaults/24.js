@@ -1,3 +1,4 @@
+/* this is a banner */
 define(function () {
 
 	'use strict';
@@ -14,3 +15,4 @@ define(function () {
 	bar();
 
 });
+/* this is a footer */

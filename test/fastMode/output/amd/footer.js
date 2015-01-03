@@ -8,3 +8,4 @@ define(['whatever'], function (whatever) {
 	return 'someExport';
 
 });
+/* this is a footer */

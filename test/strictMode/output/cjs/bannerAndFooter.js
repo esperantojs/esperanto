@@ -1,3 +1,4 @@
+/* this is a banner */
 (function () {
 
 	'use strict';
@@ -9,3 +10,4 @@
 	exports['default'] = 'someExport';
 
 }).call(global);
+/* this is a footer */

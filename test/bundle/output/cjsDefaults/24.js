@@ -1,3 +1,4 @@
+/* this is a banner */
 (function () {
 
 	'use strict';
@@ -14,3 +15,4 @@
 	bar();
 
 }).call(global);
+/* this is a footer */

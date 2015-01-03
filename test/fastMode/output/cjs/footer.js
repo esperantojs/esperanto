@@ -9,3 +9,4 @@
 	module.exports = 'someExport';
 
 }).call(global);
+/* this is a footer */
