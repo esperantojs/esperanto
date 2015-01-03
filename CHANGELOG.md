@@ -1,5 +1,10 @@
 # changelog
 
+## 0.5.3
+
+* You can specify a `banner` and/or `footer` option when converting or bundling
+* An error will be thrown if a module attempts to import itself
+
 ## 0.5.2
 
 * Imported objects (other than namespace imports) can be assigned properties ([#29](https://github.com/rich-harris/esperanto/issues/29))
