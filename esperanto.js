@@ -1388,6 +1388,10 @@
 	function packageResult ( body, options, methodName, isBundle ) {
 		var code, map;
 
+		// wrap output
+		if ( options.banner ) body.prepend( options.banner );
+		if ( options.footer ) body.append( options.footer );
+
 		code = body.toString();
 
 		if ( !!options.sourceMap ) {
