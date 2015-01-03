@@ -132,7 +132,8 @@ module.exports = function () {
 			{ dir: '20', description: 'handles hasOwnProperty edge case (named imports)' },
 			{ dir: '21', description: 'handles member assignments of named imports' },
 			{ dir: '22', description: 'handles named exports of default imports', strict: true },
-			{ dir: '23', description: 'throws error if module imports itself', error: /cannot import itself/ }
+			{ dir: '23', description: 'throws error if module imports itself', error: /cannot import itself/ },
+			{ dir: '24', description: 'adds a banner/footer to bundle' }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -159,7 +160,9 @@ module.exports = function () {
 
 							actual = bundle[ profile.method ]({
 								strict: options.strict,
-								name: options.name
+								name: options.name,
+								banner: config.banner,
+								footer: config.footer
 							}).code;
 
 							return sander.readFile( 'bundle/output/', profile.outputdir, t.dir + '.js' ).then( String ).then( function ( expected ) {
@@ -181,6 +184,8 @@ module.exports = function () {
 									assert.equal( actual, '', 'Expected\n>\n' +
 										makeWhitespaceVisible( actual ) +
 									'\n>\n\nto match non-existent file' );
+								} else {
+									throw err;
 								}
 							});
 						}).catch( function ( err ) {

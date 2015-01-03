@@ -17,7 +17,10 @@ module.exports = function () {
 			{ file: 'importAll', description: 'transpiles `import * as foo from "foo"`' },
 			{ file: 'importDefault', description: 'transpiles default imports' },
 			{ file: 'multipleImports', description: 'transpiles multiple imports' },
-			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' }
+			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
+			{ file: 'banner', description: 'adds a banner', banner: '/* this is a banner */\n' },
+			{ file: 'footer', description: 'adds a footer', footer: '\n/* this is a footer */' },
+			{ file: 'bannerAndFooter', description: 'adds a banner and a footer', banner: '/* this is a banner */\n', footer: '\n/* this is a footer */' }
 		];
 
 		tests.forEach( function ( t ) {
@@ -32,39 +35,37 @@ module.exports = function () {
 		});
 
 		describe( 'esperanto.toAmd()', function () {
-			tests.forEach( function ( t ) {
-				it( t.description, function () {
-					return sander.readFile( 'fastMode/output/amd', t.file ).then( String ).then( function ( expected ) {
-						var actual = esperanto.toAmd( t.source );
-						assert.equal( actual.code, expected, 'AMD: Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
-					});
-				});
-			});
+			runTests( 'amd', 'toAmd' );
 		});
 
 		describe( 'esperanto.toCjs()', function () {
-			tests.forEach( function ( t ) {
-				it( t.description, function () {
-					return sander.readFile( 'fastMode/output/cjs', t.file ).then( String ).then( function ( expected ) {
-						var actual = esperanto.toCjs( t.source );
-						assert.equal( actual.code, expected, 'CJS: Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
-					});
-				});
-			});
+			runTests( 'cjs', 'toCjs' );
 		});
 
 		describe( 'esperanto.toUmd()', function () {
+			runTests( 'umd', 'toUmd' );
+		});
+
+		function runTests ( dir, method ) {
 			tests.forEach( function ( t ) {
 				it( t.description, function () {
-					return sander.readFile( 'fastMode/output/umd', t.file ).then( String ).then( function ( expected ) {
-						var actual = esperanto.toUmd( t.source, {
-							name: 'myModule'
-						});
+					var actual = esperanto[ method ]( t.source, {
+						name: t.name || 'myModule',
+						banner: t.banner,
+						footer: t.footer
+					});
 
-						assert.equal( actual.code, expected, 'UMD: Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
+					return sander.readFile( 'fastMode/output/' + dir, t.file ).then( String ).then( function ( expected ) {
+						assert.equal( actual.code, expected, 'Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
+					}).catch( function ( err ) {
+						if ( err.code === 'ENOENT' ) {
+							assert.equal( actual.code, '', 'Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match non-existent file' );
+						} else {
+							throw err;
+						}
 					});
 				});
 			});
-		});
+		}
 	});
 };
