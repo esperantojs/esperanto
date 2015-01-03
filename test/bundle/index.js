@@ -130,7 +130,8 @@ module.exports = function () {
 			{ dir: '18', description: 'renames imports that conflict with existing variable names' },
 			{ dir: '19', description: 'handles hasOwnProperty edge case (default imports)' },
 			{ dir: '20', description: 'handles hasOwnProperty edge case (named imports)' },
-			{ dir: '21', description: 'handles member assignments of named imports' }
+			{ dir: '21', description: 'handles member assignments of named imports' },
+			{ dir: '22', description: 'handles named exports of default imports', strict: true }
 		];
 
 		profiles.forEach( function ( profile ) {

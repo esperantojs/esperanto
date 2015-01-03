@@ -77,7 +77,7 @@ export default function getIdentifierReplacements ( bundle ) {
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default
-						if ( bundle.externalModuleLookup[ moduleId ] ) {
+						if ( hasOwnProp.call( bundle.externalModuleLookup, moduleId ) ) {
 							replacement = moduleName + '__default';
 						}
 
@@ -113,13 +113,13 @@ export default function getIdentifierReplacements ( bundle ) {
 		if ( x = mod.defaultExport ) {
 			if ( x.declaration && x.name ) {
 				moduleIdentifiers.default = {
-					name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( null, prefix ) ?
+					name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
 						prefix + '__' + x.name :
 						x.name
 				};
 			} else {
 				moduleIdentifiers.default = {
-					name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( null, prefix ) ?
+					name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
 						prefix + '__default' :
 						prefix
 				};

@@ -4,7 +4,7 @@
 
 	if (typeof define === 'function' && define.amd) {
 		// export as AMD
-		define([], factory);
+		define(factory);
 	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
 		// node/browserify
 		module.exports = factory();
@@ -17,8 +17,9 @@
 
 	'use strict';
 
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-	console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
+	return function () {
+		var constructor;
+		constructor = 42;
+	};
 
 }));

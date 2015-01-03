@@ -1,3 +1,4 @@
+import hasOwnProp from 'utils/hasOwnProp';
 import traverseAst from 'utils/ast/traverse';
 
 export default function transformBody ( bundle, mod, body ) {
@@ -9,7 +10,7 @@ export default function transformBody ( bundle, mod, body ) {
 
 	identifierReplacements = bundle.identifierReplacements[ mod.id ];
 
-	exportNames = bundle.exports[ mod.id ];
+	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
 	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 

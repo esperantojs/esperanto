@@ -726,7 +726,14 @@
 					if ( s.batch ) {
 						name = s.name;
 						replacement = bundle.uniqueNames[ moduleId ];
-					} else {
+
+						moduleIdentifiers[ name ] = {
+							name: replacement,
+							namespace: true
+						};
+					}
+
+					else {
 						name = s.as;
 						specifierName = s.name;
 
@@ -747,7 +754,7 @@
 
 						if ( specifierName === 'default' ) {
 							// if it's an external module, always use __default
-							if ( bundle.externalModuleLookup[ moduleId ] ) {
+							if ( hasOwnProp.call( bundle.externalModuleLookup, moduleId ) ) {
 								replacement = moduleName + '__default';
 							}
 
@@ -769,12 +776,12 @@
 						} else {
 							replacement = moduleName + '.' + specifierName;
 						}
-					}
 
-					moduleIdentifiers[ name ] = {
-						name: replacement,
-						readOnly: true
-					};
+						moduleIdentifiers[ name ] = {
+							name: replacement,
+							readOnly: true
+						};
+					}
 				});
 			});
 
@@ -783,13 +790,13 @@
 			if ( x = mod.defaultExport ) {
 				if ( x.declaration && x.name ) {
 					moduleIdentifiers.default = {
-						name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( null, prefix ) ?
+						name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
 							prefix + '__' + x.name :
 							x.name
 					};
 				} else {
 					moduleIdentifiers.default = {
-						name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( null, prefix ) ?
+						name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
 							prefix + '__default' :
 							prefix
 					};
@@ -865,7 +872,7 @@
 	}
 
 	function disallowIllegalReassignment ( node, names, scope ) {
-		var assignee, name, message;
+		var assignee, name, flag, message;
 
 		if ( node.type === 'AssignmentExpression' ) {
 			assignee = node.left;
@@ -878,8 +885,10 @@
 		if ( assignee.type === 'MemberExpression' ) {
 			assignee = assignee.object;
 			message = 'Cannot reassign imported binding of namespace ';
+			flag = 'namespace';
 		} else {
 			message = 'Cannot reassign imported binding ';
+			flag = 'readOnly';
 		}
 
 		if ( assignee.type !== 'Identifier' ) {
@@ -888,7 +897,7 @@
 
 		name = assignee.name;
 
-		if ( hasOwnProp.call( names, name ) && names[ name ].readOnly && !scope.contains( name ) ) {
+		if ( hasOwnProp.call( names, name ) && names[ name ][ flag ] && !scope.contains( name ) ) {
 			throw new Error( message + '`' + name + '`' );
 		}
 	}
@@ -1017,7 +1026,7 @@
 
 		identifierReplacements = bundle.identifierReplacements[ mod.id ];
 
-		exportNames = bundle.exports[ mod.id ];
+		exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
 		traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
@@ -1650,29 +1659,34 @@
 				var name, replacement;
 
 				if ( s.batch ) {
-					name = s.name;
-				} else {
-					name = s.as;
+					name = replacement = s.name;
+
+					if ( !x.passthrough ) {
+						identifierReplacements[ name ] = {
+							name: replacement,
+							namespace: true
+						};
+					}
 				}
 
-				if ( s.batch ) {
-					replacement = s.name;
-				} else {
+				else {
+					name = s.as;
+
 					if ( s.default ) {
 						replacement = getName( x ) + '[\'default\']';
 					} else {
 						replacement = getName( x ) + '.' + s.name;
 					}
+
+					if ( !x.passthrough ) {
+						identifierReplacements[ name ] = {
+							name: replacement,
+							readOnly: true
+						};
+					}
 				}
 
 				importedBindings[ name ] = replacement;
-
-				if ( !x.passthrough ) {
-					identifierReplacements[ name ] = {
-						name: replacement,
-						readOnly: true
-					};
-				}
 			});
 		});
 
