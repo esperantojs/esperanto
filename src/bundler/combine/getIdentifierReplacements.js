@@ -49,7 +49,14 @@ export default function getIdentifierReplacements ( bundle ) {
 				if ( s.batch ) {
 					name = s.name;
 					replacement = bundle.uniqueNames[ moduleId ];
-				} else {
+
+					moduleIdentifiers[ name ] = {
+						name: replacement,
+						namespace: true
+					};
+				}
+
+				else {
 					name = s.as;
 					specifierName = s.name;
 
@@ -92,12 +99,12 @@ export default function getIdentifierReplacements ( bundle ) {
 					} else {
 						replacement = moduleName + '.' + specifierName;
 					}
-				}
 
-				moduleIdentifiers[ name ] = {
-					name: replacement,
-					readOnly: true
-				};
+					moduleIdentifiers[ name ] = {
+						name: replacement,
+						readOnly: true
+					};
+				}
 			});
 		});
 
