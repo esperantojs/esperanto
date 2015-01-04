@@ -4,7 +4,7 @@ import reorderImports from 'utils/reorderImports';
 import template from 'utils/template';
 import { quote } from 'utils/mappers';
 
-var introTemplate = template( 'define(<%= IMPORT_PATHS %>function (<%= IMPORT_NAMES %>) {\n\n' );
+var introTemplate = template( 'define(<%= paths %>function (<%= names %>) {\n\n' );
 
 export default function amd ( mod, body, options ) {
 	var importNames = [],
@@ -31,16 +31,17 @@ export default function amd ( mod, body, options ) {
 
 	transformExportDeclaration( mod.exports[0], body );
 
-	body.trim();
-
-	body.prepend( "'use strict';\n\n" ).trim();
-
 	intro = introTemplate({
-		IMPORT_PATHS: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-		IMPORT_NAMES: importNames.join( ', ' )
+		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+		names: importNames.join( ', ' )
 	});
 
-	body.indent().prepend( intro ).append( '\n\n});' );
+	body.trim()
+		.prepend( "'use strict';\n\n" )
+		.trim()
+		.indent()
+		.prepend( intro )
+		.append( '\n\n});' );
 
 	return packageResult( body, options, 'toAmd' );
 }

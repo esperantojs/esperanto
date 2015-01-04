@@ -24,6 +24,7 @@
     "gobble-jsbeautify": "~0.1.0",
     "gobble-requirejs": "~0.1.0",
     "gobble-uglifyjs": "^0.1.0",
+    "magic-string": "^0.2.6",
     "sander": "^0.2.1",
     "source-map": "^0.1.40"
   },

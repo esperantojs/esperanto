@@ -1,6 +1,6 @@
 import gatherImports from './gatherImports';
 import getExportNames from './getExportNames';
-import traverseAst from '../../../../utils/ast/traverse';
+import traverseAst from 'utils/ast/traverse';
 
 export default function transformBody ( mod, body, options ) {
 	var importedBindings,
@@ -9,17 +9,21 @@ export default function transformBody ( mod, body, options ) {
 		alreadyExported = {},
 		shouldExportEarly = {},
 		earlyExports,
-		lateExports,
-		defaultValue;
+		lateExports;
 
 	[ importedBindings, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
 
 	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
-	// Remove import statements
+	// Remove import statements from the body of the module
 	mod.imports.forEach( x => {
-		if ( x.passthrough ) return; // this is an `export { foo } from './bar'` statement
+		if ( x.passthrough ) {
+			// this is an `export { foo } from './bar'` statement -
+			// it will be dealt with in the next section
+			return;
+		}
+
 		body.remove( x.start, x.next );
 	});
 
@@ -34,8 +38,8 @@ export default function transformBody ( mod, body, options ) {
 			case 'namedClass':
 				if ( x.default ) {
 					// export default function answer () { return 42; }
-					defaultValue = body.slice( x.valueStart, x.end );
-					body.replace( x.start, x.end, defaultValue + '\nexports[\'default\'] = ' + x.name + ';' );
+					body.remove( x.start, x.valueStart );
+					body.insert( x.end, `\nexports['default'] = ${x.name};` );
 				} else {
 					// export function answer () { return 42; }
 					shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
@@ -43,19 +47,13 @@ export default function transformBody ( mod, body, options ) {
 				}
 				return;
 
-			case 'anonFunction':
-			case 'anonClass':
-				// export default function () {}
+			case 'anonFunction':   // export default function () {}
+			case 'anonClass':      // export default class () {}
+			case 'expression':     // export default 40 + 2;
 				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 				return;
 
-			case 'expression':
-				// export default 40 + 2;
-				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
-				return;
-
-			case 'named':
-				// export { foo, bar };
+			case 'named':          // export { foo, bar };
 				body.remove( x.start, x.next );
 				break;
 

@@ -35,19 +35,20 @@ export default function umd ( mod, body, options ) {
 
 	transformExportDeclaration( mod.exports[0], body );
 
-	body.trim();
-
-	body.prepend( "'use strict';\n\n" ).trim();
-
 	intro = introTemplate({
-		AMD_DEPS: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-		CJS_DEPS: importPaths.map( req ).join( ', ' ),
-		GLOBAL_DEPS: importNames.map( globalify ).join( ', ' ),
-		IMPORT_NAMES: importNames.join( ', ' ),
-		NAME: options.name
+		amdDeps: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+		cjsDeps: importPaths.map( req ).join( ', ' ),
+		globals: importNames.map( globalify ).join( ', ' ),
+		names: importNames.join( ', ' ),
+		name: options.name
 	}).replace( /\t/g, body.indentStr );
 
-	body.indent().prepend( intro ).append( '\n\n}));' );
+	body.trim()
+		.prepend( "'use strict';\n\n" )
+		.trim()
+		.indent()
+		.prepend( intro )
+		.append( '\n\n}));' );
 
 	return packageResult( body, options, 'toUmd' );
 }
@@ -58,15 +59,15 @@ introTemplate = template( `(function (global, factory) {
 
 	if (typeof define === 'function' && define.amd) {
 		// export as AMD
-		define(<%= AMD_DEPS %>factory);
+		define(<%= amdDeps %>factory);
 	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
 		// node/browserify
-		module.exports = factory(<%= CJS_DEPS %>);
+		module.exports = factory(<%= cjsDeps %>);
 	} else {
 		// browser global
-		global.<%= NAME %> = factory(<%= GLOBAL_DEPS %>);
+		global.<%= name %> = factory(<%= globals %>);
 	}
 
-}(typeof window !== 'undefined' ? window : this, function (<%= IMPORT_NAMES %>) {
+}(typeof window !== 'undefined' ? window : this, function (<%= names %>) {
 
 ` );

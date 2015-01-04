@@ -1497,7 +1497,7 @@
 		return 'global.' + name;
 	}
 
-	var amd__introTemplate = template( 'define(<%= IMPORT_PATHS %>function (<%= IMPORT_NAMES %>) {\n\n' );
+	var amd__introTemplate = template( 'define(<%= paths %>function (<%= names %>) {\n\n' );
 
 	function amd__amd ( mod, body, options ) {
 		var importNames = [],
@@ -1524,25 +1524,26 @@
 
 		transformExportDeclaration( mod.exports[0], body );
 
-		body.trim();
-
-		body.prepend( "'use strict';\n\n" ).trim();
-
 		intro = amd__introTemplate({
-			IMPORT_PATHS: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-			IMPORT_NAMES: importNames.join( ', ' )
+			paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+			names: importNames.join( ', ' )
 		});
 
-		body.indent().prepend( intro ).append( '\n\n});' );
+		body.trim()
+			.prepend( "'use strict';\n\n" )
+			.trim()
+			.indent()
+			.prepend( intro )
+			.append( '\n\n});' );
 
 		return packageResult( body, options, 'toAmd' );
 	}
 
 	function cjs__cjs ( mod, body, options ) {
-		var replacement, exportDeclaration;
+		var exportDeclaration;
 
 		mod.imports.forEach( function(x ) {
-			var specifier, name;
+			var specifier, name, replacement;
 
 			specifier = x.specifiers[0];
 
@@ -1563,24 +1564,26 @@
 			switch ( exportDeclaration.type ) {
 				case 'namedFunction':
 				case 'namedClass':
-				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-				body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
-				break;
+					body.remove( exportDeclaration.start, exportDeclaration.valueStart );
+					body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
+					break;
 
 				case 'anonFunction':
 				case 'anonClass':
 				case 'expression':
-				body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
-				break;
+					body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
+					break;
 
 				default:
-				throw new Error( 'Unexpected export type' );
+					throw new Error( 'Unexpected export type' );
 			}
 		}
 
-		body.trim();
-
-		body.prepend( "'use strict';\n\n" ).indent().prepend( '(function () {\n\n' ).append( '\n\n}).call(global);' );
+		body.trim()
+			.prepend( "'use strict';\n\n" )
+			.indent()
+			.prepend( '(function () {\n\n' )
+			.append( '\n\n}).call(global);' );
 
 		return packageResult( body, options, 'toCjs' );
 	}
@@ -1616,19 +1619,20 @@
 
 		transformExportDeclaration( mod.exports[0], body );
 
-		body.trim();
-
-		body.prepend( "'use strict';\n\n" ).trim();
-
 		intro = umd__introTemplate({
-			AMD_DEPS: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-			CJS_DEPS: importPaths.map( mappers__req ).join( ', ' ),
-			GLOBAL_DEPS: importNames.map( globalify ).join( ', ' ),
-			IMPORT_NAMES: importNames.join( ', ' ),
-			NAME: options.name
+			amdDeps: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+			cjsDeps: importPaths.map( mappers__req ).join( ', ' ),
+			globals: importNames.map( globalify ).join( ', ' ),
+			names: importNames.join( ', ' ),
+			name: options.name
 		}).replace( /\t/g, body.indentStr );
 
-		body.indent().prepend( intro ).append( '\n\n}));' );
+		body.trim()
+			.prepend( "'use strict';\n\n" )
+			.trim()
+			.indent()
+			.prepend( intro )
+			.append( '\n\n}));' );
 
 		return packageResult( body, options, 'toUmd' );
 	}
@@ -1639,16 +1643,16 @@
 \n\
 \n	if (typeof define === 'function' && define.amd) {\
 \n		// export as AMD\
-\n		define(<%= AMD_DEPS %>factory);\
+\n		define(<%= amdDeps %>factory);\
 \n	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {\
 \n		// node/browserify\
-\n		module.exports = factory(<%= CJS_DEPS %>);\
+\n		module.exports = factory(<%= cjsDeps %>);\
 \n	} else {\
 \n		// browser global\
-\n		global.<%= NAME %> = factory(<%= GLOBAL_DEPS %>);\
+\n		global.<%= name %> = factory(<%= globals %>);\
 \n	}\
 \n\
-\n}(typeof window !== 'undefined' ? window : this, function (<%= IMPORT_NAMES %>) {\
+\n}(typeof window !== 'undefined' ? window : this, function (<%= names %>) {\
 \n\
 \n") );
 
@@ -1726,17 +1730,21 @@
 			alreadyExported = {},
 			shouldExportEarly = {},
 			earlyExports,
-			lateExports,
-			defaultValue;
+			lateExports;
 
 		importedBindings = ($D$2 = gatherImports( mod.imports, mod.getName ))[0], identifierReplacements = $D$2[1], $D$2;
 		exportNames = getExportNames( mod.exports );
 
 		traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
 
-		// Remove import statements
+		// Remove import statements from the body of the module
 		mod.imports.forEach( function(x ) {
-			if ( x.passthrough ) return; // this is an `export { foo } from './bar'` statement
+			if ( x.passthrough ) {
+				// this is an `export { foo } from './bar'` statement -
+				// it will be dealt with in the next section
+				return;
+			}
+
 			body.remove( x.start, x.next );
 		});
 
@@ -1751,8 +1759,8 @@
 				case 'namedClass':
 					if ( x.default ) {
 						// export default function answer () { return 42; }
-						defaultValue = body.slice( x.valueStart, x.end );
-						body.replace( x.start, x.end, defaultValue + '\nexports[\'default\'] = ' + x.name + ';' );
+						body.remove( x.start, x.valueStart );
+						body.insert( x.end, (("\nexports['default'] = " + (x.name)) + ";") );
 					} else {
 						// export function answer () { return 42; }
 						shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
@@ -1760,19 +1768,13 @@
 					}
 					return;
 
-				case 'anonFunction':
-				case 'anonClass':
-					// export default function () {}
+				case 'anonFunction':   // export default function () {}
+				case 'anonClass':      // export default class () {}
+				case 'expression':     // export default 40 + 2;
 					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
 					return;
 
-				case 'expression':
-					// export default 40 + 2;
-					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
-					return;
-
-				case 'named':
-					// export { foo, bar };
+				case 'named':          // export { foo, bar };
 					body.remove( x.start, x.next );
 					break;
 
