@@ -3,7 +3,7 @@
   "description": "An easier way to convert ES6 modules to AMD and CommonJS",
   "version": "0.5.5",
   "author": "Rich Harris",
-  "repository": "https://github.com/rich-harris/esperanto",
+  "repository": "https://github.com/esperantojs/esperanto",
   "license": "MIT",
   "dependencies": {
     "acorn": "^0.11.0",
@@ -37,7 +37,6 @@
   "scripts": {
     "build": "scripts/build.sh",
     "test": "scripts/test.sh",
-    "update-gh-pages": "scripts/update-gh-pages.sh",
     "prepublish": "npm run build"
   }
 }
