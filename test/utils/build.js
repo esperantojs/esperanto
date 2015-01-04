@@ -9,7 +9,7 @@ module.exports = function () {
 		promise = require( 'sander' ).rimraf( libdir ).then( function () {
 			process.env.GOBBLE_ENV = 'test';
 
-			return require( '../../gobble/lib' ).build({
+			return require( '../../gobblefile' ).build({
 				dest: libdir
 			}).then( function () {
 				return require( '../lib/esperanto' );

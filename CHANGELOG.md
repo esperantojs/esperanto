@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.5
+
+* No actual changes - just shuffling things about so we can separate demo page into separate repo
+
 ## 0.5.4
 
 * Performance improvements and internal refactoring

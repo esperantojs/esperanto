@@ -8,3 +8,6 @@ mocha
 # If the tests pass, we just need to copy
 # test/lib/esperanto.js to the root
 cp test/lib/esperanto.js esperanto.js
+
+# Copy all dist files, including sourcemaps
+cp test/lib/* dist
