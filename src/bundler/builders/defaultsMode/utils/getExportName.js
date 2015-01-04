@@ -1,9 +1,9 @@
 export default function getExportName ( bundle ) {
 	var x = bundle.entryModule.defaultExport;
 
-	if ( x.declaration ) {
+	if ( x.hasDeclaration ) {
 		return x.name;
 	}
 
-	return bundle.identifierReplacements[ bundle.entry ].default.name;
+	return bundle.identifierReplacements[ bundle.entry ].default;
 }

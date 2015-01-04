@@ -3,7 +3,7 @@ export default function hasNamedExports ( mod ) {
 
 	i = mod.exports.length;
 	while ( i-- ) {
-		if ( !mod.exports[i].default ) {
+		if ( !mod.exports[i].isDefault ) {
 			return true;
 		}
 	}

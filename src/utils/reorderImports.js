@@ -1,11 +1,18 @@
+/**
+ * Reorders an array of imports so that empty imports (those with
+   no specifier, e.g. `import 'polyfills'`) are at the end. That
+   way they can be excluded from the factory function's arguments
+ * @param {array} imports - the imports to reorder
+ */
 export default function reorderImports ( imports ) {
-	var i;
+	var i = imports.length, x;
 
-	// ensure empty imports are at the end
-	i = imports.length;
 	while ( i-- ) {
-		if ( !imports[i].specifiers.length ) {
-			imports.splice( imports.length - 1, 0, imports.splice( i, 1 )[0] );
+		x = imports[i];
+
+		if ( x.isEmpty ) {
+			imports.splice( i, 1 );
+			imports.push( x );
 		}
 	}
 }

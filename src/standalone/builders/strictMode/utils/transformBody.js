@@ -1,20 +1,25 @@
 import gatherImports from './gatherImports';
 import getExportNames from './getExportNames';
+import getReadOnlyIdentifiers from 'utils/getReadOnlyIdentifiers';
 import traverseAst from 'utils/ast/traverse';
 
 export default function transformBody ( mod, body, options ) {
-	var importedBindings,
+	var chains,
 		identifierReplacements,
-		exportNames = [],
+		importedBindings = {},
+		importedNamespaces = {},
+		exportNames,
 		alreadyExported = {},
 		shouldExportEarly = {},
 		earlyExports,
 		lateExports;
 
-	[ importedBindings, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
+	[ chains, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
 
-	traverseAst( mod.ast, body, identifierReplacements, exportNames, alreadyExported );
+	[ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
+
+	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
 
 	// Remove import statements from the body of the module
 	mod.imports.forEach( x => {
@@ -27,6 +32,11 @@ export default function transformBody ( mod, body, options ) {
 		body.remove( x.start, x.next );
 	});
 
+	// Prepend require() statements (CommonJS output only)
+	if ( options.header ) {
+		body.prepend( options.header + '\n\n' );
+	}
+
 	// Remove export statements (but keep declarations)
 	mod.exports.forEach( x => {
 		switch ( x.type ) {
@@ -36,7 +46,7 @@ export default function transformBody ( mod, body, options ) {
 
 			case 'namedFunction':
 			case 'namedClass':
-				if ( x.default ) {
+				if ( x.isDefault ) {
 					// export default function answer () { return 42; }
 					body.remove( x.start, x.valueStart );
 					body.insert( x.end, `\nexports['default'] = ${x.name};` );
@@ -71,8 +81,9 @@ export default function transformBody ( mod, body, options ) {
 
 		exportAs = exportNames[ name ];
 
-		if ( chain = importedBindings[ name ] ) {
+		if ( chain = chains[ name ] ) {
 			// special case - a binding from another module
+			console.log( 'chain', chain );
 			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { get: function () { return ${chain}; }});` );
 		} else if ( shouldExportEarly[ name ] ) {
 			earlyExports.push( `exports.${exportAs} = ${name};` );
@@ -83,11 +94,6 @@ export default function transformBody ( mod, body, options ) {
 
 	if ( lateExports.length ) {
 		body.trim().append( '\n\n' + lateExports.join( '\n' ) );
-	}
-
-	// Prepend require() statements
-	if ( options.header ) {
-		body.prepend( options.header + '\n\n' );
 	}
 
 	// Function exports should be exported immediately after 'use strict'

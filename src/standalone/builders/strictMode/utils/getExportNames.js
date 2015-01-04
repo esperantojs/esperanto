@@ -2,9 +2,9 @@ export default function getExportNames ( exports ) {
 	var result = {};
 
 	exports.forEach( x => {
-		if ( x.default ) return;
+		if ( x.isDefault ) return;
 
-		if ( x.declaration ) {
+		if ( x.hasDeclaration ) {
 			result[ x.name ] = x.name;
 			return;
 		}

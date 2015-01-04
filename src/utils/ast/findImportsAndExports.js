@@ -28,7 +28,7 @@ export default function findImportsAndExports ( mod, source, ast ) {
 			declaration = processExport( node, source );
 			exports.push( declaration );
 
-			if ( declaration.default ) {
+			if ( declaration.isDefault ) {
 				if ( mod.defaultExport ) {
 					throw new Error( 'Duplicate default exports' );
 				}
@@ -66,7 +66,7 @@ export default function findImportsAndExports ( mod, source, ast ) {
  * @returns {object}
  */
 function processImport ( node, passthrough ) {
-	var result = {
+	var x = {
 		node: node,
 		start: node.start,
 		end: node.end,
@@ -86,7 +86,7 @@ function processImport ( node, passthrough ) {
 			id = s.id.name;
 
 			return {
-				default: !!s.default,
+				isDefault: !!s.default,
 				name: s.default ? 'default' : id,
 				as: s.name ? s.name.name : id
 			};
@@ -94,13 +94,14 @@ function processImport ( node, passthrough ) {
 	};
 
 	// TODO have different types of imports - batch, default, named
-
-	if ( result.specifiers.length === 1 && result.specifiers[0].default ) {
-		result.default = true;
-		result.name = result.specifiers[0].as;
+	if ( x.specifiers.length === 0 ) {
+		x.isEmpty = true;
+	} else if ( x.specifiers.length === 1 && x.specifiers[0].isDefault ) {
+		x.isDefault = true;
+		x.name = x.specifiers[0].as;
 	}
 
-	return result;
+	return x;
 }
 
 /**
@@ -124,22 +125,22 @@ function processExport ( node, source ) {
 
 		// Case 1: `export var foo = 'bar'`
 		if ( d.type === 'VariableDeclaration' ) {
-			result.declaration = true; // TODO remove in favour of result.type
+			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'varDeclaration';
 			result.name = d.declarations[0].id.name;
 		}
 
 		// Case 2: `export function foo () {...}`
 		else if ( d.type === 'FunctionDeclaration' ) {
-			result.declaration = true; // TODO remove in favour of result.type
+			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedFunction';
-			result.default = !!node.default;
+			result.isDefault = !!node.default;
 			result.name = d.id.name;
 		}
 
 		else if ( d.type === 'FunctionExpression' ) {
-			result.declaration = true; // TODO remove in favour of result.type
-			result.default = true;
+			result.hasDeclaration = true; // TODO remove in favour of result.type
+			result.isDefault = true;
 
 			// Case 3: `export default function foo () {...}`
 			if ( d.id ) {
@@ -155,15 +156,15 @@ function processExport ( node, source ) {
 
 		// Case 5: `export class Foo {...}`
 		else if ( d.type === 'ClassDeclaration' ) {
-			result.declaration = true; // TODO remove in favour of result.type
+			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedClass';
-			result.default = !!node.default;
+			result.isDefault = !!node.default;
 			result.name = d.id.name;
 		}
 
 		else if ( d.type === 'ClassExpression' ) {
-			result.declaration = true; // TODO remove in favour of result.type
-			result.default = true;
+			result.hasDeclaration = true; // TODO remove in favour of result.type
+			result.isDefault = true;
 
 			// Case 6: `export default class Foo {...}`
 			if ( d.id ) {
@@ -180,7 +181,7 @@ function processExport ( node, source ) {
 		// Case 8: `export default 1 + 2`
 		else {
 			result.type = 'expression';
-			result.default = true;
+			result.isDefault = true;
 			result.name = 'default';
 		}
 	}

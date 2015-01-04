@@ -70,7 +70,7 @@ export default {
 
 					bundle.modules.forEach( mod => {
 						mod.imports.forEach( x => {
-							if ( bundle.externalModuleLookup[ x.id ] && !x.default ) {
+							if ( bundle.externalModuleLookup[ x.id ] && !x.isDefault ) {
 								throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
 							}
 						});

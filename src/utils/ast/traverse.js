@@ -3,15 +3,12 @@ import disallowIllegalReassignment from './disallowIllegalReassignment';
 import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
 
-export default function traverseAst ( ast, body, identifierReplacements, exportNames, alreadyExported ) {
-	var scope, blockScope, capturedUpdates;
+export default function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported ) {
+	var scope = ast._scope,
+		blockScope = ast._blockScope,
+		capturedUpdates = null,
+		previousCapturedUpdates = null;
 
-	scope = ast._scope;
-	blockScope = ast._blockScope;
-
-	capturedUpdates = null;
-
-	// scope is now the global scope
 	estraverse.traverse( ast, {
 		enter: function ( node, parent ) {
 			// we're only interested in references, not property names etc
@@ -30,13 +27,13 @@ export default function traverseAst ( ast, body, identifierReplacements, exportN
 			// we capture the change and update the export (and any others) after the
 			// variable declaration
 			if ( node.type === 'VariableDeclaration' ) {
-				let previous = capturedUpdates;
+				previousCapturedUpdates = capturedUpdates;
 				capturedUpdates = [];
-				capturedUpdates.previous = previous;
+				return;
 			}
 
 			// Catch illegal reassignments
-			disallowIllegalReassignment( node, identifierReplacements, scope );
+			disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
 			// Rewrite assignments to exports
 			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
@@ -49,10 +46,10 @@ export default function traverseAst ( ast, body, identifierReplacements, exportN
 			// Special case - see above
 			if ( node.type === 'VariableDeclaration' ) {
 				if ( capturedUpdates.length ) {
-					body.replace( node.end, node.end, capturedUpdates.map( c => ` exports.${c.name} = ${c.exportAs};` ).join( '' ) );
+					body.insert( node.end, capturedUpdates.map( exportCapturedUpdate ).join( '' ) );
 				}
 
-				capturedUpdates = capturedUpdates.previous;
+				capturedUpdates = previousCapturedUpdates;
 			}
 
 			if ( node._scope ) {
@@ -62,4 +59,8 @@ export default function traverseAst ( ast, body, identifierReplacements, exportN
 			}
 		}
 	});
+}
+
+function exportCapturedUpdate ( c ) {
+	return ` exports.${c.name} = ${c.exportAs};`;
 }

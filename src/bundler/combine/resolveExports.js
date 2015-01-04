@@ -29,7 +29,7 @@ export default function resolveExports ( bundle ) {
 			});
 		}
 
-		else if ( !x.default && ( name = x.name ) ) {
+		else if ( !x.isDefault && ( name = x.name ) ) {
 			addExport( bundle.entry, name, name );
 		}
 	});

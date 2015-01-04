@@ -1,5 +1,5 @@
 export default function gatherImports ( imports, getName ) {
-	var importedBindings = {}, identifierReplacements = {};
+	var chains = {}, identifierReplacements = {};
 
 	imports.forEach( x => {
 		x.specifiers.forEach( s => {
@@ -9,33 +9,27 @@ export default function gatherImports ( imports, getName ) {
 				name = replacement = s.name;
 
 				if ( !x.passthrough ) {
-					identifierReplacements[ name ] = {
-						name: replacement,
-						namespace: true
-					};
+					identifierReplacements[ name ] = replacement;
 				}
 			}
 
 			else {
 				name = s.as;
 
-				if ( s.default ) {
+				if ( s.isDefault ) {
 					replacement = getName( x ) + '[\'default\']';
 				} else {
 					replacement = getName( x ) + '.' + s.name;
 				}
 
 				if ( !x.passthrough ) {
-					identifierReplacements[ name ] = {
-						name: replacement,
-						readOnly: true
-					};
+					identifierReplacements[ name ] = replacement;
 				}
 			}
 
-			importedBindings[ name ] = replacement;
+			chains[ name ] = replacement;
 		});
 	});
 
-	return [ importedBindings, identifierReplacements ];
+	return [ chains, identifierReplacements ];
 }

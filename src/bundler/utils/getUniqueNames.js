@@ -20,7 +20,7 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 			var id = resolve( x.path, mod.file );
 			x.id = id;
 
-			if ( x.default && !hasOwnProp.call( names, id ) && !hasOwnProp.call( used, x.name ) ) {
+			if ( x.isDefault && !hasOwnProp.call( names, id ) && !hasOwnProp.call( used, x.name ) ) {
 				names[ id ] = x.name;
 				used[ x.name ] = true;
 			}

@@ -1,7 +1,7 @@
-import template from '../../../utils/template';
-import getExportBlock from './utils/getExportBlock';
-import packageResult from '../../../utils/packageResult';
+import template from 'utils/template';
+import packageResult from 'utils/packageResult';
 import { getId, quote } from 'utils/mappers';
+import getExportBlock from './utils/getExportBlock';
 
 var introTemplate;
 

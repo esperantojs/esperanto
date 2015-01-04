@@ -1,12 +1,12 @@
 import path from 'path';
 import hasOwnProp from 'utils/hasOwnProp';
+import resolve from 'utils/resolve';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
 import getUniqueNames from './utils/getUniqueNames';
 import combine from './combine';
 import sander from 'sander';
 import getModule from './getModule';
-import resolve from '../utils/resolve';
 
 var Promise = sander.Promise;
 

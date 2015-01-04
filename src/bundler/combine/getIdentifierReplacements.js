@@ -3,7 +3,7 @@ import topLevelScopeConflicts from './topLevelScopeConflicts';
 
 /**
  * Figures out which identifiers need to be rewritten within
- * a bundle to avoid conflicts
+   a bundle to avoid conflicts
  * @param {object} bundle - the bundle
  * @returns {object}
  */
@@ -21,11 +21,9 @@ export default function getIdentifierReplacements ( bundle ) {
 		identifiers[ mod.id ] = moduleIdentifiers = {};
 
 		function addName ( n ) {
-			moduleIdentifiers[n] = {
-				name: hasOwnProp.call( conflicts, n ) ?
-					prefix + '__' + n :
-					n
-			};
+			moduleIdentifiers[n] = hasOwnProp.call( conflicts, n ) ?
+				prefix + '__' + n :
+				n;
 		}
 
 		mod.ast._scope.names.forEach( addName );
@@ -50,10 +48,7 @@ export default function getIdentifierReplacements ( bundle ) {
 					name = s.name;
 					replacement = bundle.uniqueNames[ moduleId ];
 
-					moduleIdentifiers[ name ] = {
-						name: replacement,
-						namespace: true
-					};
+					moduleIdentifiers[ name ] = replacement;
 				}
 
 				else {
@@ -81,7 +76,7 @@ export default function getIdentifierReplacements ( bundle ) {
 							replacement = moduleName + '__default';
 						}
 
-						else if ( mod && mod.defaultExport && mod.defaultExport.declaration && mod.defaultExport.name ) {
+						else if ( mod && mod.defaultExport && mod.defaultExport.hasDeclaration && mod.defaultExport.name ) {
 							replacement = hasOwnProp.call( conflicts, mod.defaultExport.name ) ?
 								moduleName + '__' + mod.defaultExport.name :
 								mod.defaultExport.name;
@@ -100,29 +95,22 @@ export default function getIdentifierReplacements ( bundle ) {
 						replacement = moduleName + '.' + specifierName;
 					}
 
-					moduleIdentifiers[ name ] = {
-						name: replacement,
-						readOnly: true
-					};
+					moduleIdentifiers[ name ] = replacement;
 				}
 			});
 		});
 
-		// TODO is this necessary? Or only necessary in with default
+		// TODO is this necessary? Or only necessary with default
 		// exports that are expressions?
 		if ( x = mod.defaultExport ) {
-			if ( x.declaration && x.name ) {
-				moduleIdentifiers.default = {
-					name: hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
-						prefix + '__' + x.name :
-						x.name
-				};
+			if ( x.hasDeclaration && x.name ) {
+				moduleIdentifiers.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
+					prefix + '__' + x.name :
+					x.name;
 			} else {
-				moduleIdentifiers.default = {
-					name: hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
-						prefix + '__default' :
-						prefix
-				};
+				moduleIdentifiers.default = hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
+					prefix + '__default' :
+					prefix;
 			}
 		}
 	});

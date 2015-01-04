@@ -13,7 +13,7 @@ export default function hasNamedImports ( mod ) {
 			return true;
 		}
 
-		if ( !x.specifiers[0].default && !x.specifiers[0].batch ) {
+		if ( !x.specifiers[0].isDefault && !x.specifiers[0].batch ) {
 			return true;
 		}
 	}

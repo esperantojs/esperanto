@@ -24,7 +24,7 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 			}
 		}
 
-		else if ( x.default ) {
+		else if ( x.isDefault ) {
 			name = x.name;
 		}
 

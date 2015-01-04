@@ -32,8 +32,9 @@ export default function getModule ( mod ) {
 	// collect exports by name, for quick lookup when verifying
 	// that this module exports a given identifier
 	mod.doesExport = {};
+
 	exports.forEach( x => {
-		if ( x.default ) {
+		if ( x.isDefault ) {
 			mod.doesExport.default = true;
 		}
 
