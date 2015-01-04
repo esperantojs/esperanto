@@ -2,10 +2,10 @@
 
 	'use strict';
 
-	var path__default = require('path');
-	var sander__default = require('sander');
 	var acorn__default = require('acorn');
 	var MagicString__default = require('magic-string');
+	var path__default = require('path');
+	var sander__default = require('sander');
 	var estraverse__default = require('estraverse');
 
 	/*
@@ -56,86 +56,82 @@
 					return this.skip();
 				}
 
-				if ( createsScope( node ) ) {
-					if ( node.id ) {
-						scope.add( node.id.name );
-						declared[ node.id.name ] = true;
-					}
+				switch ( node.type ) {
+					case 'FunctionExpression':
+					case 'FunctionDeclaration':
+						if ( node.id ) {
+							addToScope( node );
+						}
 
-					scope = node._scope = new Scope({
-						parent: scope,
-						params: node.params.map( function(x ) {return x.name} ) // TODO rest params?
-					});
-				}
+						scope = node._scope = new Scope({
+							parent: scope,
+							params: node.params.map( function(x ) {return x.name} ) // TODO rest params?
+						});
 
-				else if ( createsBlockScope( node ) ) {
-					blockScope = node._blockScope = new Scope({
-						parent: blockScope
-					});
-				}
+						break;
 
-				if ( declaresVar( node ) ) {
-					scope.add( node.id.name );
-					declared[ node.id.name ] = true;
-				}
+					case 'BlockStatement':
+						blockScope = node._blockScope = new Scope({
+							parent: blockScope
+						});
 
-				else if ( declaresLet( node ) ) {
-					blockScope.add( node.id.name );
-					declared[ node.id.name ] = true;
-				}
+						break;
 
-				// Make a note of which children we should skip
-				if ( node.type === 'MemberExpression' && !node.computed ) {
-					node.property._skip = true;
-				}
+					case 'VariableDeclaration':
+						node.declarations.forEach( node.kind === 'let' ? addToBlockScope : addToScope );
+						break;
 
-				else if ( node.type === 'Property' ) {
-					node.key._skip = true;
-				}
+					case 'ClassExpression':
+					case 'ClassDeclaration':
+						addToScope( node );
+						break;
 
-				// make a note of template literals - we want to prevent multiline
-				// strings from being indented with everything else
-				if ( node.type === 'TemplateLiteral' ) {
-					templateLiteralRanges.push([ node.start, node.end ]);
+					case 'MemberExpression':
+						!node.computed && ( node.property._skip = true );
+						break;
+
+					case 'Property':
+						node.key._skip = true;
+						break;
+
+					case 'TemplateLiteral':
+						templateLiteralRanges.push([ node.start, node.end ]);
+						break;
 				}
 			},
 			leave: function ( node ) {
-				if ( createsScope( node ) ) {
-					scope = scope.parent;
-				}
+				switch ( node.type ) {
+					case 'FunctionExpression':
+					case 'FunctionDeclaration':
+						scope = scope.parent;
+						break;
 
-				else if ( createsBlockScope( node ) ) {
-					blockScope = blockScope.parent;
+					case 'BlockStatement':
+						blockScope = blockScope.parent;
+						break;
 				}
 			}
 		});
+
+		function addToScope ( declarator ) {
+			var name = declarator.id.name;
+
+			scope.add( name );
+			declared[ name ] = true;
+		}
+
+		function addToBlockScope ( declarator ) {
+			var name = declarator.id.name;
+
+			blockScope.add( name );
+			declared[ name ] = true;
+		}
 
 		ast._scope = scope;
 		ast._blockScope = blockScope;
 		ast._topLevelNames = ast._scope.names.concat( ast._blockScope.names );
 		ast._declared = declared;
 		ast._templateLiteralRanges = templateLiteralRanges;
-	}
-
-	function createsScope ( node ) {
-		return node.type === 'FunctionExpression' || node.type === 'FunctionDeclaration';
-	}
-
-	function createsBlockScope ( node ) {
-		return node.type === 'BlockStatement';
-	}
-
-	function declaresVar ( node ) {
-		// TODO const? (function taken care of already)
-		return (
-			node.type === 'VariableDeclarator' ||
-			node.type === 'ClassExpression' ||
-			node.type === 'ClassDeclaration'
-		);
-	}
-
-	function declaresLet ( node ) {
-		return false; // TODO
 	}
 
 	/**
@@ -979,7 +975,7 @@
 			previousCapturedUpdates = null;
 
 		estraverse__default.traverse( ast, {
-			enter: function ( node, parent ) {
+			enter: function ( node ) {
 				// we're only interested in references, not property names etc
 				if ( node._skip ) return this.skip();
 

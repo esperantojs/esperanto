@@ -10,7 +10,7 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 		previousCapturedUpdates = null;
 
 	estraverse.traverse( ast, {
-		enter: function ( node, parent ) {
+		enter: function ( node ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();
 

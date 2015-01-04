@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.4
+
+* Performance improvements and internal refactoring
+
 ## 0.5.3
 
 * You can specify a `banner` and/or `footer` option when converting or bundling
