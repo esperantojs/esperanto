@@ -7,7 +7,7 @@ A better way to transpile ES6 modules to AMD and CommonJS:
 * Smarter - non-destructive source code transformation, no runtime Traceur dependency, and no ES5-only features
 * Faster - roughly 10x quicker than the alternatives
 
-Try it online here: [rich-harris.co.uk/esperanto](http://www.rich-harris.co.uk/esperanto/)
+Try it online here: [esperantojs.org](http://esperantojs.org)
 
 ## Installation
 
@@ -21,13 +21,13 @@ npm install esperanto
 
 You can use Esperanto in one of two modes:
 
-* [Converting a single module](https://github.com/Rich-Harris/esperanto/wiki/Converting-a-single-module)
-* [Bundling multiple ES6 modules](https://github.com/Rich-Harris/esperanto/wiki/Bundling-multiple-ES6-modules)
+* [Converting a single module](https://github.com/esperantojs/esperanto/wiki/Converting-a-single-module)
+* [Bundling multiple ES6 modules](https://github.com/esperantojs/esperanto/wiki/Bundling-multiple-ES6-modules)
 
 
 ## Why not use existing module transpilers?
 
-See [comparisons with other tools](https://github.com/Rich-Harris/esperanto/wiki/Comparisons-with-other-tools) for some of the reasons to use Esperanto.
+See [comparisons with other tools](https://github.com/esperantojs/esperanto/wiki/Comparisons-with-other-tools) for some of the reasons to use Esperanto.
 
 
 ## Credits
