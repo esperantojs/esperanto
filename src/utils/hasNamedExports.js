@@ -1,7 +1,6 @@
 export default function hasNamedExports ( mod ) {
-	var i;
+	var i = mod.exports.length;
 
-	i = mod.exports.length;
 	while ( i-- ) {
 		if ( !mod.exports[i].isDefault ) {
 			return true;

@@ -11,7 +11,7 @@ export default function transformBody ( bundle, mod, body ) {
 		shouldExportEarly = {},
 		exportBlock;
 
-	identifierReplacements = bundle.identifierReplacements[ mod.id ];
+	identifierReplacements = mod.identifierReplacements;
 	[ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
 
 	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
@@ -112,7 +112,6 @@ export default function transformBody ( bundle, mod, body ) {
 
 			if ( !alreadyExported[ name ] ) {
 				exportAs = exportNames[ name ];
-
 				exportBlock.push( `exports.${exportAs} = ${identifierReplacements[name]};` );
 			}
 		});

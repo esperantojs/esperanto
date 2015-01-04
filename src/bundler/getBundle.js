@@ -1,6 +1,6 @@
 import path from 'path';
 import hasOwnProp from 'utils/hasOwnProp';
-import resolve from 'utils/resolve';
+import resolveId from './utils/resolveId';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
 import getUniqueNames from './utils/getUniqueNames';
@@ -77,25 +77,23 @@ export default function getBundle ( options ) {
 				moduleLookup[ moduleId ] = module;
 
 				promises = module.imports.map( x => {
-					var importId;
+					x.id = resolveId( x.path, module.file );
 
-					importId = resolve( x.path, module.file );
-
-					if ( importId === moduleId ) {
+					if ( x.id === moduleId ) {
 						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
 					}
 
 					// Some modules can be skipped
-					if ( skip && ~skip.indexOf( importId ) ) {
+					if ( skip && ~skip.indexOf( x.id ) ) {
 						return;
 					}
 
 					// short-circuit cycles
-					if ( hasOwnProp.call( promiseById, importId ) ) {
+					if ( hasOwnProp.call( promiseById, x.id ) ) {
 						return;
 					}
 
-					return fetchModule( importId );
+					return fetchModule( x.id );
 				});
 
 				return Promise.all( promises );

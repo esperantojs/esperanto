@@ -4,10 +4,10 @@
 
 	if (typeof define === 'function' && define.amd) {
 		// export as AMD
-		define([], factory);
+		define(['foo'], factory);
 	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
 		// node/browserify
-		module.exports = factory();
+		module.exports = factory(require('foo'));
 	} else {
 		// browser global
 		global.myModule = factory();
@@ -17,12 +17,8 @@
 
 	'use strict';
 
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var foo = 'should not clash';
 
-	var main = function () {
-		console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
-	}
-
-	return main;
+	bar();
 
 }));

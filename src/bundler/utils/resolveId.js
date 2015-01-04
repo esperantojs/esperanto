@@ -4,7 +4,7 @@
  * @param {string} importerPath - the (relative to `base`) path of the importing module
  * @returns {string}
  */
-export default function resolve ( importPath, importerPath ) {
+export default function resolveId ( importPath, importerPath ) {
 	var resolved, importerParts, importParts;
 
 	if ( importPath[0] !== '.' ) {

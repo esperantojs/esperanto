@@ -8,6 +8,6 @@
 		console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
 	}
 
-	exports['default'] = undefined;
+	exports['default'] = main;
 
 }).call(global);

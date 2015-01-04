@@ -28,7 +28,7 @@ export default function amd ( bundle, body, options ) {
 		importNames.unshift( 'exports' );
 
 		if ( entry.defaultExport ) {
-			body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
+			body.append( '\n\n' + getExportBlock( entry, indentStr ) );
 		}
 	}
 

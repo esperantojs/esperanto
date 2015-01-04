@@ -42,7 +42,7 @@ export default function umd ( bundle, body, options ) {
 		names   = [ 'exports' ].concat( importNames ).join( ', ' );
 
 		if ( entry.defaultExport ) {
-			body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
+			body.append( '\n\n' + getExportBlock( entry, indentStr ) );
 		}
 	} else {
 		amdDeps = importPaths.map( quote ).join( ', ' );

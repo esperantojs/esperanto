@@ -21,7 +21,7 @@ export default function cjs ( bundle, body, options ) {
 	}
 
 	if ( entry.defaultExport ) {
-		body.append( '\n\n' + getExportBlock( bundle, entry, indentStr ) );
+		body.append( '\n\n' + getExportBlock( entry, indentStr ) );
 	}
 
 	intro = '(function () {\n\n' + indentStr + "'use strict';\n\n";

@@ -1,19 +1,8 @@
 export default function hasNamedImports ( mod ) {
-	var i, x;
+	var i = mod.imports.length;
 
-	i = mod.imports.length;
 	while ( i-- ) {
-		x = mod.imports[i];
-
-		if ( !x.specifiers.length ) {
-			continue; // ok
-		}
-
-		if ( x.specifiers.length > 1 ) {
-			return true;
-		}
-
-		if ( !x.specifiers[0].isDefault && !x.specifiers[0].batch ) {
+		if ( mod.imports[i].isNamed ) {
 			return true;
 		}
 	}

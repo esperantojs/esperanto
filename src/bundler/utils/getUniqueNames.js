@@ -1,8 +1,6 @@
 import hasOwnProp from 'utils/hasOwnProp';
-import resolve from 'utils/resolve';
 import sanitize from 'utils/sanitize';
 
-// TODO use sensible names, inferring from defaults where poss
 export default function getUniqueNames ( modules, externalModules, userNames ) {
 	var names = {}, used = {};
 
@@ -14,14 +12,11 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 		});
 	}
 
-	// infer names from imports
+	// infer names from default imports
 	modules.forEach( mod => {
 		mod.imports.forEach( x => {
-			var id = resolve( x.path, mod.file );
-			x.id = id;
-
-			if ( x.isDefault && !hasOwnProp.call( names, id ) && !hasOwnProp.call( used, x.name ) ) {
-				names[ id ] = x.name;
+			if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.name ) ) {
+				names[ x.id ] = x.name;
 				used[ x.name ] = true;
 			}
 		});

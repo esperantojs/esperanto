@@ -9,7 +9,7 @@ export default function topLevelScopeConflicts ( bundle ) {
 		var names =
 
 			// all top defined identifiers are in top scope
-			mod.ast._scope.names
+			mod.ast._topLevelNames
 
 			// all unattributed identifiers could collide with top scope
 			.concat( getUnscopedNames( mod ) )

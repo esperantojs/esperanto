@@ -2,29 +2,20 @@ export default function gatherImports ( imports, getName ) {
 	var chains = {}, identifierReplacements = {};
 
 	imports.forEach( x => {
+		var moduleName = getName( x );
+
 		x.specifiers.forEach( s => {
 			var name, replacement;
 
-			if ( s.batch ) {
-				name = replacement = s.name;
-
-				if ( !x.passthrough ) {
-					identifierReplacements[ name ] = replacement;
-				}
+			if ( s.isBatch ) {
+				return;
 			}
 
-			else {
-				name = s.as;
+			name = s.as;
+			replacement = moduleName + ( s.isDefault ? `['default']` : `.${s.name}` );
 
-				if ( s.isDefault ) {
-					replacement = getName( x ) + '[\'default\']';
-				} else {
-					replacement = getName( x ) + '.' + s.name;
-				}
-
-				if ( !x.passthrough ) {
-					identifierReplacements[ name ] = replacement;
-				}
+			if ( !x.passthrough ) {
+				identifierReplacements[ name ] = replacement;
 			}
 
 			chains[ name ] = replacement;

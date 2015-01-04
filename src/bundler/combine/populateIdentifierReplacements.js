@@ -7,52 +7,63 @@ import topLevelScopeConflicts from './topLevelScopeConflicts';
  * @param {object} bundle - the bundle
  * @returns {object}
  */
-export default function getIdentifierReplacements ( bundle ) {
-	var conflicts, identifiers = {};
-
+export default function populateIdentifierReplacements ( bundle ) {
 	// first, discover conflicts
-	conflicts = topLevelScopeConflicts( bundle );
+	var conflicts = topLevelScopeConflicts( bundle );
 
+	// then figure out what identifiers need to be created
+	// for default exports
+	bundle.modules.forEach( mod => {
+		var prefix, x;
+
+		prefix = bundle.uniqueNames[ mod.id ];
+
+		if ( x = mod.defaultExport ) {
+			if ( x.hasDeclaration && x.name ) {
+				mod.identifierReplacements.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
+					prefix + '__' + x.name :
+					x.name;
+			} else {
+				mod.identifierReplacements.default = hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
+					prefix + '__default' :
+					prefix;
+			}
+		}
+	});
+
+	// then determine which existing identifiers
+	// need to be replaced
 	bundle.modules.forEach( mod => {
 		var prefix, moduleIdentifiers, x;
 
 		prefix = bundle.uniqueNames[ mod.id ];
+		moduleIdentifiers = mod.identifierReplacements;
 
-		identifiers[ mod.id ] = moduleIdentifiers = {};
-
-		function addName ( n ) {
+		mod.ast._topLevelNames.forEach( n => {
 			moduleIdentifiers[n] = hasOwnProp.call( conflicts, n ) ?
 				prefix + '__' + n :
 				n;
-		}
-
-		mod.ast._scope.names.forEach( addName );
-		mod.ast._blockScope.names.forEach( addName );
+		});
 
 		mod.imports.forEach( x => {
-			var external;
+			var isExternalModule;
 
 			if ( x.passthrough ) {
 				return;
 			}
 
-			external = hasOwnProp.call( bundle.externalModuleLookup, x.id );
+			isExternalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id );
 
 			x.specifiers.forEach( s => {
-				var moduleId, mod, moduleName, specifierName, name, replacement, hash, isChained, separatorIndex;
+				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
 
 				moduleId = x.id;
-				mod = bundle.moduleLookup[ moduleId ];
 
-				if ( s.batch ) {
-					name = s.name;
+				if ( s.isBatch ) {
 					replacement = bundle.uniqueNames[ moduleId ];
-
-					moduleIdentifiers[ name ] = replacement;
 				}
 
 				else {
-					name = s.as;
 					specifierName = s.name;
 
 					// If this is a chained import, get the origin
@@ -69,17 +80,19 @@ export default function getIdentifierReplacements ( bundle ) {
 					}
 
 					moduleName = bundle.uniqueNames[ moduleId ];
+					mod = bundle.moduleLookup[ moduleId ];
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default
-						if ( hasOwnProp.call( bundle.externalModuleLookup, moduleId ) ) {
+						if ( isExternalModule ) {
 							replacement = moduleName + '__default';
 						}
 
-						else if ( mod && mod.defaultExport && mod.defaultExport.hasDeclaration && mod.defaultExport.name ) {
-							replacement = hasOwnProp.call( conflicts, mod.defaultExport.name ) ?
-								moduleName + '__' + mod.defaultExport.name :
-								mod.defaultExport.name;
+						// We currently need to check for the existence of `mod`, because modules
+						// can be skipped. Would be better to replace skipped modules with dummies
+						// - see https://github.com/Rich-Harris/esperanto/issues/32
+						else if ( mod ) {
+							replacement = mod.identifierReplacements.default;
 						}
 
 						else {
@@ -87,32 +100,20 @@ export default function getIdentifierReplacements ( bundle ) {
 								moduleName + '__default' :
 								moduleName;
 						}
-					} else if ( !external ) {
+					} else if ( !isExternalModule ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							moduleName + '__' + specifierName :
 							specifierName;
 					} else {
 						replacement = moduleName + '.' + specifierName;
 					}
+				}
 
-					moduleIdentifiers[ name ] = replacement;
+				if ( replacement !== s.as ) {
+					moduleIdentifiers[ s.as ] = replacement;
 				}
 			});
 		});
-
-		// TODO is this necessary? Or only necessary with default
-		// exports that are expressions?
-		if ( x = mod.defaultExport ) {
-			if ( x.hasDeclaration && x.name ) {
-				moduleIdentifiers.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
-					prefix + '__' + x.name :
-					x.name;
-			} else {
-				moduleIdentifiers.default = hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
-					prefix + '__default' :
-					prefix;
-			}
-		}
 	});
 
 	function otherModulesDeclare ( mod, replacement ) {
@@ -131,6 +132,4 @@ export default function getIdentifierReplacements ( bundle ) {
 			}
 		}
 	}
-
-	return identifiers;
 }

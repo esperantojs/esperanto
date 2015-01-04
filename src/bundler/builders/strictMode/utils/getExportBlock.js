@@ -1,11 +1,4 @@
-export default function getExportBlock ( bundle, entry, indentStr ) {
-	var name;
-
-	if ( bundle.entryModule.defaultExport.hasDeclaration ) {
-		name = bundle.entryModule.defaultExport.name;
-	} else {
-		name = bundle.identifierReplacements[ bundle.entry ].default;
-	}
-
+export default function getExportBlock ( entry, indentStr ) {
+	var name = entry.identifierReplacements.default;
 	return indentStr + `exports['default'] = ${name};`;
 }

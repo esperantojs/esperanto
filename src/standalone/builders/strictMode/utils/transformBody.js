@@ -77,28 +77,26 @@ export default function transformBody ( mod, body, options ) {
 	lateExports = [];
 
 	Object.keys( exportNames ).forEach( name => {
-		var exportAs, chain;
+		var exportAs = exportNames[ name ];
 
-		exportAs = exportNames[ name ];
-
-		if ( chain = chains[ name ] ) {
+		if ( chains.hasOwnProperty( name ) ) {
 			// special case - a binding from another module
-			console.log( 'chain', chain );
-			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { get: function () { return ${chain}; }});` );
-		} else if ( shouldExportEarly[ name ] ) {
+			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { get: function () { return ${chains[name]}; }});` );
+		} else if ( shouldExportEarly.hasOwnProperty( name ) ) {
 			earlyExports.push( `exports.${exportAs} = ${name};` );
-		} else if ( !alreadyExported[ name ] ) {
+		} else if ( !alreadyExported.hasOwnProperty( name ) ) {
 			lateExports.push( `exports.${exportAs} = ${name};` );
 		}
 	});
 
-	if ( lateExports.length ) {
-		body.trim().append( '\n\n' + lateExports.join( '\n' ) );
-	}
-
 	// Function exports should be exported immediately after 'use strict'
 	if ( earlyExports.length ) {
 		body.trim().prepend( earlyExports.join( '\n' ) + '\n\n' );
+	}
+
+	// Everything else should be exported at the end
+	if ( lateExports.length ) {
+		body.trim().append( '\n\n' + lateExports.join( '\n' ) );
 	}
 
 	body.trim().indent({

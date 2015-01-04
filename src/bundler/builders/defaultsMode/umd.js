@@ -1,15 +1,17 @@
-import template from '../../../utils/template';
-import packageResult from '../../../utils/packageResult';
-import getExportName from './utils/getExportName';
+import template from 'utils/template';
+import packageResult from 'utils/packageResult';
+import { getId, quote, req } from 'utils/mappers';
 
 var introTemplate;
 
 export default function umd ( bundle, body, options ) {
-	var amdDeps,
+	var externalModuleIds,
+		amdDeps,
 		cjsDeps,
 		globals,
 		intro,
-		indentStr;
+		indentStr,
+		defaultName;
 
 	indentStr = body.getIndentString();
 
@@ -17,32 +19,26 @@ export default function umd ( bundle, body, options ) {
 		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
 	}
 
-	if ( bundle.entryModule.defaultExport ) {
-		body.append( `\n\n${indentStr}return ${getExportName(bundle)};` );
+	if ( defaultName = bundle.entryModule.identifierReplacements.default ) {
+		body.append( `\n\n${indentStr}return ${defaultName};` );
 	}
 
-	amdDeps = bundle.externalModules.map( quoteId ).join( ', ' );
-	cjsDeps = bundle.externalModules.map( req ).join( ', ' );
-	globals = bundle.externalModules.map( m => 'global.' + bundle.uniqueNames[ m.id ] ).join( ', ' );
+	externalModuleIds = bundle.externalModules.map( getId );
+
+	amdDeps = externalModuleIds.map( quote ).join( ', ' );
+	cjsDeps = externalModuleIds.map( req ).join( ', ' );
+	globals = externalModuleIds.map( id => 'global.' + bundle.uniqueNames[ id ] ).join( ', ' );
 
 	intro = introTemplate({
 		amdDeps: amdDeps,
 		cjsDeps: cjsDeps,
 		globals: globals,
 		name: options.name,
-		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] + '__default' ).join( ', ' )
+		names: externalModuleIds.map( id => bundle.uniqueNames[ id ] + '__default' ).join( ', ' )
 	}).replace( /\t/g, indentStr );
 
 	body.prepend( intro ).trim().append( '\n\n}));' );
 	return packageResult( body, options, 'toUmd', true );
-}
-
-function quoteId ( m ) {
-	return "'" + m.id + "'";
-}
-
-function req ( m ) {
-	return 'require(\'' + m.id + '\')';
 }
 
 introTemplate = template( `(function (global, factory) {

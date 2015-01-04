@@ -1,21 +1,10 @@
-import packageResult from '../../../utils/packageResult';
+import packageResult from 'utils/packageResult';
 
 export default function cjs ( mod, body, options ) {
 	var exportDeclaration;
 
 	mod.imports.forEach( x => {
-		var specifier, name, replacement;
-
-		specifier = x.specifiers[0];
-
-		if ( !specifier ) {
-			// empty import
-			replacement = `require('${x.path}');`;
-		} else {
-			name = specifier.batch ? specifier.name : specifier.as;
-			replacement = `var ${name} = require('${x.path}');`;
-		}
-
+		var replacement = x.isEmpty ? `require('${x.path}');` : `var ${x.name} = require('${x.path}');`;
 		body.replace( x.start, x.end, replacement );
 	});
 

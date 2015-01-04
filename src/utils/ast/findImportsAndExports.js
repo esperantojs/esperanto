@@ -67,6 +67,7 @@ export default function findImportsAndExports ( mod, source, ast ) {
  */
 function processImport ( node, passthrough ) {
 	var x = {
+		id: null, // used by bundler - filled in later
 		node: node,
 		start: node.start,
 		end: node.end,
@@ -78,8 +79,9 @@ function processImport ( node, passthrough ) {
 
 			if ( s.type === 'ImportBatchSpecifier' ) {
 				return {
-					batch: true,
-					name: s.name.name
+					isBatch: true,
+					name: s.name.name,
+					as: s.name.name
 				};
 			}
 
@@ -96,9 +98,18 @@ function processImport ( node, passthrough ) {
 	// TODO have different types of imports - batch, default, named
 	if ( x.specifiers.length === 0 ) {
 		x.isEmpty = true;
-	} else if ( x.specifiers.length === 1 && x.specifiers[0].isDefault ) {
-		x.isDefault = true;
-		x.name = x.specifiers[0].as;
+	} else if ( x.specifiers.length === 1 ) {
+		if ( x.specifiers[0].isDefault ) {
+			x.isDefault = true;
+			x.name = x.specifiers[0].as;
+		}
+
+		if ( x.specifiers[0].isBatch ) {
+			x.isBatch = true;
+			x.name = x.specifiers[0].name;
+		}
+	} else {
+		x.isNamed = true;
 	}
 
 	return x;

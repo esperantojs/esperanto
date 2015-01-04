@@ -8,6 +8,6 @@ define(function () {
 		console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
 	}
 
-	return undefined;
+	return main;
 
 });

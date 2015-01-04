@@ -35,8 +35,9 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 			// Catch illegal reassignments
 			disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
-			// Rewrite assignments to exports
-			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, ~ast.body.indexOf( parent ), capturedUpdates );
+			// Rewrite assignments to exports. This call may mutate `alreadyExported`
+			// and `capturedUpdates`, which are used elsewhere
+			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, scope === ast._scope, capturedUpdates );
 
 			// Replace identifiers
 			replaceIdentifiers( body, node, identifierReplacements, scope );

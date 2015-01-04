@@ -1,6 +1,6 @@
 import path from 'path';
 import MagicString from 'magic-string';
-import getIdentifierReplacements from './getIdentifierReplacements';
+import populateIdentifierReplacements from './populateIdentifierReplacements';
 import resolveExports from './resolveExports';
 import transformBody from './transformBody';
 
@@ -11,7 +11,9 @@ export default function combine ( bundle ) {
 		separator: '\n\n'
 	});
 
-	bundle.identifierReplacements = getIdentifierReplacements( bundle );
+	// determine which identifiers need to be replaced
+	// inside this bundle
+	populateIdentifierReplacements( bundle );
 
 	bundle.exports = resolveExports( bundle );
 
@@ -20,15 +22,11 @@ export default function combine ( bundle ) {
 		mod.imports.forEach( x => {
 			var importedModule = bundle.moduleLookup[ x.id ];
 
-			if ( !importedModule ) {
+			if ( !importedModule || x.isBatch ) {
 				return;
 			}
 
 			x.specifiers.forEach( s => {
-				if ( s.batch ) {
-					return;
-				}
-
 				if ( !importedModule.doesExport[ s.name ] ) {
 					throw new Error( 'Module ' + importedModule.id + ' does not export ' + s.name + ' (imported by ' + mod.id + ')' );
 				}

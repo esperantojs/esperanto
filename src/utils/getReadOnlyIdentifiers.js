@@ -13,8 +13,8 @@ export default function getReadOnlyIdentifiers ( imports ) {
 		if ( x.passthrough ) return;
 
 		x.specifiers.forEach( s => {
-			if ( s.batch ) {
-				importedNamespaces[ s.name ] = true;
+			if ( s.isBatch ) {
+				importedNamespaces[ s.as ] = true;
 			} else {
 				importedBindings[ s.as ] = true;
 			}

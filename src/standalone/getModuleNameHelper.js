@@ -5,7 +5,7 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 	var nameById = {}, getModuleName;
 
 	getModuleName = x => {
-		var moduleId, parts, i, prefix = '', name, candidate, specifier;
+		var moduleId, parts, i, prefix = '', name, candidate;
 
 		moduleId = x.path;
 
@@ -24,12 +24,8 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 			}
 		}
 
-		else if ( x.isDefault ) {
+		else if ( x.isDefault || x.isBatch ) {
 			name = x.name;
-		}
-
-		else if ( ( specifier = x.specifiers[0] ) && specifier.batch ) {
-			name = specifier.name;
 		}
 
 		else {

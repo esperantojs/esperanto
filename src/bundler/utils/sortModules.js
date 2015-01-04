@@ -1,5 +1,4 @@
 import hasOwnProp from 'utils/hasOwnProp';
-import resolve from 'utils/resolve';
 
 export default function sortModules ( entry, moduleLookup ) {
 	var seen = {},
@@ -15,8 +14,7 @@ export default function sortModules ( entry, moduleLookup ) {
 		seen[ mod.id ] = true;
 
 		mod.imports.forEach( x => {
-			var id = resolve( x.path, mod.file );
-			visit( moduleLookup[ id ] );
+			visit( moduleLookup[ x.id ] );
 		});
 
 		ordered.push( mod );

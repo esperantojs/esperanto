@@ -1,5 +1,4 @@
 import hasOwnProp from 'utils/hasOwnProp';
-import resolve from 'utils/resolve';
 
 export default function resolveChains ( modules, moduleLookup ) {
 	var chains = {};
@@ -10,19 +9,17 @@ export default function resolveChains ( modules, moduleLookup ) {
 
 		mod.imports.forEach( x => {
 			x.specifiers.forEach( s => {
-				var moduleId = resolve( x.path, mod.file );
-
-				if ( s.batch ) {
+				if ( s.isBatch ) {
 					// if this is an internal module, we need to tell that module that
 					// it needs to export an object full of getters
-					if ( hasOwnProp.call( moduleLookup, moduleId ) ) {
-						moduleLookup[ moduleId ]._exportsNamespace = true;
+					if ( hasOwnProp.call( moduleLookup, x.id ) ) {
+						moduleLookup[ x.id ]._exportsNamespace = true;
 					}
 
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = moduleId + '@' + s.name;
+				origin[ s.as ] = x.id + '@' + s.name;
 			});
 		});
 

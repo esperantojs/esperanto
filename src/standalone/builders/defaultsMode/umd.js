@@ -21,13 +21,10 @@ export default function umd ( mod, body, options ) {
 
 	// gather imports, and remove import declarations
 	mod.imports.forEach( ( x, i ) => {
-		var specifier;
-
 		importPaths[i] = x.path;
 
-		specifier = x.specifiers[0];
-		if ( specifier ) {
-			importNames[i] = specifier.batch ? specifier.name : specifier.as;
+		if ( x.name ) {
+			importNames[i] = x.name;
 		}
 
 		body.remove( x.start, x.next );

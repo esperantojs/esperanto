@@ -17,6 +17,7 @@ export default function getModule ( mod ) {
 		annotateAst( mod.ast );
 	} catch ( err ) {
 		// If there's a parse error, attach file info
+		// before throwing the error
 		if ( err.loc ) {
 			err.file = mod.path;
 		}
@@ -28,6 +29,10 @@ export default function getModule ( mod ) {
 
 	mod.imports = imports;
 	mod.exports = exports;
+
+	// identifiers to replace within this module
+	// (gets filled in later, once bundle is combined)
+	mod.identifierReplacements = {};
 
 	// collect exports by name, for quick lookup when verifying
 	// that this module exports a given identifier

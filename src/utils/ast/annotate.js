@@ -104,6 +104,7 @@ export default function annotateAst ( ast ) {
 
 	ast._scope = scope;
 	ast._blockScope = blockScope;
+	ast._topLevelNames = ast._scope.names.concat( ast._blockScope.names );
 	ast._declared = declared;
 	ast._templateLiteralRanges = templateLiteralRanges;
 }
