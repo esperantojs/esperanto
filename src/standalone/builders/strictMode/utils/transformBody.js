@@ -52,7 +52,10 @@ export default function transformBody ( mod, body, options ) {
 					body.insert( x.end, `\nexports['default'] = ${x.name};` );
 				} else {
 					// export function answer () { return 42; }
-					shouldExportEarly[ x.name ] = x.type === 'namedFunction';
+					if ( x.type === 'namedFunction' ) {
+						shouldExportEarly[ x.name ] = true;
+					}
+
 					body.remove( x.start, x.valueStart );
 				}
 				return;
