@@ -1774,7 +1774,7 @@
 						body.insert( x.end, (("\nexports['default'] = " + (x.name)) + ";") );
 					} else {
 						// export function answer () { return 42; }
-						shouldExportEarly[ x.name ] = true; // TODO what about `function foo () {}; export { foo }`?
+						shouldExportEarly[ x.name ] = x.type === 'namedFunction';
 						body.remove( x.start, x.valueStart );
 					}
 					return;

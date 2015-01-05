@@ -17,6 +17,7 @@ module.exports = function () {
 			{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
 			{ file: 'exportDefault', description: 'transpiles default exports' },
 			{ file: 'exportInlineFunction', description: 'transpiles named inline function exports' },
+			{ file: 'exportClass', description: 'transpiles named class exports as late exports' },
 			{ file: 'exportLet', description: 'transpiles named inline let exports' },
 			{ file: 'exportNamed', description: 'transpiles named exports' },
 			{ file: 'exportVar', description: 'transpiles named inline variable exports' },
