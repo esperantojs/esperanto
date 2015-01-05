@@ -15,7 +15,8 @@ command = minimist( process.argv.slice( 2 ), {
 		m: 'sourcemap',
 		n: 'name',
 		d: 'basedir',
-		k: 'skip'
+		k: 'skip',
+		a: 'amdName'
 	}
 });
 

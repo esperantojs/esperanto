@@ -35,7 +35,7 @@ module.exports = function () {
 				{ entry: 'importer', dir: 'export-default-function' },
 				{ entry: 'importer', dir: 'export-default-named-function' },
 				{ entry: 'third', dir: 'export-from' },
-				//{ entry: 'third', dir: 'export-from-default' }, // pending https://github.com/marijnh/acorn/pull/15
+				{ entry: 'third', dir: 'export-from-default' },
 				{ entry: 'importer', dir: 'export-function' },
 				{ entry: 'importer', dir: 'export-list' },
 				{ entry: 'importer', dir: 'export-mixins' },
@@ -133,7 +133,8 @@ module.exports = function () {
 			{ dir: '21', description: 'handles member assignments of named imports' },
 			{ dir: '22', description: 'handles named exports of default imports', strict: true },
 			{ dir: '23', description: 'throws error if module imports itself', error: /cannot import itself/ },
-			{ dir: '24', description: 'adds a banner/footer to bundle' }
+			{ dir: '24', description: 'adds a banner/footer to bundle' },
+			{ dir: '25', description: 'creates a named AMD module' }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -161,6 +162,7 @@ module.exports = function () {
 							actual = bundle[ profile.method ]({
 								strict: options.strict,
 								name: options.name,
+								amdName: config.amdName,
 								banner: config.banner,
 								footer: config.footer
 							}).code;

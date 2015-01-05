@@ -59,6 +59,7 @@ function bundle ( options, method ) {
 
 		transpiled = bundle[ method ]({
 			name: options.name,
+			amdName: options.amdName,
 			strict: options.strict,
 			sourceMap: options.sourcemap,
 			sourceMapFile: path.resolve( options.output )
@@ -93,6 +94,7 @@ function convert ( options, method ) {
 		transpiled = esperanto[ method ]( source, {
 			strict: options.strict,
 			name: options.name,
+			amdName: options.amdName,
 			sourceMap: options.sourcemap,
 			sourceMapSource: options.input,
 			sourceMapFile: options.output

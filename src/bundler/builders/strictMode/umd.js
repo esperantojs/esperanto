@@ -55,6 +55,7 @@ export default function umd ( bundle, body, options ) {
 		amdDeps: amdDeps,
 		cjsDeps: cjsDeps,
 		globals: globals,
+		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		names: names,
 		name: options.name
 	}).replace( /\t/g, indentStr );
@@ -69,7 +70,7 @@ introTemplate = template( `(function (global, factory) {
 
 	if (typeof define === 'function' && define.amd) {
 		// export as AMD
-		define([<%= amdDeps %>], factory);
+		define(<%= amdName %>[<%= amdDeps %>], factory);
 	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
 		// node/browserify
 		factory(<%= cjsDeps %>);

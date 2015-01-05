@@ -13,6 +13,7 @@
     -s, --strict             Use strict mode
     -b, --bundle             Create a bundle including <file>'s dependencies
     -n, --name               Name for UMD export
+    -a, --amdName            Name for AMD module (default is anonymous)
     -m, --sourcemap          Generate sourcemap (`-m inline` for inline map)
 
   Additional options when bundling

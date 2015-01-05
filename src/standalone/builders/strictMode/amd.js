@@ -7,7 +7,7 @@ import { quote } from 'utils/mappers';
 
 var introTemplate;
 
-introTemplate = template( 'define(<%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
+introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( mod, body, options ) {
 	var importPaths,
@@ -25,6 +25,7 @@ export default function amd ( mod, body, options ) {
 	}
 
 	intro = introTemplate({
+		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
 	}).replace( /\t/g, body.indentStr );

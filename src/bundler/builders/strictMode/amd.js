@@ -33,6 +33,7 @@ export default function amd ( bundle, body, options ) {
 	}
 
 	intro = introTemplate({
+		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
 	}).replace( /\t/g, indentStr );
@@ -41,4 +42,4 @@ export default function amd ( bundle, body, options ) {
 	return packageResult( body, options, 'toAmd', true );
 }
 
-introTemplate = template( 'define(<%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
+introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );

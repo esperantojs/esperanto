@@ -4,7 +4,7 @@ import reorderImports from 'utils/reorderImports';
 import template from 'utils/template';
 import { quote } from 'utils/mappers';
 
-var introTemplate = template( 'define(<%= paths %>function (<%= names %>) {\n\n' );
+var introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
 
 export default function amd ( mod, body, options ) {
 	var importNames = [],
@@ -29,6 +29,7 @@ export default function amd ( mod, body, options ) {
 	transformExportDeclaration( mod.exports[0], body );
 
 	intro = introTemplate({
+		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
 	});

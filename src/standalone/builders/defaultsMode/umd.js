@@ -36,6 +36,7 @@ export default function umd ( mod, body, options ) {
 		amdDeps: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
 		cjsDeps: importPaths.map( req ).join( ', ' ),
 		globals: importNames.map( globalify ).join( ', ' ),
+		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		names: importNames.join( ', ' ),
 		name: options.name
 	}).replace( /\t/g, body.indentStr );
@@ -56,7 +57,7 @@ introTemplate = template( `(function (global, factory) {
 
 	if (typeof define === 'function' && define.amd) {
 		// export as AMD
-		define(<%= amdDeps %>factory);
+		define(<%= amdName %><%= amdDeps %>factory);
 	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
 		// node/browserify
 		module.exports = factory(<%= cjsDeps %>);

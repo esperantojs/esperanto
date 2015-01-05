@@ -20,7 +20,8 @@ module.exports = function () {
 			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
 			{ file: 'banner', description: 'adds a banner' },
 			{ file: 'footer', description: 'adds a footer' },
-			{ file: 'bannerAndFooter', description: 'adds a banner and a footer' }
+			{ file: 'bannerAndFooter', description: 'adds a banner and a footer' },
+			{ file: 'namedAmdModule', description: 'creates a named AMD module if amdName is passed' }
 		];
 
 		tests.forEach( function ( t ) {
@@ -57,6 +58,7 @@ module.exports = function () {
 				it( t.description, function () {
 					var actual = esperanto[ method ]( t.source, {
 						name: t.name || 'myModule',
+						amdName: t.config.amdName,
 						banner: t.config.banner,
 						footer: t.config.footer
 					});

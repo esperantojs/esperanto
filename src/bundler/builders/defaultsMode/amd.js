@@ -1,7 +1,7 @@
 import template from '../../../utils/template';
 import packageResult from '../../../utils/packageResult';
 
-var introTemplate = template( 'define(<%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
+var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( bundle, body, options ) {
 	var intro,
@@ -15,6 +15,7 @@ export default function amd ( bundle, body, options ) {
 	}
 
 	intro = introTemplate({
+		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
 		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] + '__default' ).join( ', ' )
 	}).replace( /\t/g, indentStr );

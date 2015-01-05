@@ -14,7 +14,7 @@ module.exports = function () {
 			{ file: 'earlyExport', description: 'transpiles exports that are not the final statement' },
 			{ file: 'emptyImport', description: 'transpiles empty imports with no exports' },
 			{ file: 'emptyImportWithDefaultExport', description: 'transpiles empty imports with default exports' },
-			//{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
+			{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
 			{ file: 'exportDefault', description: 'transpiles default exports' },
 			{ file: 'exportInlineFunction', description: 'transpiles named inline function exports' },
 			{ file: 'exportLet', description: 'transpiles named inline let exports' },
@@ -29,10 +29,17 @@ module.exports = function () {
 			{ file: 'trailingEmptyImport', description: 'transpiles trailing empty imports' },
 			{ file: 'clashingNames', description: 'avoids naming collisions' },
 			{ file: 'shadowedImport', description: 'handles shadowed imports' },
-			{ file: 'constructor', description: 'handles `constructor` edge case' }
+			{ file: 'constructor', description: 'handles `constructor` edge case' },
+			{ file: 'namedAmdModule', description: 'creates a named AMD module if amdName is passed' }
 		];
 
 		tests.forEach( function ( t ) {
+			try {
+				t.config = require( '../samples/config/' + t.file );
+			} catch ( err ) {
+				t.config = {};
+			}
+
 			t.file += '.js',
 			t.source = sander.readFileSync( 'samples', t.file ).toString();
 		});
@@ -48,59 +55,44 @@ module.exports = function () {
 		});
 
 		describe( 'esperanto.toAmd()', function () {
-			tests.forEach( function ( t ) {
-				it( t.description, function () {
-					return sander.readFile( 'strictMode/output/amd', t.file ).then( String ).then( function ( expected ) {
-						var actual = esperanto.toAmd( t.source, {
-							strict: true
-						}).code;
-
-						assert.equal( actual, expected, 'AMD: Expected\n>\n' +
-							makeWhitespaceVisible( actual ) +
-						'\n>\n\nto match\n\n>\n' +
-							makeWhitespaceVisible( expected ) +
-						'\n>' );
-					});
-				});
-			});
+			runTests( 'amd', 'toAmd' );
 		});
 
 		describe( 'esperanto.toCjs()', function () {
-			tests.forEach( function ( t ) {
-				it( t.description, function () {
-					return sander.readFile( 'strictMode/output/cjs', t.file ).then( String ).then( function ( expected ) {
-						var actual = esperanto.toCjs( t.source, {
-							strict: true
-						}).code;
-
-						assert.equal( actual, expected, 'CJS: Expected\n>\n' +
-							makeWhitespaceVisible( actual ) +
-						'\n>\n\nto match\n\n>\n' +
-							makeWhitespaceVisible( expected ) +
-						'\n>' );
-					});
-				});
-			});
+			runTests( 'cjs', 'toCjs' );
 		});
 
 		describe( 'esperanto.toUmd()', function () {
+			runTests( 'umd', 'toUmd' );
+		});
+
+		function runTests ( dir, method ) {
 			tests.forEach( function ( t ) {
 				it( t.description, function () {
-					return sander.readFile( 'strictMode/output/umd', t.file ).then( String ).then( function ( expected ) {
-						var actual = esperanto.toUmd( t.source, {
-							name: 'myModule',
-							strict: true
-						}).code;
+					var actual = esperanto[ method ]( t.source, {
+						name: 'myModule',
+						strict: true,
+						amdName: t.config.amdName
+					}).code;
 
-						assert.equal( actual, expected, 'UMD: Expected\n>\n' +
+					return sander.readFile( 'strictMode/output/' + dir, t.file ).then( String ).then( function ( expected ) {
+						assert.equal( actual, expected, 'Expected\n>\n' +
 							makeWhitespaceVisible( actual ) +
 						'\n>\n\nto match\n\n>\n' +
 							makeWhitespaceVisible( expected ) +
 						'\n>' );
+					}, function ( err ) {
+						if ( err.code === 'ENOENT' ) {
+							assert.equal( actual, '', 'Expected\n>\n' +
+								makeWhitespaceVisible( actual ) +
+							'\n>\n\nto match non-existent file' );
+						} else {
+							throw err;
+						}
 					});
 				});
 			});
-		});
+		}
 
 		describe( 'ES6 module semantics tests from es6-module-transpiler:', function () {
 			var tests = [

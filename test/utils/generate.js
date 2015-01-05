@@ -46,6 +46,7 @@ require( './build' )().then( function ( esperanto ) {
 					try {
 						var transpiled = esperanto[ profile.method ]( source, {
 							name: profile.options && profile.options.name,
+							amdName: config.amdName,
 							strict: profile.options && profile.options.strict,
 							banner: config.banner,
 							footer: config.footer
@@ -101,6 +102,7 @@ require( './build' )().then( function ( esperanto ) {
 					try {
 						var transpiled = esperanto[ profile.method ]( source, {
 							name: profile.options && profile.options.name,
+							amdName: config.amdName,
 							strict: profile.options && profile.options.strict,
 							banner: config.banner,
 							footer: config.footer
@@ -165,6 +167,7 @@ require( './build' )().then( function ( esperanto ) {
 						var transpiled = bundle[ profile.method ]({
 							strict: profile.options && profile.options.strict,
 							name: profile.options && profile.options.name,
+							amdName: config.amdName,
 							banner: config.banner,
 							footer: config.footer
 						});
