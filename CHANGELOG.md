@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.6
+
+* Support for named AMD modules, via `amdName` option (works for both standalone and bundle conversions)
+
 ## 0.5.5
 
 * No actual changes - just shuffling things about so we can separate demo page into separate repo
