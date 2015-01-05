@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.7
+
+* Classes are exported after declaration, not before ([#33](https://github.com/rich-harris/esperanto/issues/33))
+
 ## 0.5.6
 
 * Support for named AMD modules, via `amdName` option (works for both standalone and bundle conversions)
