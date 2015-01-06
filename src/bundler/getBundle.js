@@ -63,7 +63,21 @@ export default function getBundle ( options ) {
 				}
 
 				throw err;
-			}).then( String ).then( function ( source ) {
+			}).then( function ( source ) {
+				source = String( source );
+				if ( options.transform ) {
+					var transform = options.transform;
+					var transformed = transform(source);
+					if ( !transformed ||
+						( typeof transformed !== 'string' &&
+							typeof transformed.then !== 'function' )) {
+						throw new Error( 'transform should return String or Promise' );
+					}
+					return transformed;
+				} else {
+					return source;
+				}
+			}).then( function ( source ) {
 				var module, promises;
 
 				module = getModule({
