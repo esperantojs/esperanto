@@ -1,5 +1,9 @@
 # changelog
 
+## 0.5.9
+
+* More concise UMD output
+
 ## 0.5.8
 
 * Functions are always exported early ([#37](https://github.com/rich-harris/esperanto/issues/37))
