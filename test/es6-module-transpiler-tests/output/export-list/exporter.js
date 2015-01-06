@@ -2,6 +2,8 @@
 
   'use strict';
 
+  exports.incr = incr;
+
   /* jshint esnext:true */
 
   var a = 1;
@@ -14,6 +16,5 @@
 
   exports.a = a;
   exports.b = b;
-  exports.incr = incr;
 
 }).call(global);
