@@ -67,7 +67,7 @@ export default function getBundle ( options ) {
 				source = String( source );
 				if ( options.transform ) {
 					var transform = options.transform;
-					var transformed = transform(source);
+					var transformed = transform( source, modulePath );
 					if ( !transformed ||
 						( typeof transformed !== 'string' &&
 							typeof transformed.then !== 'function' )) {
