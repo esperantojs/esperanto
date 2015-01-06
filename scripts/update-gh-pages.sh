@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # build the library
 npm run build
 

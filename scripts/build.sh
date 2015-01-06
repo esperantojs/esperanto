@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # If the tests fail, abort (errexit)
 set -e
 
