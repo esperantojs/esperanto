@@ -1,5 +1,10 @@
 # changelog
 
+## 0.5.8
+
+* Functions are always exported early ([#37](https://github.com/rich-harris/esperanto/issues/37))
+* Modules can be transformed before bundling with `esperanto.bundle({ transform: someFunction })`, where `someFunction` returns either a string, or a promise that resolves to a string
+
 ## 0.5.7
 
 * Classes are exported after declaration, not before ([#33](https://github.com/rich-harris/esperanto/issues/33))

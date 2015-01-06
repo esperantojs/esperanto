@@ -53,7 +53,7 @@
 	};
 
 	function annotateAst ( ast ) {
-		var scope = new Scope(), blockScope = new Scope(), declared = {}, templateLiteralRanges = [];
+		var scope = new Scope(), blockScope = new Scope(), declared = {}, topLevelFunctionNames = [], templateLiteralRanges = [];
 
 		estraverse__default.traverse( ast, {
 			enter: function ( node ) {
@@ -70,6 +70,12 @@
 					case 'FunctionDeclaration':
 						if ( node.id ) {
 							addToScope( node );
+
+							// If this is the root scope, this may need to be
+							// exported early, so we make a note of it
+							if ( !scope.parent ) {
+								topLevelFunctionNames.push( node.id.name );
+							}
 						}
 
 						scope = node._scope = new Scope({
@@ -139,6 +145,7 @@
 		ast._scope = scope;
 		ast._blockScope = blockScope;
 		ast._topLevelNames = ast._scope.names.concat( ast._blockScope.names );
+		ast._topLevelFunctionNames = topLevelFunctionNames;
 		ast._declared = declared;
 		ast._templateLiteralRanges = templateLiteralRanges;
 	}
@@ -1035,10 +1042,6 @@
 						body.insert( x.end, (("\nexports['default'] = " + (x.name)) + ";") );
 					} else {
 						// export function answer () { return 42; }
-						if ( x.type === 'namedFunction' ) {
-							shouldExportEarly[ x.name ] = true;
-						}
-
 						body.remove( x.start, x.valueStart );
 					}
 					return;
@@ -1068,7 +1071,9 @@
 			if ( chains.hasOwnProperty( name ) ) {
 				// special case - a binding from another module
 				earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { get: function () { return " + (chains[name])) + "; }});") );
-			} else if ( shouldExportEarly.hasOwnProperty( name ) ) {
+			} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
+				// functions should be exported early, in
+				// case of cyclic dependencies
 				earlyExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
 			} else if ( !alreadyExported.hasOwnProperty( name ) ) {
 				lateExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
