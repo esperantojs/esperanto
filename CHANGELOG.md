@@ -1,8 +1,13 @@
 # changelog
 
+## 0.5.10
+
+* One-to-one conversions get the same compact UMD form as bundles
+* Default imports are not hedged unnecessarily ([#40](https://github.com/rich-harris/esperanto/issues/40))
+
 ## 0.5.9
 
-* More concise UMD output
+* More concise UMD output ([#36](https://github.com/rich-harris/esperanto/issues/36))
 
 ## 0.5.8
 
