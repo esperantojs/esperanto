@@ -36,7 +36,7 @@ Scope.prototype = {
 };
 
 export default function annotateAst ( ast ) {
-	var scope = new Scope(), blockScope = new Scope(), declared = {}, templateLiteralRanges = [];
+	var scope = new Scope(), blockScope = new Scope(), declared = {}, topLevelFunctionNames = [], templateLiteralRanges = [];
 
 	estraverse.traverse( ast, {
 		enter: function ( node ) {
@@ -53,6 +53,12 @@ export default function annotateAst ( ast ) {
 				case 'FunctionDeclaration':
 					if ( node.id ) {
 						addToScope( node );
+
+						// If this is the root scope, this may need to be
+						// exported early, so we make a note of it
+						if ( !scope.parent ) {
+							topLevelFunctionNames.push( node.id.name );
+						}
 					}
 
 					scope = node._scope = new Scope({
@@ -122,6 +128,7 @@ export default function annotateAst ( ast ) {
 	ast._scope = scope;
 	ast._blockScope = blockScope;
 	ast._topLevelNames = ast._scope.names.concat( ast._blockScope.names );
+	ast._topLevelFunctionNames = topLevelFunctionNames;
 	ast._declared = declared;
 	ast._templateLiteralRanges = templateLiteralRanges;
 }

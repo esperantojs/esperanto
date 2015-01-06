@@ -31,7 +31,8 @@ module.exports = function () {
 			{ file: 'clashingNames', description: 'avoids naming collisions' },
 			{ file: 'shadowedImport', description: 'handles shadowed imports' },
 			{ file: 'constructor', description: 'handles `constructor` edge case' },
-			{ file: 'namedAmdModule', description: 'creates a named AMD module if amdName is passed' }
+			{ file: 'namedAmdModule', description: 'creates a named AMD module if amdName is passed' },
+			{ file: 'exportNamedFunction', description: 'named functions are exported early' }
 		];
 
 		tests.forEach( function ( t ) {

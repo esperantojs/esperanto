@@ -52,10 +52,6 @@ export default function transformBody ( mod, body, options ) {
 					body.insert( x.end, `\nexports['default'] = ${x.name};` );
 				} else {
 					// export function answer () { return 42; }
-					if ( x.type === 'namedFunction' ) {
-						shouldExportEarly[ x.name ] = true;
-					}
-
 					body.remove( x.start, x.valueStart );
 				}
 				return;
@@ -85,7 +81,9 @@ export default function transformBody ( mod, body, options ) {
 		if ( chains.hasOwnProperty( name ) ) {
 			// special case - a binding from another module
 			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { get: function () { return ${chains[name]}; }});` );
-		} else if ( shouldExportEarly.hasOwnProperty( name ) ) {
+		} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
+			// functions should be exported early, in
+			// case of cyclic dependencies
 			earlyExports.push( `exports.${exportAs} = ${name};` );
 		} else if ( !alreadyExported.hasOwnProperty( name ) ) {
 			lateExports.push( `exports.${exportAs} = ${name};` );
