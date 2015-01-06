@@ -160,7 +160,8 @@ require( './build' )().then( function ( esperanto ) {
 				base: path.join( '../bundle/input', sourceBundle ),
 				entry: 'main',
 				skip: config.skip,
-				names: config.names
+				names: config.names,
+				transform: config.transform
 			}).then( function ( bundle ) {
 				var promises = profiles.map( function ( profile ) {
 					try {

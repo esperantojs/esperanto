@@ -134,7 +134,8 @@ module.exports = function () {
 			{ dir: '22', description: 'handles named exports of default imports', strict: true },
 			{ dir: '23', description: 'throws error if module imports itself', error: /cannot import itself/ },
 			{ dir: '24', description: 'adds a banner/footer to bundle' },
-			{ dir: '25', description: 'creates a named AMD module' }
+			{ dir: '25', description: 'creates a named AMD module' },
+			{ dir: '26', description: 'transforms input sources' }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -153,7 +154,8 @@ module.exports = function () {
 							base: path.resolve( 'bundle/input', t.dir ),
 							entry: t.entry || 'main',
 							skip: config.skip,
-							names: config.names
+							names: config.names,
+							transform: config.transform
 						}).then( function ( bundle ) {
 							var options, actual;
 
