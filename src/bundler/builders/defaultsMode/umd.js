@@ -1,5 +1,6 @@
 import packageResult from 'utils/packageResult';
-import { getId, quote, req, globalify } from 'utils/mappers';
+import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
+import { getId } from 'utils/mappers';
 
 export default function umd ( bundle, body, options ) {
 	if ( !options || !options.name ) {
@@ -9,41 +10,22 @@ export default function umd ( bundle, body, options ) {
 	var entry = bundle.entryModule;
 	var indentStr = body.getIndentString();
 
-	var hasImports = bundle.externalModules.length > 0;
-	var hasExports = entry.exports.length > 0;
-	var needsGlobal = hasImports || hasExports;
-
 	var importPaths = bundle.externalModules.map( getId );
 	var importNames = importPaths.map( path => bundle.uniqueNames[ path ] );
 
-	var amdName = options.amdName ? "'" + options.amdName + "', " : '';
-	var amdDeps = importPaths.map( quote ).join( ', ' );
-	var cjsDeps = importPaths.map( req ).join( ', ' );
-	var globals = importNames.map( globalify ).join( ', ' );
-	var name = options.name;
-	var names = importNames.map( name => name + '__default' ).join( ', ' );
+	var intro = defaultUmdIntro({
+		hasImports: bundle.externalModules.length > 0,
+		hasExports: entry.exports.length > 0,
 
-	var cjsDefine = hasExports ?
-		`module.exports = factory(${cjsDeps})` :
-		`factory(${cjsDeps})`;
+		importPaths: importPaths,
+		importNames: importNames,
+		args: importNames.map( name => name + '__default' ),
 
-	var globalDefine = hasExports ?
-		`global.${name} = factory(${globals})` :
-		`factory(${globals})`
+		amdName: options.amdName,
+		name: options.name
+	}, indentStr );
 
-	var nonAMDDefine = cjsDefine === globalDefine ? globalDefine :
-		`typeof exports === 'object' ? ${cjsDefine} :\n\t${globalDefine}`;
-
-	body.prepend(
-`(function (${needsGlobal ? 'global, ' : ''}factory) {
-	typeof define === 'function' && define.amd ? define(${amdName}[${amdDeps}], factory) :
-	${nonAMDDefine}
-}(${needsGlobal ? 'this, ' : ''}function (${names}) { 'use strict';
-
-`.replace( /\t/g, indentStr )
-	);
-
-	body.trim();
+	body.prepend( intro ).trim();
 
 	var defaultName;
 	if ( ( defaultName = entry.identifierReplacements.default ) ) {

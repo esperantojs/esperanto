@@ -1,10 +1,7 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
-import packageResult from '../../../utils/packageResult';
-import template from '../../../utils/template';
+import packageResult from 'utils/packageResult';
+import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
 import reorderImports from 'utils/reorderImports';
-import { globalify, quote, req } from 'utils/mappers';
-
-var introTemplate;
 
 export default function umd ( mod, body, options ) {
 	var importNames = [],
@@ -32,14 +29,16 @@ export default function umd ( mod, body, options ) {
 
 	transformExportDeclaration( mod.exports[0], body );
 
-	intro = introTemplate({
-		amdDeps: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-		cjsDeps: importPaths.map( req ).join( ', ' ),
-		globals: importNames.map( globalify ).join( ', ' ),
-		amdName: options.amdName ? `'${options.amdName}', ` : '',
-		names: importNames.join( ', ' ),
+	intro = defaultUmdIntro({
+		hasImports: mod.imports.length > 0,
+		hasExports: mod.exports.length > 0,
+
+		importPaths: importPaths,
+		importNames: importNames,
+
+		amdName: options.amdName,
 		name: options.name
-	}).replace( /\t/g, body.indentStr );
+	}, mod.body.indentStr );
 
 	body.trim()
 		.prepend( "'use strict';\n\n" )
@@ -50,22 +49,3 @@ export default function umd ( mod, body, options ) {
 
 	return packageResult( body, options, 'toUmd' );
 }
-
-introTemplate = template( `(function (global, factory) {
-
-	'use strict';
-
-	if (typeof define === 'function' && define.amd) {
-		// export as AMD
-		define(<%= amdName %><%= amdDeps %>factory);
-	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-		// node/browserify
-		module.exports = factory(<%= cjsDeps %>);
-	} else {
-		// browser global
-		global.<%= name %> = factory(<%= globals %>);
-	}
-
-}(typeof window !== 'undefined' ? window : this, function (<%= names %>) {
-
-` );

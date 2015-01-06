@@ -1,22 +1,8 @@
 (function (global, factory) {
-
-	'use strict';
-
-	if (typeof define === 'function' && define.amd) {
-		// export as AMD
-		define('myModule', ['exports', 'foo'], factory);
-	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-		// node/browserify
-		factory(exports, require('foo'));
-	} else {
-		// browser global
-		global.myModule = {};
-		factory(global.myModule, global.foo);
-	}
-
-}(typeof window !== 'undefined' ? window : this, function (exports, foo) {
-
-	'use strict';
+	typeof define === 'function' && define.amd ? define('myModule', ['foo'], factory) :
+	typeof exports === 'object' ? factory(require('foo')) :
+	factory(global.foo)
+}(this, function (foo) { 'use strict';
 
 	foo['default']();
 
