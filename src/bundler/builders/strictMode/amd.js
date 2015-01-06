@@ -1,12 +1,14 @@
 import template from 'utils/template';
 import packageResult from 'utils/packageResult';
 import { getId, quote } from 'utils/mappers';
+import getExternalDefaults from './utils/getExternalDefaults';
 import getExportBlock from './utils/getExportBlock';
 
 var introTemplate;
 
 export default function amd ( bundle, body, options ) {
-	var defaultsBlock,
+	var externalDefaults = getExternalDefaults( bundle ),
+		defaultsBlock,
 		entry = bundle.entryModule,
 		importIds = bundle.externalModules.map( getId ),
 		importNames = importIds.map( id => bundle.uniqueNames[ id ] ),
@@ -15,8 +17,8 @@ export default function amd ( bundle, body, options ) {
 
 	indentStr = body.getIndentString();
 
-	if ( importNames.length ) {
-		defaultsBlock = importNames.map( name => {
+	if ( externalDefaults.length ) {
+		defaultsBlock = externalDefaults.map( name => {
 			return indentStr + `var ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`;
 		}).join( '\n' );
 

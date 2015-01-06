@@ -12,9 +12,8 @@ export default function strictUmdIntro ( options, indentStr ) {
 
 	args        = ( options.hasExports ? [ 'exports' ]    : [] ).concat( options.importNames ).join( ', ' );
 
-	// TODO only do this for defaults that are actually used
-	if ( options.interop && options.importNames.length > 0 ) {
-		defaultsBlock = options.importNames.map( name =>
+	if ( options.externalDefaults && options.externalDefaults.length > 0 ) {
+		defaultsBlock = options.externalDefaults.map( name =>
 			`\tvar ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`
 		).join( '\n' ) + '\n\n';
 	}
