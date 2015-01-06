@@ -1,5 +1,5 @@
 (function (factory) {
-	typeof define === 'function' && define.amd ? define('myModule', [], factory) :
+	typeof define === 'function' && define.amd ? define('myModule', factory) :
 	factory()
 }(function () { 'use strict';
 

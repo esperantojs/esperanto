@@ -25,7 +25,7 @@ export default function defaultUmdIntro ( options, indentStr ) {
 
 	intro =
 `(function (${needsGlobal ? 'global, ' : ''}factory) {
-	typeof define === 'function' && define.amd ? define(${amdName}[${amdDeps}], factory) :
+	typeof define === 'function' && define.amd ? define(${amdName}${amdDeps ? '[' + amdDeps + '], ' : ''}factory) :
 	${nonAMDDefine}
 }(${needsGlobal ? 'this, ' : ''}function (${args}) { 'use strict';
 

@@ -1,6 +1,6 @@
 /* this is a banner */
 (function (factory) {
-	typeof define === 'function' && define.amd ? define([], factory) :
+	typeof define === 'function' && define.amd ? define(factory) :
 	factory()
 }(function () { 'use strict';
 
