@@ -4,23 +4,18 @@ import packageResult from '../../../utils/packageResult';
 var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( bundle, body, options ) {
-	var intro,
-		indentStr,
-		defaultName;
-
-	indentStr = body.getIndentString();
-
-	if ( defaultName = bundle.entryModule.identifierReplacements.default ) {
-		body.append( `\n\n${indentStr}return ${defaultName};` );
+	var defaultName = bundle.entryModule.identifierReplacements.default;
+	if ( defaultName ) {
+		body.append( `\n\nreturn ${defaultName};` );
 	}
 
-	intro = introTemplate({
+	var intro = introTemplate({
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
 		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] + '__default' ).join( ', ' )
-	}).replace( /\t/g, indentStr );
+	}).replace( /\t/g, body.getIndentString() );
 
-	body.prepend( intro ).trim().append( '\n\n});' );
+	body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( body, options, 'toAmd', true );
 }
 

@@ -10,7 +10,6 @@ export default function umd ( bundle, body, options ) {
 	}
 
 	var entry = bundle.entryModule;
-	var indentStr = body.getIndentString();
 
 	var importPaths = bundle.externalModules.map( getId );
 	var importNames = importPaths.map( path => bundle.uniqueNames[ path ] );
@@ -25,15 +24,13 @@ export default function umd ( bundle, body, options ) {
 
 		amdName: options.amdName,
 		name: options.name
-	}, indentStr );
-
-	body.prepend( intro ).trim();
+	}, body.getIndentString() );
 
 	if ( entry.exports.length && entry.defaultExport ) {
-		body.append( '\n\n' + getExportBlock( entry, indentStr ) );
+		body.append( '\n\n' + getExportBlock( entry ) );
 	}
 
-	body.append('\n\n}));');
+	body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
 	return packageResult( body, options, 'toUmd', true );
 }
