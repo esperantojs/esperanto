@@ -4,22 +4,18 @@ import { getId, quote } from 'utils/mappers';
 import getExternalDefaults from './utils/getExternalDefaults';
 import getExportBlock from './utils/getExportBlock';
 
-var introTemplate;
+var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( bundle, body, options ) {
-	var externalDefaults = getExternalDefaults( bundle ),
-		defaultsBlock,
-		entry = bundle.entryModule,
-		importIds = bundle.externalModules.map( getId ),
-		importNames = importIds.map( id => bundle.uniqueNames[ id ] ),
-		intro,
-		indentStr;
+	var externalDefaults = getExternalDefaults( bundle );
+	var entry = bundle.entryModule;
 
-	indentStr = body.getIndentString();
+	var importIds = bundle.externalModules.map( getId );
+	var importNames = importIds.map( id => bundle.uniqueNames[ id ] );
 
 	if ( externalDefaults.length ) {
-		defaultsBlock = externalDefaults.map( name => {
-			return indentStr + `var ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`;
+		var defaultsBlock = externalDefaults.map( name => {
+			return `var ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`;
 		}).join( '\n' );
 
 		body.prepend( defaultsBlock + '\n\n' );
@@ -30,18 +26,16 @@ export default function amd ( bundle, body, options ) {
 		importNames.unshift( 'exports' );
 
 		if ( entry.defaultExport ) {
-			body.append( '\n\n' + getExportBlock( entry, indentStr ) );
+			body.append( '\n\n' + getExportBlock( entry ) );
 		}
 	}
 
-	intro = introTemplate({
+	var intro = introTemplate({
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
-	}).replace( /\t/g, indentStr );
+	}).replace( /\t/g, body.getIndentString() );
 
-	body.prepend( intro ).trim().append( '\n\n});' );
+	body.indent().prepend( intro ).append( '\n\n});' );
 	return packageResult( body, options, 'toAmd', true );
 }
-
-introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
