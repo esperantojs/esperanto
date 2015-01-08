@@ -1,4 +1,4 @@
-export default function getExportBlock ( entry, indentStr ) {
+export default function getExportBlock ( entry ) {
 	var name = entry.identifierReplacements.default;
-	return indentStr + `exports['default'] = ${name};`;
+	return `exports['default'] = ${name};`;
 }

@@ -40,5 +40,5 @@ export default function combine ( bundle ) {
 		});
 	});
 
-	bundle.body = body.indent();
+	bundle.body = body;
 }
