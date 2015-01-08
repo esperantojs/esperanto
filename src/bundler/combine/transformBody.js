@@ -75,6 +75,7 @@ export default function transformBody ( bundle, mod, body ) {
 	// If this module exports a namespace - i.e. another module does
 	// `import * from 'foo'` - then we need to make all this module's
 	// exports available, using Object.defineProperty
+	var indentStr = body.getIndentString();
 	if ( mod._exportsNamespace ) {
 		let prefix = bundle.uniqueNames[ mod.id ],
 			namespaceExportBlock = `var ${prefix} = {\n`,
@@ -82,16 +83,16 @@ export default function transformBody ( bundle, mod, body ) {
 
 		mod.exports.forEach( x => {
 			if ( x.hasDeclaration ) {
-				namespaceExports.push( body.indentStr + `get ${x.name} () { return ${identifierReplacements[x.name]}; }` );
+				namespaceExports.push( indentStr + `get ${x.name} () { return ${identifierReplacements[x.name]}; }` );
 			}
 
 			else if ( x.isDefault ) {
-				namespaceExports.push( body.indentStr + `get default () { return ${identifierReplacements.default}; }` );
+				namespaceExports.push( indentStr + `get default () { return ${identifierReplacements.default}; }` );
 			}
 
 			else {
 				x.specifiers.forEach( s => {
-					namespaceExports.push( body.indentStr + `get ${s.name} () { return ${s.name}; }` );
+					namespaceExports.push( indentStr + `get ${s.name} () { return ${s.name}; }` );
 				});
 			}
 		});

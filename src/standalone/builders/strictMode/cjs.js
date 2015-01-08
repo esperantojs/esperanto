@@ -22,7 +22,7 @@ export default function cjs ( mod, body, options ) {
 	}).join( '\n' );
 
 	transformBody( mod, body, {
-		intro: intro.replace( /\t/g, body.indentStr ),
+		intro: intro.replace( /\t/g, body.getIndentString() ),
 		header: importBlock,
 		outro: outro
 	});

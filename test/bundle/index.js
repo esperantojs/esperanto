@@ -135,7 +135,8 @@ module.exports = function () {
 			{ dir: '23', description: 'throws error if module imports itself', error: /cannot import itself/ },
 			{ dir: '24', description: 'adds a banner/footer to bundle' },
 			{ dir: '25', description: 'creates a named AMD module' },
-			{ dir: '26', description: 'transforms input sources' }
+			{ dir: '26', description: 'transforms input sources' },
+			{ dir: '27', description: 'correctly infers indentation with single-line edge case' }
 		];
 
 		profiles.forEach( function ( profile ) {

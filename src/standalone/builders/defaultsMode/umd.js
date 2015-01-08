@@ -38,7 +38,7 @@ export default function umd ( mod, body, options ) {
 
 		amdName: options.amdName,
 		name: options.name
-	}, mod.body.indentStr );
+	}, mod.body.getIndentString() );
 
 	body.trim()
 		.prepend( "'use strict';\n\n" )

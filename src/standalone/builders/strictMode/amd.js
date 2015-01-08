@@ -28,7 +28,7 @@ export default function amd ( mod, body, options ) {
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
-	}).replace( /\t/g, body.indentStr );
+	}).replace( /\t/g, body.getIndentString() );
 
 	transformBody( mod, body, {
 		intro: intro,

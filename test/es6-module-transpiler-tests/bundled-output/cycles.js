@@ -1,28 +1,28 @@
 (function () {
 
-	'use strict';
+  'use strict';
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	function geta() {
-	  return a;
-	}
+  function geta() {
+    return a;
+  }
 
-	var b = 2;
+  var b = 2;
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	function getb() {
-	  return b;
-	}
+  function getb() {
+    return b;
+  }
 
-	var a = 1;
+  var a = 1;
 
-	/* jshint esnext:true */
+  /* jshint esnext:true */
 
-	assert.equal(geta(), 1);
-	assert.equal(a, 1);
-	assert.equal(getb(), 2);
-	assert.equal(b, 2);
+  assert.equal(geta(), 1);
+  assert.equal(a, 1);
+  assert.equal(getb(), 2);
+  assert.equal(b, 2);
 
 }).call(global);

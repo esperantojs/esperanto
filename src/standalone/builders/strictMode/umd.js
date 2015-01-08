@@ -26,7 +26,7 @@ export default function umd ( mod, body, options ) {
 
 		amdName: options.amdName,
 		name: options.name
-	}, body.indentStr );
+	}, body.getIndentString() );
 
 	transformBody( mod, body, {
 		intro: intro,
