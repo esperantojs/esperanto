@@ -36,6 +36,6 @@ export default function amd ( bundle, body, options ) {
 		names: importNames.join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );
 
-	body.indent().prepend( intro ).append( '\n\n});' );
+	body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( body, options, 'toAmd', true );
 }

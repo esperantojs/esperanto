@@ -17,6 +17,6 @@ export default function cjs ( bundle, body, options ) {
 
 	body.prepend("'use strict';\n\n");
 
-	body.indent().prepend('(function () {\n\n').append('\n\n}).call(global);');
+	body.indent().prepend('(function () {\n\n').trimLines().append('\n\n}).call(global);');
 	return packageResult( body, options, 'toCjs', true );
 }

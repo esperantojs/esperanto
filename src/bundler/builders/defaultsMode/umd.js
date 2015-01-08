@@ -29,7 +29,7 @@ export default function umd ( bundle, body, options ) {
 		name: options.name
 	}, body.getIndentString() );
 
-	body.indent().prepend( intro ).append('\n\n}));');
+	body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
 	return packageResult( body, options, 'toUmd', true );
 }

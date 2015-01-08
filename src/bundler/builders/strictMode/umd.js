@@ -30,7 +30,7 @@ export default function umd ( bundle, body, options ) {
 		body.append( '\n\n' + getExportBlock( entry ) );
 	}
 
-	body.indent().prepend( intro ).append('\n\n}));');
+	body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
 	return packageResult( body, options, 'toUmd', true );
 }

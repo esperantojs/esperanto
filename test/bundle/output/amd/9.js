@@ -4,6 +4,4 @@ define(['external'], function (Correct) {
 
 	var Correct__default = ('default' in Correct ? Correct['default'] : Correct);
 
-
-
 });
