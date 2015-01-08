@@ -1,6 +1,6 @@
 (function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('baz')) :
 	typeof define === 'function' && define.amd ? define(['baz'], factory) :
-	typeof exports === 'object' ? factory(require('baz')) :
 	factory(global.baz)
 }(this, function (baz) { 'use strict';
 

@@ -1,35 +1,33 @@
 import { globalify, quote, req } from 'utils/mappers';
 
 export default function defaultUmdIntro ( options, indentStr ) {
-	var intro, amdName, needsGlobal, amdDeps, cjsDeps, globalDeps, args, cjsDefine, globalDefine, nonAMDDefine;
+	var hasExports = options.hasExports;
 
-	amdName     = options.amdName ? `'${options.amdName}', ` : '';
-	needsGlobal = options.hasImports || options.hasExports;
+	var amdName = options.amdName ?
+		"'" + options.amdName + "', " :
+		'';
+	var amdDeps = options.importPaths.length > 0 ?
+		'[' + options.importPaths.map( quote ).join( ', ' ) + '], ' :
+		'';
+	var cjsDeps = options.importPaths.map( req ).join( ', ' );
+	var globalDeps = options.importNames.map( globalify ).join( ', ' );
+	var args = options.args.join( ', ' );
 
-	amdDeps     = options.importPaths.map( quote ).join( ', ' );
-	cjsDeps     = options.importPaths.map( req ).join( ', ' );
-	globalDeps  = options.importNames.map( globalify ).join( ', ' );
-	
-	args        = ( options.args || options.importNames ).join( ', ' );
+	var cjsExport =
+		(hasExports ? 'module.exports = ' : '') + `factory(${cjsDeps})`;
 
-	cjsDefine = options.hasExports ?
-		`module.exports = factory(${cjsDeps})` :
-		`factory(${cjsDeps})`;
+	var globalExport =
+		(hasExports ? `global.${options.name} = ` : '') + `factory(${globalDeps})`;
 
-	globalDefine = options.hasExports ?
-		`global.${options.name} = factory(${globalDeps})` :
-		`factory(${globalDeps})`;
 
-	nonAMDDefine = cjsDefine === globalDefine ? globalDefine :
-		`typeof exports === 'object' ? ${cjsDefine} :\n\t${globalDefine}`;
+	var intro =
+`(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? ${cjsExport} :
+	typeof define === 'function' && define.amd ? define(${amdName}${amdDeps}factory) :
+	${globalExport}
+}(this, function (${args}) { 'use strict';
 
-	intro =
-`(function (${needsGlobal ? 'global, ' : ''}factory) {
-	typeof define === 'function' && define.amd ? define(${amdName}${amdDeps ? '[' + amdDeps + '], ' : ''}factory) :
-	${nonAMDDefine}
-}(${needsGlobal ? 'this, ' : ''}function (${args}) { 'use strict';
+`;
 
-`.replace( /\t/g, indentStr );
-
-	return intro;
+	return intro.replace( /\t/g, indentStr );
 }
