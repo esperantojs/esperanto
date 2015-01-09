@@ -1,6 +1,6 @@
 (function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('foo'), require('polyfills')) :
 	typeof define === 'function' && define.amd ? define(['foo', 'polyfills'], factory) :
-	typeof exports === 'object' ? factory(require('foo'), require('polyfills')) :
 	factory(global.foo)
 }(this, function (foo) { 'use strict';
 
