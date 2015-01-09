@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+module.exports = foo;
 
-	module.exports = foo;
-
-	function foo () {
-		console.log( 'fooing' );
-	}
-
-}).call(global);
+function foo () {
+	console.log( 'fooing' );
+}

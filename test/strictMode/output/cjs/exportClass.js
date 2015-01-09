@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
+class Point {}
 
-	class Point {}
-
-	exports.Point = Point;
-
-}).call(global);
+exports.Point = Point;

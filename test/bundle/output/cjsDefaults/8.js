@@ -1,7 +1,3 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	var ImplicitlyNamed__default = require('external');
-
-}).call(global);
+var ImplicitlyNamed__default = require('external');

@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-	console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
-
-}).call(global);
+console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );

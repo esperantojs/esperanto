@@ -1,7 +1,3 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	var baz = require('baz');
-
-}).call(global);
+var baz = require('baz');

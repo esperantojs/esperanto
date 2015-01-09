@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+var second = require('./second');
 
-	var second = require('./second');
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(second.a, 1);
-
-}).call(global);
+assert.equal(second.a, 1);

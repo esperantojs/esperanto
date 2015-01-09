@@ -1,13 +1,9 @@
-(function () {
+'use strict';
 
-	'use strict';
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
+var main = function () {
+	console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
+}
 
-	var main = function () {
-		console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
-	}
-
-	exports['default'] = main;
-
-}).call(global);
+exports['default'] = main;

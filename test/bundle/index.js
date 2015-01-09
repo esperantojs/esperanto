@@ -52,7 +52,7 @@ module.exports = function () {
 				{ entry: 'third', dir: 're-export-default-import' },
 				{ entry: 'importer', dir: 'reassign-import-fails', expectedError: 'Cannot reassign imported binding `x`' },
 				{ entry: 'importer', dir: 'reassign-import-not-at-top-level-fails', expectedError: 'Cannot reassign imported binding `x`' },
-				{ entry: 'mod', dir: 'this-is-global' },
+				{ entry: 'mod', dir: 'this-binding-undefined' },
 				{ entry: 'importer', dir: 'update-expression-of-import-fails', expectedError: 'Cannot reassign imported binding `a`' }
 			];
 
@@ -136,7 +136,8 @@ module.exports = function () {
 			{ dir: '24', description: 'adds a banner/footer to bundle' },
 			{ dir: '25', description: 'creates a named AMD module' },
 			{ dir: '26', description: 'transforms input sources' },
-			{ dir: '27', description: 'correctly infers indentation with single-line edge case' }
+			{ dir: '27', description: 'correctly infers indentation with single-line edge case' },
+			{ dir: '28', description: 'environment GetThisBinding is always undefined' }
 		];
 
 		profiles.forEach( function ( profile ) {

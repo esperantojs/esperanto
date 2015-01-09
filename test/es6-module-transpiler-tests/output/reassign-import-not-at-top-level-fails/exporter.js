@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+var x = 1;
 
-	var x = 1;
-
-	exports.x = x;
-
-}).call(global);
+exports.x = x;

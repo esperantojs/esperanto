@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	module.exports = {
-		amdName: 'myModule'
-	};
-
-}).call(global);
+module.exports = {
+	amdName: 'myModule'
+};

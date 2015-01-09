@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	exports['default'] = function () {
-		console.log( 'I am anonymous' );
-	}
-
-}).call(global);
+exports['default'] = function () {
+	console.log( 'I am anonymous' );
+}

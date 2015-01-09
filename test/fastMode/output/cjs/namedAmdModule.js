@@ -1,8 +1,4 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	var foo = require('foo');
-	foo();
-
-}).call(global);
+var foo = require('foo');
+foo();

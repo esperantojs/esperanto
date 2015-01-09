@@ -100,7 +100,7 @@ export default function transformBody ( mod, body, options ) {
 		body.trim().append( '\n\n' + lateExports.join( '\n' ) );
 	}
 
-	body.trim().indent({
-		exclude: mod.ast._templateLiteralRanges
-	}).prepend( options.intro ).trim().append( options.outro );
+	if ( options.intro && options.outro ) {
+		body.indent().prepend( options.intro ).trimLines().append( options.outro );
+	}
 }

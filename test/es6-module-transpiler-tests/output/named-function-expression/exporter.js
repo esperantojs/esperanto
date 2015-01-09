@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
+var a = 1;
 
-	var a = 1;
-
-	exports.a = a;
-
-}).call(global);
+exports.a = a;

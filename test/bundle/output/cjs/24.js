@@ -1,18 +1,14 @@
 /* this is a banner */
-(function () {
+'use strict';
 
-	'use strict';
+function foo () {
+	console.log( 'fooing' );
+}
 
-	function foo () {
-		console.log( 'fooing' );
-	}
+function bar () {
+	console.log( 'baring' );
+}
 
-	function bar () {
-		console.log( 'baring' );
-	}
-
-	foo();
-	bar();
-
-}).call(global);
+foo();
+bar();
 /* this is a footer */

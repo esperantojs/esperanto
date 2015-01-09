@@ -79,13 +79,13 @@ module.exports = function () {
 					});
 
 					smc = new SourceMapConsumer( converted.map );
-					loc = smc.originalPositionFor({ line: 5, column: 15 });
+					loc = smc.originalPositionFor({ line: 3, column: 15 });
 
 					assert.equal( loc.line, 1 );
 					assert.equal( loc.column, 15 );
 					assert.equal( loc.source, 'bundle/foo.js' );
 
-					loc = smc.originalPositionFor({ line: 8, column: 9 });
+					loc = smc.originalPositionFor({ line: 6, column: 8 });
 
 					assert.equal( loc.line, 2 );
 					assert.equal( loc.column, 8 );

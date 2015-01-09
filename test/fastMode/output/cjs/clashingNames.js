@@ -1,10 +1,6 @@
-(function () {
+'use strict';
 
-	'use strict';
+var undefined = require('foo');
+var foo = 'should not clash';
 
-	var undefined = require('foo');
-	var foo = 'should not clash';
-
-	bar();
-
-}).call(global);
+bar();

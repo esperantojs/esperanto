@@ -1,7 +1,3 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	exports['default'] = 'foo';
-
-}).call(global);
+exports['default'] = 'foo';

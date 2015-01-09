@@ -1,10 +1,6 @@
-(function () {
+'use strict';
 
-	'use strict';
+var foo = require('foo');
+require('polyfills');
 
-	var foo = require('foo');
-	require('polyfills');
-
-	exports['default'] = 'baz';
-
-}).call(global);
+exports['default'] = 'baz';
