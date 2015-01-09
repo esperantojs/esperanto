@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+var answer = 42;
 
-	var answer = 42;
+var main = answer * 2;
 
-	var main = answer * 2;
-
-	exports['default'] = main;
-
-}).call(global);
+exports['default'] = main;

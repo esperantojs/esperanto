@@ -1,17 +1,13 @@
-(function () {
+'use strict';
 
-  'use strict';
+exports.incr = incr;
 
-  exports.incr = incr;
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+var count = 0;
 
-  var count = 0;
+function incr() {
+  count++, exports.count = count;
+}
 
-  function incr() {
-    count++, exports.count = count;
-  }
-
-  exports.count = count;
-
-}).call(global);
+exports.count = count;

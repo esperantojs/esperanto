@@ -1,29 +1,25 @@
-(function () {
+'use strict';
 
-  'use strict';
+var exporter = {
+	get a () { return a; },
+	get b () { return b; },
+	get default () { return exporter__default; }
+};
 
-  var exporter = {
-  	get a () { return a; },
-  	get b () { return b; },
-  	get default () { return exporter__default; }
-  };
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+var a = 'a';
+var b = 'b';
+var exporter__default = 'DEF';
 
-  var a = 'a';
-  var b = 'b';
-  var exporter__default = 'DEF';
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+assert.equal(exporter['default'], 'DEF');
+assert.equal(exporter.b, 'b');
+assert.equal(exporter.a, 'a');
 
-  assert.equal(exporter['default'], 'DEF');
-  assert.equal(exporter.b, 'b');
-  assert.equal(exporter.a, 'a');
-
-  var keys = [];
-  for (var key in exporter) {
-    keys.push(key);
-  }
-  assert.deepEqual(keys.sort(), ['a', 'b', 'default']);
-
-}).call(global);
+var keys = [];
+for (var key in exporter) {
+  keys.push(key);
+}
+assert.deepEqual(keys.sort(), ['a', 'b', 'default']);

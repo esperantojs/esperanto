@@ -1,17 +1,13 @@
-(function () {
+'use strict';
 
-  'use strict';
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+function hi() {
+  return 'hi';
+}
 
-  function hi() {
-    return 'hi';
-  }
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
-
-  assert.equal(hi(), 'hi');
-
-}).call(global);
+assert.equal(hi(), 'hi');

@@ -1,22 +1,18 @@
-(function () {
+'use strict';
 
-	'use strict';
+function _a__a () {
+	console.log( 'a' );
+}
 
-	function _a__a () {
-		console.log( 'a' );
-	}
+function a__a () {
+	console.log( 'a but actually c' );
+}
 
-	function a__a () {
-		console.log( 'a but actually c' );
-	}
+var b = function () {
+	// a but actually c
+	a__a();
+}
 
-	var b = function () {
-		// a but actually c
-		a__a();
-	}
-
-	function foo () {
-		_a__a();
-	}
-
-}).call(global);
+function foo () {
+	_a__a();
+}

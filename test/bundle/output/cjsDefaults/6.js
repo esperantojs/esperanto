@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+var external__default = require('utils/external');
 
-	var external__default = require('utils/external');
+var message = 'this is a message';
 
-	var message = 'this is a message';
-
-	console.log( message );
-
-}).call(global);
+console.log( message );

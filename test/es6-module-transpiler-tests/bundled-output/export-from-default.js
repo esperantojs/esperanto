@@ -1,15 +1,11 @@
-(function () {
+'use strict';
 
-	'use strict';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+var first = 1;
 
-	var first = 1;
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(first, 1);
-
-}).call(global);
+assert.equal(first, 1);

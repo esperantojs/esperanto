@@ -1,10 +1,6 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	exports['default'] = function () {
-		var constructor;
-		constructor = 42;
-	}
-
-}).call(global);
+exports['default'] = function () {
+	var constructor;
+	constructor = 42;
+}

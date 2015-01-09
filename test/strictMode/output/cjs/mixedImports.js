@@ -1,7 +1,3 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	var asap = require('asap');
-
-}).call(global);
+var asap = require('asap');

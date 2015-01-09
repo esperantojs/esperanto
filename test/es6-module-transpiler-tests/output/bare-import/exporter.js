@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	global.sideEffectyValue = 99;
-
-}).call(global);
+global.sideEffectyValue = 99;

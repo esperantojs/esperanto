@@ -1,16 +1,12 @@
-(function () {
+'use strict';
 
-  'use strict';
+exports.callsFoo = callsFoo;
 
-  exports.callsFoo = callsFoo;
+function foo() {
+  return 1;
+}
+exports['default'] = foo;
 
-  function foo() {
-    return 1;
-  }
-  exports['default'] = foo;
-
-  function callsFoo() {
-    return foo();
-  }
-
-}).call(global);
+function callsFoo() {
+  return foo();
+}

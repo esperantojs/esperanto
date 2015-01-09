@@ -1,19 +1,15 @@
-(function () {
+'use strict';
 
-  'use strict';
+exports.geta = geta;
 
-  exports.geta = geta;
+var a = require('./a');
 
-  var a = require('./a');
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+function geta() {
+  return a.a;
+}
 
-  function geta() {
-    return a.a;
-  }
+var b = 2;
 
-  var b = 2;
-
-  exports.b = b;
-
-}).call(global);
+exports.b = b;

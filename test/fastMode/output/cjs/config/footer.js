@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	module.exports = {
-		footer: '\n/* this is a footer */'
-	};
-
-}).call(global);
+module.exports = {
+	footer: '\n/* this is a footer */'
+};

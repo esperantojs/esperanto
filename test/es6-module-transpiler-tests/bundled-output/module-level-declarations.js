@@ -1,14 +1,10 @@
-(function () {
+'use strict';
 
-  'use strict';
+var a = 1;
 
-  var a = 1;
+assert.equal(a, 1);
+assert.equal(getA(), 1);
 
-  assert.equal(a, 1);
-  assert.equal(getA(), 1);
-
-  function getA() {
-    return a;
-  }
-
-}).call(global);
+function getA() {
+  return a;
+}

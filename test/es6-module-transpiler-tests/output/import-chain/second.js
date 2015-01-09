@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+Object.defineProperty(exports, 'value', { get: function () { return first.value; }});
 
-	Object.defineProperty(exports, 'value', { get: function () { return first.value; }});
+var first = require('./first');
 
-	var first = require('./first');
-
-	/* jshint esnext:true */
-
-}).call(global);
+/* jshint esnext:true */

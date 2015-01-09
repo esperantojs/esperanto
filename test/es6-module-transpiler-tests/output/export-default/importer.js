@@ -1,19 +1,15 @@
-(function () {
+'use strict';
 
-  'use strict';
+var value = require('./exporter');
+var value = require('./exporter');
 
-  var value = require('./exporter');
-  var value = require('./exporter');
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+assert.equal(value['default'], 42);
 
-  assert.equal(value['default'], 42);
-
-  value.change();
-  assert.equal(
-    value['default'],
-    42,
-    'default export should not be bound'
-  );
-
-}).call(global);
+value.change();
+assert.equal(
+  value['default'],
+  42,
+  'default export should not be bound'
+);

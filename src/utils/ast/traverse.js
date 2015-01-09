@@ -41,6 +41,11 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 
 			// Replace identifiers
 			replaceIdentifiers( body, node, identifierReplacements, scope );
+
+			// Replace top-level this with undefined ES6 8.1.1.5.4
+			if ( node.type === 'ThisExpression' && node._topLevel ) {
+				body.replace( node.start, node.end, 'undefined' );
+			}
 		},
 
 		leave: function ( node ) {

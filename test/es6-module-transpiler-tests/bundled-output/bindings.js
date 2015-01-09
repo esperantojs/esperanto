@@ -1,19 +1,15 @@
-(function () {
+'use strict';
 
-  'use strict';
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
+var count = 0;
 
-  var count = 0;
+function incr() {
+  count++;
+}
 
-  function incr() {
-    count++;
-  }
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
-
-  assert.equal(count, 0);
-  incr();
-  assert.equal(count, 1);
-
-}).call(global);
+assert.equal(count, 0);
+incr();
+assert.equal(count, 1);

@@ -1,13 +1,9 @@
-(function () {
+'use strict';
 
-	'use strict';
+var exporter = require('./exporter');
 
-	var exporter = require('./exporter');
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(exporter.count, 0);
-	exporter.incr();
-	assert.equal(exporter.count, 1);
-
-}).call(global);
+assert.equal(exporter.count, 0);
+exporter.incr();
+assert.equal(exporter.count, 1);

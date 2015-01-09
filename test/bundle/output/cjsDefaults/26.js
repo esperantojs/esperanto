@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+function bar () {
+	console.log( 'baring' );
+}
 
-	function bar () {
-		console.log( 'baring' );
-	}
-
-	bar();
-
-}).call(global);
+bar();

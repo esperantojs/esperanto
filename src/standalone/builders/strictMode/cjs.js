@@ -1,9 +1,6 @@
 import packageResult from 'utils/packageResult';
 import transformBody from './utils/transformBody';
 
-var intro = '(function () {\n\n\t\'use strict\';\n\n';
-var outro = '\n\n}).call(global);';
-
 export default function cjs ( mod, body, options ) {
 	var importBlock;
 
@@ -22,10 +19,10 @@ export default function cjs ( mod, body, options ) {
 	}).join( '\n' );
 
 	transformBody( mod, body, {
-		intro: intro.replace( /\t/g, body.getIndentString() ),
 		header: importBlock,
-		outro: outro
 	});
+
+	body.prepend( "'use strict';\n\n" ).trimLines()
 
 	return packageResult( body, options, 'toCjs' );
 }
