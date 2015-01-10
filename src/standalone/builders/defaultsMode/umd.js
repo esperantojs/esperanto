@@ -1,51 +1,53 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from 'utils/packageResult';
+import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
 import reorderImports from 'utils/reorderImports';
 
 export default function umd ( mod, body, options ) {
-	var importNames = [],
-		importPaths = [],
-		intro,
-		i;
+	var importNames = [];
+	var importPaths = [];
 
 	if ( !options.name ) {
 		throw new Error( 'You must supply a `name` option for UMD modules' );
 	}
 
-	// ensure empty imports are at the end
-	reorderImports( mod.imports );
+	var hasImports = mod.imports.length > 0;
+	var hasExports = mod.exports.length > 0;
 
-	// gather imports, and remove import declarations
-	mod.imports.forEach( ( x, i ) => {
-		importPaths[i] = x.path;
+	var intro;
+	if (!hasImports && !hasExports) {
+		intro = standaloneUmdIntro({
+			amdName: options.amdName,
+		}, body.getIndentString() );
+	} else {
+		// ensure empty imports are at the end
+		reorderImports( mod.imports );
 
-		if ( x.name ) {
-			importNames[i] = x.name;
-		}
+		// gather imports, and remove import declarations
+		mod.imports.forEach( ( x, i ) => {
+			importPaths[i] = x.path;
 
-		body.remove( x.start, x.next );
-	});
+			if ( x.name ) {
+				importNames[i] = x.name;
+			}
 
-	transformExportDeclaration( mod.exports[0], body );
+			body.remove( x.start, x.next );
+		});
 
-	intro = defaultUmdIntro({
-		hasImports: mod.imports.length > 0,
-		hasExports: mod.exports.length > 0,
+		transformExportDeclaration( mod.exports[0], body );
 
-		importPaths: importPaths,
-		importNames: importNames,
+		intro = defaultUmdIntro({
+			hasExports,
+			importPaths,
+			importNames,
+			amdName: options.amdName,
+			name: options.name,
+			args: importNames,
+		}, body.getIndentString() );
+	}
 
-		amdName: options.amdName,
-		name: options.name
-	}, mod.body.getIndentString() );
-
-	body.trim()
-		.prepend( "'use strict';\n\n" )
-		.trim()
-		.indent()
-		.prepend( intro )
-		.append( '\n\n}));' );
+	body.indent().prepend( intro ).trimLines().append( '\n\n}));' );
 
 	return packageResult( body, options, 'toUmd' );
 }

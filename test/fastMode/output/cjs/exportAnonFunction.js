@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	module.exports = function () {
-		console.log( 'I am anonymous' );
-	}
-
-}).call(global);
+module.exports = function () {
+	console.log( 'I am anonymous' );
+}

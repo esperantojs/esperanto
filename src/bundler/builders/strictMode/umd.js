@@ -1,3 +1,4 @@
+import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import strictUmdIntro from 'utils/umd/strictUmdIntro';
 import packageResult from 'utils/packageResult';
 import { getId } from 'utils/mappers';
@@ -11,23 +12,31 @@ export default function umd ( bundle, body, options ) {
 
 	var entry = bundle.entryModule;
 
-	var importPaths = bundle.externalModules.map( getId );
-	var importNames = importPaths.map( path => bundle.uniqueNames[ path ] );
+	var hasImports = bundle.externalModules.length > 0;
+	var hasExports = entry.exports.length > 0;
 
-	var intro = strictUmdIntro({
-		hasImports: bundle.externalModules.length > 0,
-		hasExports: entry.exports.length > 0,
+	var intro;
+	if (!hasImports && !hasExports) {
+		intro = standaloneUmdIntro({
+			amdName: options.amdName,
+		}, body.getIndentString() );
+	} else {
 
-		importPaths: importPaths,
-		importNames: importNames,
-		externalDefaults: getExternalDefaults( bundle ),
+		if ( hasExports && entry.defaultExport ) {
+			body.append( '\n\n' + getExportBlock( entry ) );
+		}
 
-		amdName: options.amdName,
-		name: options.name
-	}, body.getIndentString() );
+		var importPaths = bundle.externalModules.map( getId );
+		var importNames = importPaths.map( path => bundle.uniqueNames[ path ] );
 
-	if ( entry.exports.length && entry.defaultExport ) {
-		body.append( '\n\n' + getExportBlock( entry ) );
+		intro = strictUmdIntro({
+			hasExports,
+			importPaths,
+			importNames,
+			externalDefaults: getExternalDefaults( bundle ),
+			amdName: options.amdName,
+			name: options.name,
+		}, body.getIndentString() );
 	}
 
 	body.indent().prepend( intro ).trimLines().append('\n\n}));');

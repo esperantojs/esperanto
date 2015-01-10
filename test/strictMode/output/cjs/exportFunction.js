@@ -1,10 +1,6 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	function foo ( str ) {
-		return str.toUpperCase();
-	}
-	exports['default'] = foo;
-
-}).call(global);
+function foo ( str ) {
+	return str.toUpperCase();
+}
+exports['default'] = foo;

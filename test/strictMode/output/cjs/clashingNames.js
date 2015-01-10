@@ -1,11 +1,7 @@
-(function () {
+'use strict';
 
-	'use strict';
+var _foo = require('foo');
 
-	var _foo = require('foo');
+var foo = 'should not clash';
 
-	var foo = 'should not clash';
-
-	_foo.bar();
-
-}).call(global);
+_foo.bar();

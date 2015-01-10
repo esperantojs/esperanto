@@ -1,13 +1,9 @@
-(function () {
+'use strict';
 
-	'use strict';
+Object.defineProperty(exports, 'a', { get: function () { return first.a; }});
 
-	Object.defineProperty(exports, 'a', { get: function () { return first.a; }});
+var first = require('./first');
 
-	var first = require('./first');
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(typeof a, 'undefined');
-
-}).call(global);
+assert.equal(typeof a, 'undefined');

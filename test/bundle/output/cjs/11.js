@@ -1,19 +1,15 @@
-(function () {
+'use strict';
 
-	'use strict';
+var foo = 1;
+var bar = 2;
 
-	var foo = 1;
-	var bar = 2;
+exports.foo = foo = 3;
 
-	exports.foo = foo = 3;
+exports.bar = bar;
 
-	exports.bar = bar;
+var baz = 4;
 
-	var baz = 4;
+exports.baz = baz;
 
-	exports.baz = baz;
-
-	var qux = 5;
-	exports.qux = qux = 6;
-
-}).call(global);
+var qux = 5;
+exports.qux = qux = 6;

@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
+const config = {};
 
-	const config = {};
-
-	config.async = true;
-
-}).call(global);
+config.async = true;

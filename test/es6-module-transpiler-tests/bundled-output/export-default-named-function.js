@@ -1,16 +1,12 @@
-(function () {
+'use strict';
 
-  'use strict';
+function foo() {
+  return 1;
+}
 
-  function foo() {
-    return 1;
-  }
+function callsFoo() {
+  return foo();
+}
 
-  function callsFoo() {
-    return foo();
-  }
-
-  assert.strictEqual(foo(), 1);
-  assert.strictEqual(callsFoo(), 1);
-
-}).call(global);
+assert.strictEqual(foo(), 1);
+assert.strictEqual(callsFoo(), 1);

@@ -1,11 +1,9 @@
 /* this is a banner */
 (function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('whatever')) :
 	typeof define === 'function' && define.amd ? define(['whatever'], factory) :
-	typeof exports === 'object' ? module.exports = factory(require('whatever')) :
 	global.myModule = factory(global.whatever)
 }(this, function (whatever) { 'use strict';
-
-	'use strict';
 
 	whatever();
 

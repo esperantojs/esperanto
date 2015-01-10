@@ -1,7 +1,3 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	var fs = require('fs');
-
-}).call(global);
+var fs = require('fs');

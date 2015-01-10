@@ -1,15 +1,11 @@
-(function () {
+'use strict';
 
-	'use strict';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+var value = 42;
 
-	var value = 42;
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(value, 42);
-
-}).call(global);
+assert.equal(value, 42);

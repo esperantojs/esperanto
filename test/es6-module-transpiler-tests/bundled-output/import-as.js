@@ -1,17 +1,13 @@
-(function () {
+'use strict';
 
-	'use strict';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+var exporter__a = 'a';
+var exporter__b = 'b';
+var exporter = 'DEF';
 
-	var exporter__a = 'a';
-	var exporter__b = 'b';
-	var exporter = 'DEF';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(exporter__a, 'a');
-	assert.equal(exporter__b, 'b');
-	assert.equal(exporter, 'DEF');
-
-}).call(global);
+assert.equal(exporter__a, 'a');
+assert.equal(exporter__b, 'b');
+assert.equal(exporter, 'DEF');

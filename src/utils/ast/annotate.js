@@ -38,6 +38,8 @@ Scope.prototype = {
 export default function annotateAst ( ast ) {
 	var scope = new Scope(), blockScope = new Scope(), declared = {}, topLevelFunctionNames = [], templateLiteralRanges = [];
 
+	var envDepth = 0;
+
 	estraverse.traverse( ast, {
 		enter: function ( node ) {
 			if ( node.type === 'ImportDeclaration' ) {
@@ -51,6 +53,12 @@ export default function annotateAst ( ast ) {
 			switch ( node.type ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':
+
+					envDepth++;
+
+					// fallthrough
+
+				case 'ArrowFunctionExpression':
 					if ( node.id ) {
 						addToScope( node );
 
@@ -95,13 +103,27 @@ export default function annotateAst ( ast ) {
 				case 'TemplateLiteral':
 					templateLiteralRanges.push([ node.start, node.end ]);
 					break;
+
+				case 'ThisExpression':
+					if (envDepth === 0) {
+						node._topLevel = true;
+					}
+					break;
 			}
 		},
 		leave: function ( node ) {
 			switch ( node.type ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':
+
+					envDepth--;
+
+					// fallthrough
+
+				case 'ArrowFunctionExpression':
+
 					scope = scope.parent;
+
 					break;
 
 				case 'BlockStatement':

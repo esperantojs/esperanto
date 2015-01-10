@@ -1,12 +1,8 @@
-(function () {
+'use strict';
 
-  'use strict';
+/* jshint esnext:true */
 
-  /* jshint esnext:true */
-
-  function hi() {
-    return 'hi';
-  }
-  exports['default'] = hi;
-
-}).call(global);
+function hi() {
+  return 'hi';
+}
+exports['default'] = hi;

@@ -1,10 +1,6 @@
-(function () {
+'use strict';
 
-	'use strict';
+var message = 'yes';
+var foo = message;
 
-	var message = 'yes';
-	var foo = message;
-
-	console.log( foo );
-
-}).call(global);
+console.log( foo );

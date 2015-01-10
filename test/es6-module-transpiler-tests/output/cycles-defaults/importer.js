@@ -1,15 +1,11 @@
-(function () {
+'use strict';
 
-	'use strict';
+var a = require('./a');
+var b = require('./b');
 
-	var a = require('./a');
-	var b = require('./b');
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(a['default'].a, 1);
-	assert.equal(a['default'].b, 2);
-	assert.equal(b['default'].a, 1);
-	assert.equal(b['default'].b, 2);
-
-}).call(global);
+assert.equal(a['default'].a, 1);
+assert.equal(a['default'].b, 2);
+assert.equal(b['default'].a, 1);
+assert.equal(b['default'].b, 2);

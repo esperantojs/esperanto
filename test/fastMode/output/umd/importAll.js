@@ -1,9 +1,7 @@
 (function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('fs')) :
 	typeof define === 'function' && define.amd ? define(['fs'], factory) :
-	typeof exports === 'object' ? factory(require('fs')) :
 	factory(global.fs)
 }(this, function (fs) { 'use strict';
-
-	'use strict';
 
 }));

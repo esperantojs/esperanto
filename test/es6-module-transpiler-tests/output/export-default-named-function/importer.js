@@ -1,10 +1,6 @@
-(function () {
+'use strict';
 
-	'use strict';
+var exporter = require('./exporter');
 
-	var exporter = require('./exporter');
-
-	assert.strictEqual(exporter['default'](), 1);
-	assert.strictEqual(exporter.callsFoo(), 1);
-
-}).call(global);
+assert.strictEqual(exporter['default'](), 1);
+assert.strictEqual(exporter.callsFoo(), 1);

@@ -1,17 +1,13 @@
-(function () {
+'use strict';
 
-	'use strict';
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+var first__a = 1;
 
-	var first__a = 1;
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
+assert.equal(typeof a, 'undefined');
 
-	assert.equal(typeof a, 'undefined');
+/* jshint esnext:true */
 
-	/* jshint esnext:true */
-
-	assert.equal(first__a, 1);
-
-}).call(global);
+assert.equal(first__a, 1);

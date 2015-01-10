@@ -1,13 +1,9 @@
 /* this is a banner */
-(function () {
+'use strict';
 
-	'use strict';
+var whatever = require('whatever');
 
-	var whatever = require('whatever');
+whatever();
 
-	whatever();
-
-	module.exports = 'someExport';
-
-}).call(global);
+module.exports = 'someExport';
 /* this is a footer */

@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
+var external = require('external');
 
-	var external = require('external');
-
-	external.foo();
-
-}).call(global);
+external.foo();

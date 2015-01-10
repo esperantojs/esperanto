@@ -29,11 +29,7 @@ export default function cjs ( mod, body, options ) {
 		}
 	}
 
-	body.trim()
-		.prepend( "'use strict';\n\n" )
-		.indent()
-		.prepend( '(function () {\n\n' )
-		.append( '\n\n}).call(global);' );
+	body.prepend( "'use strict';\n\n" ).trimLines()
 
 	return packageResult( body, options, 'toCjs' );
 }

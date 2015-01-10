@@ -1,9 +1,5 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	module.exports = {
-		banner: '/* this is a banner */\n'
-	};
-
-}).call(global);
+module.exports = {
+	banner: '/* this is a banner */\n'
+};

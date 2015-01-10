@@ -1,8 +1,4 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	var foo = 'bar';
-	exports.foo = foo = 'baz';
-
-}).call(global);
+var foo = 'bar';
+exports.foo = foo = 'baz';

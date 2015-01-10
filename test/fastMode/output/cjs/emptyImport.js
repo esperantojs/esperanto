@@ -1,8 +1,4 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	require('polyfills');
-	var bar = require('foo');
-
-}).call(global);
+require('polyfills');
+var bar = require('foo');

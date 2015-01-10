@@ -1,17 +1,13 @@
-(function () {
+'use strict';
 
-	'use strict';
-
-	class Foo {
-		constructor( str ) {
-			this.str = str;
-		}
-
-		toString() {
-			return this.str;
-		}
+class Foo {
+	constructor( str ) {
+		this.str = str;
 	}
 
-	module.exports = Foo;
+	toString() {
+		return this.str;
+	}
+}
 
-}).call(global);
+module.exports = Foo;
