@@ -1,10 +1,10 @@
-define(['external'], function (external__default) {
+define(['external'], function (external) {
 
 	'use strict';
 
 	var bar = 'yes';
 	var foo = bar;
 
-	console.log( external__default( foo ) );
+	console.log( external( foo ) );
 
 });

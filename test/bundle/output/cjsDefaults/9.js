@@ -1,3 +1,3 @@
 'use strict';
 
-var Correct__default = require('external');
+var Correct = require('external');

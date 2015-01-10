@@ -1,5 +1,5 @@
 'use strict';
 
-var foo__default = require('external');
+var foo = require('external');
 
-foo__default();
+foo();

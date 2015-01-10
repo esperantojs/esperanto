@@ -1,8 +1,8 @@
 'use strict';
 
-var external__default = require('external');
+var external = require('external');
 
 var bar = 'yes';
 var foo = bar;
 
-console.log( external__default( foo ) );
+console.log( external( foo ) );

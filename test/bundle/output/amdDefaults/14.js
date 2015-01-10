@@ -1,7 +1,7 @@
-define(['external'], function (foo__default) {
+define(['external'], function (foo) {
 
 	'use strict';
 
-	foo__default();
+	foo();
 
 });

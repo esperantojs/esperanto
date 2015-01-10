@@ -1,4 +1,4 @@
-define(['utils/external'], function (external__default) {
+define(['utils/external'], function (external) {
 
 	'use strict';
 

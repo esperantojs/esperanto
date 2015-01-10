@@ -2,6 +2,6 @@
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('external')) :
 	typeof define === 'function' && define.amd ? define(['external'], factory) :
 	factory(global.ImplicitlyNamed)
-}(this, function (ImplicitlyNamed__default) { 'use strict';
+}(this, function (ImplicitlyNamed) { 'use strict';
 
 }));

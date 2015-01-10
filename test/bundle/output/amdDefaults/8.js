@@ -1,4 +1,4 @@
-define(['external'], function (ImplicitlyNamed__default) {
+define(['external'], function (ImplicitlyNamed) {
 
 	'use strict';
 
