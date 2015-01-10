@@ -138,7 +138,8 @@ module.exports = function () {
 			{ dir: '26', description: 'transforms input sources' },
 			{ dir: '27', description: 'correctly infers indentation with single-line edge case' },
 			{ dir: '28', description: 'environment GetThisBinding is always undefined' },
-			{ dir: '29', description: 'both named and default bindings can be imported from an external module', strict: true }
+			{ dir: '29', description: 'both named and default bindings can be imported from an external module', strict: true },
+			{ dir: '30', description: 'batch import from external module' }
 		];
 
 		profiles.forEach( function ( profile ) {
