@@ -139,7 +139,8 @@ module.exports = function () {
 			{ dir: '27', description: 'correctly infers indentation with single-line edge case' },
 			{ dir: '28', description: 'environment GetThisBinding is always undefined' },
 			{ dir: '29', description: 'both named and default bindings can be imported from an external module', strict: true },
-			{ dir: '30', description: 'batch import from external module' }
+			{ dir: '30', description: 'batch import from external module' },
+			{ dir: '31', description: 'renames identifiers consistently' }
 		];
 
 		profiles.forEach( function ( profile ) {
@@ -156,7 +157,7 @@ module.exports = function () {
 					( t.only ? it.only : it )( t.description, function () {
 						return esperanto.bundle({
 							base: path.resolve( 'bundle/input', t.dir ),
-							entry: t.entry || 'main',
+							entry: config.entry || 'main',
 							skip: config.skip,
 							names: config.names,
 							transform: config.transform
