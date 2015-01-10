@@ -747,7 +747,7 @@ function populateIdentifierReplacements ( bundle ) {
 
 		if ( x = mod.defaultExport ) {
 			if ( x.hasDeclaration && x.name ) {
-				mod.identifierReplacements.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, mod.name ) ?
+				mod.identifierReplacements.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, x.name ) ?
 					mod.name + '__' + x.name :
 					x.name;
 			} else {
