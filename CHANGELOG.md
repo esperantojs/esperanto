@@ -1,5 +1,10 @@
 # changelog
 
+## 0.6.1
+
+* Fix for ([#45](https://github.com/rich-harris/esperanto/issues/45))
+* External modules only have `__default` appended where necessary ([#46](https://github.com/rich-harris/esperanto/issues/46))
+
 ## 0.6.0
 
 * UMD export detects CJS environment *before* AMD ([#42](https://github.com/rich-harris/esperanto/issues/42))
