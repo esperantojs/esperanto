@@ -18,8 +18,9 @@ export default function strictUmdIntro ( options, indentStr ) {
 
 	var defaultsBlock = '';
 	if ( options.externalDefaults && options.externalDefaults.length > 0 ) {
-		defaultsBlock = options.externalDefaults.map( name =>
-			`\tvar ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`
+		defaultsBlock = options.externalDefaults.map( x =>
+			'\t' + ( x.needsNamed ? `var ${x.name}__default` : x.name ) +
+				` = ('default' in ${x.name} ? ${x.name}['default'] : ${x.name});`
 		).join('\n') + '\n\n';
 	}
 

@@ -11,7 +11,7 @@ export default function defaultUmdIntro ( options, indentStr ) {
 		'';
 	var cjsDeps = options.importPaths.map( req ).join( ', ' );
 	var globalDeps = options.importNames.map( globalify ).join( ', ' );
-	var args = options.args.join( ', ' );
+	var args = options.importNames.join( ', ' );
 
 	var cjsExport =
 		(hasExports ? 'module.exports = ' : '') + `factory(${cjsDeps})`;

@@ -46,13 +46,13 @@ export default function populateIdentifierReplacements ( bundle ) {
 		});
 
 		mod.imports.forEach( x => {
-			var isExternalModule;
+			var externalModule;
 
 			if ( x.passthrough ) {
 				return;
 			}
 
-			isExternalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id );
+			externalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id ) && bundle.externalModuleLookup[ x.id ];
 
 			x.specifiers.forEach( s => {
 				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
@@ -83,9 +83,10 @@ export default function populateIdentifierReplacements ( bundle ) {
 					mod = bundle.moduleLookup[ moduleId ];
 
 					if ( specifierName === 'default' ) {
-						// if it's an external module, always use __default
-						if ( isExternalModule ) {
-							replacement = moduleName + '__default';
+						// if it's an external module, always use __default if the
+						// bundle also uses named imports
+						if ( !!externalModule ) {
+							replacement = externalModule.needsNamed ? moduleName + '__default' : moduleName;
 						}
 
 						// We currently need to check for the existence of `mod`, because modules
@@ -100,7 +101,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 								moduleName + '__default' :
 								moduleName;
 						}
-					} else if ( !isExternalModule ) {
+					} else if ( !externalModule ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							moduleName + '__' + specifierName :
 							specifierName;

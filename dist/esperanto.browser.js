@@ -1,21 +1,15 @@
+/*
+	esperanto.js v0.6.0 - 2015-01-10
+	http://esperantojs.org
+
+	Released under the MIT License.
+*/
+
 (function (global, factory) {
-
-	'use strict';
-
-	if (typeof define === 'function' && define.amd) {
-		// export as AMD
-		define(['acorn', 'magic-string', 'estraverse'], factory);
-	} else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-		// node/browserify
-		module.exports = factory(require('acorn'), require('magic-string'), require('estraverse'));
-	} else {
-		// browser global
-		global.esperanto = factory(global.acorn, global.MagicString, global.estraverse);
-	}
-
-}(typeof window !== 'undefined' ? window : this, function (acorn__default, MagicString__default, estraverse__default) {
-
-	'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('acorn'), require('magic-string'), require('estraverse')) :
+	typeof define === 'function' && define.amd ? define(['acorn', 'magic-string', 'estraverse'], factory) :
+	global.esperanto = factory(global.acorn, global.MagicString, global.estraverse)
+}(this, function (acorn, MagicString, estraverse) { 'use strict';
 
 	/*
 		This module traverse a module's AST, attaching scope information
@@ -57,7 +51,7 @@
 
 		var envDepth = 0;
 
-		estraverse__default.traverse( ast, {
+		estraverse.traverse( ast, {
 			enter: function ( node ) {
 				if ( node.type === 'ImportDeclaration' ) {
 					node._skip = true;
@@ -460,8 +454,8 @@
 		var mod, imports, exports;
 
 		mod = {
-			body: new MagicString__default( options.source ),
-			ast: acorn__default.parse( options.source, {
+			body: new MagicString( options.source ),
+			ast: acorn.parse( options.source, {
 				ecmaVersion: 6,
 				locations: true
 			})
@@ -725,12 +719,12 @@
 
 		var intro =
 	(("(function (factory) {\
-\n	!(typeof exports === 'object' && typeof module !== 'undefined') &&\
-\n	typeof define === 'function' && define.amd ? define(" + amdName) + "factory) :\
-\n	factory()\
-\n}(function () { 'use strict';\
+\n		!(typeof exports === 'object' && typeof module !== 'undefined') &&\
+\n		typeof define === 'function' && define.amd ? define(" + amdName) + "factory) :\
+\n		factory()\
+\n	}(function () { 'use strict';\
 \n\
-\n");
+\n	");
 
 		return intro.replace( /\t/g, indentStr );
 	}
@@ -746,7 +740,7 @@
 			'';
 		var cjsDeps = options.importPaths.map( req ).join( ', ' );
 		var globalDeps = options.importNames.map( globalify ).join( ', ' );
-		var args = options.args.join( ', ' );
+		var args = options.importNames.join( ', ' );
 
 		var cjsExport =
 			(hasExports ? 'module.exports = ' : '') + (("factory(" + cjsDeps) + ")");
@@ -757,12 +751,12 @@
 
 		var intro =
 	(("(function (global, factory) {\
-\n	typeof exports === 'object' && typeof module !== 'undefined' ? " + cjsExport) + (" :\
-\n	typeof define === 'function' && define.amd ? define(" + amdName) + ("" + amdDeps) + ("factory) :\
-\n	" + globalExport) + ("\
-\n}(this, function (" + args) + ") { 'use strict';\
+\n		typeof exports === 'object' && typeof module !== 'undefined' ? " + cjsExport) + (" :\
+\n		typeof define === 'function' && define.amd ? define(" + amdName) + ("" + amdDeps) + ("factory) :\
+\n		" + globalExport) + ("\
+\n	}(this, function (" + args) + ") { 'use strict';\
 \n\
-\n");
+\n	");
 
 		return intro.replace( /\t/g, indentStr );
 	}
@@ -805,8 +799,7 @@
 				importPaths: importPaths,
 				importNames: importNames,
 				amdName: options.amdName,
-				name: options.name,
-				args: importNames,
+				name: options.name
 			}, body.getIndentString() );
 		}
 
@@ -985,7 +978,7 @@
 			capturedUpdates = null,
 			previousCapturedUpdates = null;
 
-		estraverse__default.traverse( ast, {
+		estraverse.traverse( ast, {
 			enter: function ( node ) {
 				// we're only interested in references, not property names etc
 				if ( node._skip ) return this.skip();
@@ -1240,19 +1233,20 @@
 
 		var defaultsBlock = '';
 		if ( options.externalDefaults && options.externalDefaults.length > 0 ) {
-			defaultsBlock = options.externalDefaults.map( function(name )
-				{return (("\tvar " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");")}
-		).join('\n') + '\n\n';
+			defaultsBlock = options.externalDefaults.map( function(x )
+				{return '\t' + ( x.needsNamed ? (("var " + (x.name)) + "__default") : x.name ) +
+					((" = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");")}
+			).join('\n') + '\n\n';
 		}
 
 		var intro =
 	(("(function (global, factory) {\
-\n	typeof exports === 'object' && typeof module !== 'undefined' ? factory(" + cjsDeps) + (") :\
-\n	typeof define === 'function' && define.amd ? define(" + amdName) + ("" + amdDeps) + ("factory) :\
-\n	factory(" + globalDeps) + (")\
-\n}(this, function (" + args) + (") { 'use strict';\
+\n		typeof exports === 'object' && typeof module !== 'undefined' ? factory(" + cjsDeps) + (") :\
+\n		typeof define === 'function' && define.amd ? define(" + amdName) + ("" + amdDeps) + ("factory) :\
+\n		factory(" + globalDeps) + (")\
+\n	}(this, function (" + args) + (") { 'use strict';\
 \n\
-\n" + defaultsBlock) + "")
+\n	" + defaultsBlock) + "")
 
 		return intro.replace( /\t/g, indentStr );
 	}
@@ -1315,7 +1309,7 @@
 		var intro = defaultsMode_amd__introTemplate({
 			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
 			amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
-			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ] + '__default'} ).join( ', ' )
+			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} ).join( ', ' )
 		}).replace( /\t/g, body.getIndentString() );
 
 		body.indent().prepend( intro ).trimLines().append( '\n\n});' );
@@ -1329,7 +1323,7 @@
 	function defaultsMode_cjs__cjs ( bundle, body, options ) {
 		var importBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ];
-			return (("var " + name) + ("__default = require('" + (x.id)) + "');");
+			return (("var " + name) + (" = require('" + (x.id)) + "');");
 		}).join( '\n' );
 
 		if ( importBlock ) {
@@ -1376,8 +1370,7 @@
 				importPaths: importPaths,
 				importNames: importNames,
 				amdName: options.amdName,
-				name: options.name,
-				args: importNames.map( function(name ) {return name + '__default'} ),
+				name: options.name
 			}, body.getIndentString() );
 		}
 
@@ -1392,26 +1385,6 @@
 		umd: defaultsMode_umd__umd
 	};
 
-	function getExternalDefaults ( bundle ) {
-		var externalDefaults = [];
-
-		bundle.modules.forEach( function(mod ) {
-			mod.imports.forEach( function(x ) {
-				var name;
-
-				if ( x.isDefault && hasOwnProp.call( bundle.externalModuleLookup, x.id ) ) {
-					name = bundle.uniqueNames[ x.id ];
-
-					if ( !~externalDefaults.indexOf( name ) ) {
-						externalDefaults.push( name );
-					}
-				}
-			});
-		});
-
-		return externalDefaults;
-	}
-
 	function getExportBlock ( entry ) {
 		var name = entry.identifierReplacements.default;
 		return (("exports['default'] = " + name) + ";");
@@ -1420,14 +1393,22 @@
 	var builders_strictMode_amd__introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 	function builders_strictMode_amd__amd ( bundle, body, options ) {
-		var externalDefaults = getExternalDefaults( bundle );
+		var externalDefaults = bundle.externalModules.filter( builders_strictMode_amd__needsDefault );
 		var entry = bundle.entryModule;
 
 		var importIds = bundle.externalModules.map( getId );
 		var importNames = importIds.map( function(id ) {return bundle.uniqueNames[ id ]} );
 
 		if ( externalDefaults.length ) {
-			var defaultsBlock = externalDefaults.map( function(name ) {
+			var defaultsBlock = externalDefaults.map( function(x ) {
+				var name = bundle.uniqueNames[ x.id ];
+
+				// Case 1: default is used, and named is not
+				if ( !x.needsNamed ) {
+					return (("" + name) + (" = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+				}
+
+				// Case 2: both default and named are used
 				return (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 			}).join( '\n' );
 
@@ -1453,16 +1434,21 @@
 		return packageResult( body, options, 'toAmd', true );
 	}
 
+	function builders_strictMode_amd__needsDefault ( externalModule ) {
+		return externalModule.needsDefault;
+	}
+
 	function builders_strictMode_cjs__cjs ( bundle, body, options ) {
-		var externalDefaults = getExternalDefaults( bundle );
 		var entry = bundle.entryModule;
 
 		var importBlock = bundle.externalModules.map( function(x ) {
 			var name = bundle.uniqueNames[ x.id ],
 				statement = (("var " + name) + (" = require('" + (x.id)) + "');");
 
-			if ( ~externalDefaults.indexOf( name ) ) {
-				statement += (("\nvar " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+			if ( x.needsDefault ) {
+				statement += '\n' +
+					( x.needsNamed ? (("var " + name) + "__default") : name ) +
+					((" = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
 			}
 
 			return statement;
@@ -1509,7 +1495,7 @@
 				hasExports: hasExports,
 				importPaths: importPaths,
 				importNames: importNames,
-				externalDefaults: getExternalDefaults( bundle ),
+				externalDefaults: bundle.externalModules.filter( builders_strictMode_umd__needsDefault ),
 				amdName: options.amdName,
 				name: options.name,
 			}, body.getIndentString() );
@@ -1518,6 +1504,10 @@
 		body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
 		return packageResult( body, options, 'toUmd', true );
+	}
+
+	function builders_strictMode_umd__needsDefault ( externalModule ) {
+		return externalModule.needsDefault;
 	}
 
 	var builders_strictMode = {
@@ -1637,4 +1627,3 @@
 	return esperanto;
 
 }));
-//# sourceMappingURL=./esperanto.browser.js.map

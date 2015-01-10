@@ -1,20 +1,27 @@
 import template from 'utils/template';
 import packageResult from 'utils/packageResult';
 import { getId, quote } from 'utils/mappers';
-import getExternalDefaults from './utils/getExternalDefaults';
 import getExportBlock from './utils/getExportBlock';
 
 var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( bundle, body, options ) {
-	var externalDefaults = getExternalDefaults( bundle );
+	var externalDefaults = bundle.externalModules.filter( needsDefault );
 	var entry = bundle.entryModule;
 
 	var importIds = bundle.externalModules.map( getId );
 	var importNames = importIds.map( id => bundle.uniqueNames[ id ] );
 
 	if ( externalDefaults.length ) {
-		var defaultsBlock = externalDefaults.map( name => {
+		var defaultsBlock = externalDefaults.map( x => {
+			var name = bundle.uniqueNames[ x.id ];
+
+			// Case 1: default is used, and named is not
+			if ( !x.needsNamed ) {
+				return `${name} = ('default' in ${name} ? ${name}['default'] : ${name});`;
+			}
+
+			// Case 2: both default and named are used
 			return `var ${name}__default = ('default' in ${name} ? ${name}['default'] : ${name});`;
 		}).join( '\n' );
 
@@ -38,4 +45,8 @@ export default function amd ( bundle, body, options ) {
 
 	body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( body, options, 'toAmd', true );
+}
+
+function needsDefault ( externalModule ) {
+	return externalModule.needsDefault;
 }

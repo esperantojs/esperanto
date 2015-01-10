@@ -1,5 +1,6 @@
 import path from 'path';
 import MagicString from 'magic-string';
+import populateExternalModuleImports from './populateExternalModuleImports';
 import populateIdentifierReplacements from './populateIdentifierReplacements';
 import resolveExports from './resolveExports';
 import transformBody from './transformBody';
@@ -10,6 +11,15 @@ export default function combine ( bundle ) {
 	body = new MagicString.Bundle({
 		separator: '\n\n'
 	});
+
+	// populate names
+	var setName = mod => mod.name = bundle.uniqueNames[ mod.id ];
+	bundle.modules.forEach( setName );
+	bundle.externalModules.forEach( setName );
+
+	// determine which specifiers are imported from
+	// external modules
+	populateExternalModuleImports( bundle );
 
 	// determine which identifiers need to be replaced
 	// inside this bundle

@@ -2,7 +2,6 @@ import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import strictUmdIntro from 'utils/umd/strictUmdIntro';
 import packageResult from 'utils/packageResult';
 import { getId } from 'utils/mappers';
-import getExternalDefaults from './utils/getExternalDefaults';
 import getExportBlock from './utils/getExportBlock';
 
 export default function umd ( bundle, body, options ) {
@@ -33,7 +32,7 @@ export default function umd ( bundle, body, options ) {
 			hasExports,
 			importPaths,
 			importNames,
-			externalDefaults: getExternalDefaults( bundle ),
+			externalDefaults: bundle.externalModules.filter( needsDefault ),
 			amdName: options.amdName,
 			name: options.name,
 		}, body.getIndentString() );
@@ -42,4 +41,8 @@ export default function umd ( bundle, body, options ) {
 	body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
 	return packageResult( body, options, 'toUmd', true );
+}
+
+function needsDefault ( externalModule ) {
+	return externalModule.needsDefault;
 }

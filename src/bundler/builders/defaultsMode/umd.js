@@ -33,8 +33,7 @@ export default function umd ( bundle, body, options ) {
 			importPaths,
 			importNames,
 			amdName: options.amdName,
-			name: options.name,
-			args: importNames.map( name => name + '__default' ),
+			name: options.name
 		}, body.getIndentString() );
 	}
 

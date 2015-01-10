@@ -12,7 +12,7 @@ export default function amd ( bundle, body, options ) {
 	var intro = introTemplate({
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
-		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] + '__default' ).join( ', ' )
+		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] ).join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );
 
 	body.indent().prepend( intro ).trimLines().append( '\n\n});' );
