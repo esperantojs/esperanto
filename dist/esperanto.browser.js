@@ -11,6 +11,8 @@
 	global.esperanto = factory(global.acorn, global.MagicString, global.estraverse)
 }(this, function (acorn, MagicString, estraverse) { 'use strict';
 
+	var hasOwnProp = Object.prototype.hasOwnProperty;
+
 	/*
 		This module traverse a module's AST, attaching scope information
 		to nodes as it goes, which is later used to determine which
@@ -374,8 +376,6 @@
 		return result;
 	}
 
-	var hasOwnProp = Object.prototype.hasOwnProperty;
-
 	var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
 
 	/**
@@ -624,6 +624,10 @@
 
 	function getId ( m ) {
 		return m.id;
+	}
+
+	function getName ( m ) {
+		return m.name;
 	}
 
 	function quote ( str ) {
@@ -1221,15 +1225,15 @@
 		var amdName = options.amdName ?
 			"'" + options.amdName + "', " :
 			'';
-		var amdDeps = options.hasExports || options.importPaths.length > 0 ?
+		var amdDeps = hasExports || options.importPaths.length > 0 ?
 			'[' +
-				( options.hasExports ? [ 'exports' ] : [] ).concat( options.importPaths ).map( quote ).join( ', ' ) +
+				( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths ).map( quote ).join( ', ' ) +
 			'], ' :
 			'';
-		var cjsDeps = ( options.hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
-		var globalDeps = ( options.hasExports ? [ (("(global." + (options.name)) + " = {})") ] : [] )
+		var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
+		var globalDeps = ( hasExports ? [ (("(global." + (options.name)) + " = {})") ] : [] )
 			.concat( options.importNames.map( globalify ) ).join( ', ' );
-		var args = ( options.hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
+		var args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
 
 		var defaultsBlock = '';
 		if ( options.externalDefaults && options.externalDefaults.length > 0 ) {
@@ -1309,7 +1313,7 @@
 		var intro = defaultsMode_amd__introTemplate({
 			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
 			amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
-			names: bundle.externalModules.map( function(m ) {return bundle.uniqueNames[ m.id ]} ).join( ', ' )
+			names: bundle.externalModules.map( getName ).join( ', ' )
 		}).replace( /\t/g, body.getIndentString() );
 
 		body.indent().prepend( intro ).trimLines().append( '\n\n});' );
@@ -1322,8 +1326,7 @@
 
 	function defaultsMode_cjs__cjs ( bundle, body, options ) {
 		var importBlock = bundle.externalModules.map( function(x ) {
-			var name = bundle.uniqueNames[ x.id ];
-			return (("var " + name) + (" = require('" + (x.id)) + "');");
+			return (("var " + (x.name)) + (" = require('" + (x.id)) + "');");
 		}).join( '\n' );
 
 		if ( importBlock ) {
@@ -1363,7 +1366,7 @@
 			}
 
 			var importPaths = bundle.externalModules.map( getId );
-			var importNames = importPaths.map( function(path ) {return bundle.uniqueNames[ path ]} );
+			var importNames = bundle.externalModules.map( getName );
 
 			intro = defaultUmdIntro({
 				hasExports: hasExports,
@@ -1397,19 +1400,17 @@
 		var entry = bundle.entryModule;
 
 		var importIds = bundle.externalModules.map( getId );
-		var importNames = importIds.map( function(id ) {return bundle.uniqueNames[ id ]} );
+		var importNames = bundle.externalModules.map( getName );
 
 		if ( externalDefaults.length ) {
 			var defaultsBlock = externalDefaults.map( function(x ) {
-				var name = bundle.uniqueNames[ x.id ];
-
 				// Case 1: default is used, and named is not
 				if ( !x.needsNamed ) {
-					return (("" + name) + (" = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+					return (("" + (x.name)) + (" = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");");
 				}
 
 				// Case 2: both default and named are used
-				return (("var " + name) + ("__default = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+				return (("var " + (x.name)) + ("__default = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");");
 			}).join( '\n' );
 
 			body.prepend( defaultsBlock + '\n\n' );
@@ -1442,13 +1443,12 @@
 		var entry = bundle.entryModule;
 
 		var importBlock = bundle.externalModules.map( function(x ) {
-			var name = bundle.uniqueNames[ x.id ],
-				statement = (("var " + name) + (" = require('" + (x.id)) + "');");
+			var statement = (("var " + (x.name)) + (" = require('" + (x.id)) + "');");
 
 			if ( x.needsDefault ) {
 				statement += '\n' +
-					( x.needsNamed ? (("var " + name) + "__default") : name ) +
-					((" = ('default' in " + name) + (" ? " + name) + ("['default'] : " + name) + ");");
+					( x.needsNamed ? (("var " + (x.name)) + "__default") : x.name ) +
+					((" = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");");
 			}
 
 			return statement;
@@ -1489,7 +1489,7 @@
 			}
 
 			var importPaths = bundle.externalModules.map( getId );
-			var importNames = importPaths.map( function(path ) {return bundle.uniqueNames[ path ]} );
+			var importNames = bundle.externalModules.map( getName );
 
 			intro = strictUmdIntro({
 				hasExports: hasExports,
@@ -1581,7 +1581,7 @@
 		toUmd: transpileMethod( 'umd' ),
 
 		bundle: function ( options ) {
-			return getBundle( options ).then( function ( bundle ) {
+			return undefined__default( options ).then( function ( bundle ) {
 				return {
 					toAmd: function(options ) {return transpile( 'amd', options )},
 					toCjs: function(options ) {return transpile( 'cjs', options )},
@@ -1607,7 +1607,7 @@
 
 						bundle.modules.forEach( function(mod ) {
 							mod.imports.forEach( function(x ) {
-								if ( bundle.externalModuleLookup[ x.id ] && !x.isDefault ) {
+								if ( hasOwnProp.call( bundle.externalModuleLookup, x.id ) && ( !x.isDefault && !x.isBatch ) ) {
 									throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
 								}
 							});
