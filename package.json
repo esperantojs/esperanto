@@ -17,12 +17,9 @@
     "esperanto": "./bin/index.js"
   },
   "devDependencies": {
-    "gobble": "^0.7.1",
-    "gobble-amdclean": "~0.1.0",
+    "gobble": "^0.7.2",
     "gobble-es6-transpiler": "^0.1.0",
-    "gobble-esperanto-bundle": "^0.1.2",
-    "gobble-jsbeautify": "~0.1.0",
-    "gobble-requirejs": "~0.1.0",
+    "gobble-esperanto-bundle": "^0.1.4",
     "gobble-uglifyjs": "^0.1.0",
     "mocha": "^2.1.0",
     "sander": "^0.2.1",
