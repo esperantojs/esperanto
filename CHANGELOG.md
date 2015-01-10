@@ -1,5 +1,12 @@
 # changelog
 
+## 0.6.0
+
+* UMD export detects CJS environment *before* AMD ([#42](https://github.com/rich-harris/esperanto/issues/42))
+* `this` at module top-level is replaced with `undefined`, as per the spec ([#43](https://github.com/rich-harris/esperanto/issues/43))
+* More compact CommonJS export
+* Bundler transform function receives path as second argument
+
 ## 0.5.10
 
 * One-to-one conversions get the same compact UMD form as bundles
