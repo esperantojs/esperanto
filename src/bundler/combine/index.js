@@ -1,5 +1,6 @@
 import path from 'path';
 import MagicString from 'magic-string';
+import getUniqueNames from './getUniqueNames';
 import populateExternalModuleImports from './populateExternalModuleImports';
 import populateIdentifierReplacements from './populateIdentifierReplacements';
 import resolveExports from './resolveExports';
@@ -13,7 +14,8 @@ export default function combine ( bundle ) {
 	});
 
 	// populate names
-	var setName = mod => mod.name = bundle.uniqueNames[ mod.id ];
+	var uniqueNames = getUniqueNames( bundle.modules, bundle.externalModules, bundle.names );
+	var setName = mod => mod.name = uniqueNames[ mod.id ];
 	bundle.modules.forEach( setName );
 	bundle.externalModules.forEach( setName );
 

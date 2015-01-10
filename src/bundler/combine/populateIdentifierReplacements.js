@@ -14,19 +14,17 @@ export default function populateIdentifierReplacements ( bundle ) {
 	// then figure out what identifiers need to be created
 	// for default exports
 	bundle.modules.forEach( mod => {
-		var prefix, x;
-
-		prefix = bundle.uniqueNames[ mod.id ];
+		var x;
 
 		if ( x = mod.defaultExport ) {
 			if ( x.hasDeclaration && x.name ) {
-				mod.identifierReplacements.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, prefix ) ?
-					prefix + '__' + x.name :
+				mod.identifierReplacements.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, mod.name ) ?
+					mod.name + '__' + x.name :
 					x.name;
 			} else {
-				mod.identifierReplacements.default = hasOwnProp.call( conflicts, prefix ) || otherModulesDeclare( mod, prefix ) ?
-					prefix + '__default' :
-					prefix;
+				mod.identifierReplacements.default = hasOwnProp.call( conflicts, mod.name ) || otherModulesDeclare( mod, mod.name ) ?
+					mod.name + '__default' :
+					mod.name;
 			}
 		}
 	});
@@ -34,14 +32,13 @@ export default function populateIdentifierReplacements ( bundle ) {
 	// then determine which existing identifiers
 	// need to be replaced
 	bundle.modules.forEach( mod => {
-		var prefix, moduleIdentifiers, x;
+		var moduleIdentifiers, x;
 
-		prefix = bundle.uniqueNames[ mod.id ];
 		moduleIdentifiers = mod.identifierReplacements;
 
 		mod.ast._topLevelNames.forEach( n => {
 			moduleIdentifiers[n] = hasOwnProp.call( conflicts, n ) ?
-				prefix + '__' + n :
+				mod.name + '__' + n :
 				n;
 		});
 
@@ -60,7 +57,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 				moduleId = x.id;
 
 				if ( s.isBatch ) {
-					replacement = bundle.uniqueNames[ moduleId ];
+					replacement = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] ).name;
 				}
 
 				else {
@@ -79,8 +76,8 @@ export default function populateIdentifierReplacements ( bundle ) {
 						specifierName = hash.substring( separatorIndex + 1 );
 					}
 
-					moduleName = bundle.uniqueNames[ moduleId ];
-					mod = bundle.moduleLookup[ moduleId ];
+					mod = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] );
+					moduleName = mod && mod.name;
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default if the
@@ -89,7 +86,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 							replacement = externalModule.needsNamed ? moduleName + '__default' : moduleName;
 						}
 
-						// We currently need to check for the existence of `mod`, because modules
+						// TODO We currently need to check for the existence of `mod`, because modules
 						// can be skipped. Would be better to replace skipped modules with dummies
 						// - see https://github.com/Rich-Harris/esperanto/issues/32
 						else if ( mod ) {

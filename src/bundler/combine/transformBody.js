@@ -77,8 +77,7 @@ export default function transformBody ( bundle, mod, body ) {
 	// exports available, using Object.defineProperty
 	var indentStr = body.getIndentString();
 	if ( mod._exportsNamespace ) {
-		let prefix = bundle.uniqueNames[ mod.id ],
-			namespaceExportBlock = `var ${prefix} = {\n`,
+		let namespaceExportBlock = `var ${mod.name} = {\n`,
 			namespaceExports = [];
 
 		mod.exports.forEach( x => {

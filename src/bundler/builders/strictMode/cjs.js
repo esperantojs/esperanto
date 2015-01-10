@@ -5,13 +5,12 @@ export default function cjs ( bundle, body, options ) {
 	var entry = bundle.entryModule;
 
 	var importBlock = bundle.externalModules.map( x => {
-		var name = bundle.uniqueNames[ x.id ],
-			statement = `var ${name} = require('${x.id}');`;
+		var statement = `var ${x.name} = require('${x.id}');`;
 
 		if ( x.needsDefault ) {
 			statement += '\n' +
-				( x.needsNamed ? `var ${name}__default` : name ) +
-				` = ('default' in ${name} ? ${name}['default'] : ${name});`;
+				( x.needsNamed ? `var ${x.name}__default` : x.name ) +
+				` = ('default' in ${x.name} ? ${x.name}['default'] : ${x.name});`;
 		}
 
 		return statement;

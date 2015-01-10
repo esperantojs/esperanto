@@ -1,7 +1,7 @@
 import packageResult from 'utils/packageResult';
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
-import { getId } from 'utils/mappers';
+import { getId, getName } from 'utils/mappers';
 
 export default function umd ( bundle, body, options ) {
 	if ( !options || !options.name ) {
@@ -26,7 +26,7 @@ export default function umd ( bundle, body, options ) {
 		}
 
 		var importPaths = bundle.externalModules.map( getId );
-		var importNames = importPaths.map( path => bundle.uniqueNames[ path ] );
+		var importNames = bundle.externalModules.map( getName );
 
 		intro = defaultUmdIntro({
 			hasExports,

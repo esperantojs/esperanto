@@ -2,8 +2,7 @@ import packageResult from 'utils/packageResult';
 
 export default function cjs ( bundle, body, options ) {
 	var importBlock = bundle.externalModules.map( x => {
-		var name = bundle.uniqueNames[ x.id ];
-		return `var ${name} = require('${x.id}');`;
+		return `var ${x.name} = require('${x.id}');`;
 	}).join( '\n' );
 
 	if ( importBlock ) {

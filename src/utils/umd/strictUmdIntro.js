@@ -6,15 +6,15 @@ export default function strictUmdIntro ( options, indentStr ) {
 	var amdName = options.amdName ?
 		"'" + options.amdName + "', " :
 		'';
-	var amdDeps = options.hasExports || options.importPaths.length > 0 ?
+	var amdDeps = hasExports || options.importPaths.length > 0 ?
 		'[' +
-			( options.hasExports ? [ 'exports' ] : [] ).concat( options.importPaths ).map( quote ).join( ', ' ) +
+			( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths ).map( quote ).join( ', ' ) +
 		'], ' :
 		'';
-	var cjsDeps = ( options.hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
-	var globalDeps = ( options.hasExports ? [ `(global.${options.name} = {})` ] : [] )
+	var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
+	var globalDeps = ( hasExports ? [ `(global.${options.name} = {})` ] : [] )
 		.concat( options.importNames.map( globalify ) ).join( ', ' );
-	var args = ( options.hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
+	var args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
 
 	var defaultsBlock = '';
 	if ( options.externalDefaults && options.externalDefaults.length > 0 ) {

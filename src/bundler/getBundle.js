@@ -3,7 +3,6 @@ import hasOwnProp from 'utils/hasOwnProp';
 import resolveId from './utils/resolveId';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
-import getUniqueNames from './utils/getUniqueNames';
 import combine from './combine';
 import sander from 'sander';
 import getModule from './getModule';
@@ -41,7 +40,6 @@ export default function getBundle ( options ) {
 			externalModuleLookup: externalModuleLookup,
 			skip: skip,
 			names: names,
-			uniqueNames: getUniqueNames( modules, externalModules, options.names ),
 			chains: resolveChains( modules, moduleLookup )
 		};
 

@@ -8,7 +8,7 @@ export default function populateExternalModuleImports ( bundle ) {
 			}
 
 			x.specifiers.forEach( s => {
-				if ( s.isDefault || s.isBatch ) {
+				if ( s.isDefault ) {
 					externalModule.needsDefault = true;
 				} else {
 					externalModule.needsNamed = true;

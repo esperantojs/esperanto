@@ -1,5 +1,6 @@
-import template from '../../../utils/template';
-import packageResult from '../../../utils/packageResult';
+import template from 'utils/template';
+import packageResult from 'utils/packageResult';
+import { getName } from 'utils/mappers';
 
 var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
@@ -12,7 +13,7 @@ export default function amd ( bundle, body, options ) {
 	var intro = introTemplate({
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
-		names: bundle.externalModules.map( m => bundle.uniqueNames[ m.id ] ).join( ', ' )
+		names: bundle.externalModules.map( getName ).join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );
 
 	body.indent().prepend( intro ).trimLines().append( '\n\n});' );

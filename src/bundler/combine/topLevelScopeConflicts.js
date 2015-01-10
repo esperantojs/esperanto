@@ -17,7 +17,7 @@ export default function topLevelScopeConflicts ( bundle ) {
 			.concat( getRenamedImports( mod ) );
 
 		if ( mod._exportsNamespace ) {
-			conflicts[ bundle.uniqueNames[ mod.id ] ] = true;
+			conflicts[ mod.name ] = true;
 		}
 
 		// merge this module's top scope with bundle top scope
