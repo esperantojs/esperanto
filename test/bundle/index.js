@@ -137,7 +137,8 @@ module.exports = function () {
 			{ dir: '25', description: 'creates a named AMD module' },
 			{ dir: '26', description: 'transforms input sources' },
 			{ dir: '27', description: 'correctly infers indentation with single-line edge case' },
-			{ dir: '28', description: 'environment GetThisBinding is always undefined' }
+			{ dir: '28', description: 'environment GetThisBinding is always undefined' },
+			{ dir: '29', description: 'both named and default bindings can be imported from an external module', strict: true }
 		];
 
 		profiles.forEach( function ( profile ) {
