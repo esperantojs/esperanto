@@ -52,7 +52,7 @@ export default {
 				toCjs: options => transpile( 'cjs', options ),
 				toUmd: options => transpile( 'umd', options ),
 
-				concat: options => concat( bundle, options )
+				concat: options => concat( bundle, options || {} )
 			};
 
 			function transpile ( format, options ) {
