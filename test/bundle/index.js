@@ -109,15 +109,15 @@ module.exports = function () {
 		];
 
 		tests = [
-			{ dir: '1', description: 'bundles a simple collection of modules' },
-			{ dir: '2', description: 'bundles modules in index.js files' },
-			{ dir: '3', description: 'allows external imports' },
-			{ dir: '4', description: 'exports a default export' },
-			{ dir: '5', description: 'exports named exports', strict: true },
-			{ dir: '6', description: 'gives legal names to nested imports' },
-			{ dir: '7', description: 'modules can be skipped' },
-			{ dir: '8', description: 'external module names are guessed (affects UMD only)' },
-			{ dir: '9', description: 'external module names can be specified (affects UMD only)' },
+			{ dir: '01', description: 'bundles a simple collection of modules' },
+			{ dir: '02', description: 'bundles modules in index.js files' },
+			{ dir: '03', description: 'allows external imports' },
+			{ dir: '04', description: 'exports a default export' },
+			{ dir: '05', description: 'exports named exports', strict: true },
+			{ dir: '06', description: 'gives legal names to nested imports' },
+			{ dir: '07', description: 'modules can be skipped' },
+			{ dir: '08', description: 'external module names are guessed (affects UMD only)' },
+			{ dir: '09', description: 'external module names can be specified (affects UMD only)' },
 			{ dir: '10', description: 'does not affect ES6 classes' },
 			{ dir: '11', description: 'exports chains correctly in strict mode', strict: true },
 			{ dir: '12', description: 'throws an error if a non-exported identifier is imported', error: /does not export/ },
@@ -141,7 +141,8 @@ module.exports = function () {
 			{ dir: '28', description: 'environment GetThisBinding is always undefined' },
 			{ dir: '29', description: 'both named and default bindings can be imported from an external module', strict: true },
 			{ dir: '30', description: 'batch import from external module' },
-			{ dir: '31', description: 'renames identifiers consistently' }
+			{ dir: '31', description: 'renames identifiers consistently' },
+			{ dir: '32', description: 'transformer can return an empty string' }
 		];
 
 		profiles.forEach( function ( profile ) {
