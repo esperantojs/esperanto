@@ -99,6 +99,7 @@ module.exports = function () {
 		});
 
 		profiles = [
+			{ description: 'bundle.concat()', method: 'concat', outputdir: 'concat' },
 			{ description: 'bundle.toAmd()', method: 'toAmd', outputdir: 'amdDefaults' },
 			{ description: 'bundle.toUmd()', method: 'toUmd', outputdir: 'umdDefaults', options: { name: 'myModule' } },
 			{ description: 'bundle.toCjs()', method: 'toCjs', outputdir: 'cjsDefaults' },
@@ -200,6 +201,10 @@ module.exports = function () {
 						}).catch( function ( err ) {
 							// strict mode tests should fail
 							if ( /strict mode/.test( err.message ) && t.strict ) {
+								return;
+							}
+
+							if ( /bundles that have no imports\/exports/.test( err.message ) && profile.method === 'concat' ) {
 								return;
 							}
 

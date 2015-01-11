@@ -1,10 +1,11 @@
 import hasOwnProp from 'utils/hasOwnProp';
-import getStandaloneModule from './standalone/getModule';
-import getBundle from './bundler/getBundle';
-import moduleBuilders from './standalone/builders';
-import bundleBuilders from './bundler/builders';
-import hasNamedImports from './utils/hasNamedImports';
-import hasNamedExports from './utils/hasNamedExports';
+import hasNamedImports from 'utils/hasNamedImports';
+import hasNamedExports from 'utils/hasNamedExports';
+import getStandaloneModule from 'standalone/getModule';
+import getBundle from 'bundler/getBundle';
+import moduleBuilders from 'standalone/builders';
+import bundleBuilders from 'bundler/builders';
+import concat from 'bundler/builders/concat';
 
 var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
 	alreadyWarned = false;
@@ -49,7 +50,9 @@ export default {
 			return {
 				toAmd: options => transpile( 'amd', options ),
 				toCjs: options => transpile( 'cjs', options ),
-				toUmd: options => transpile( 'umd', options )
+				toUmd: options => transpile( 'umd', options ),
+
+				concat: options => concat( bundle, options )
 			};
 
 			function transpile ( format, options ) {

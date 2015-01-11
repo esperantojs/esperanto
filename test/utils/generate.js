@@ -123,6 +123,7 @@ require( './build' )().then( function ( esperanto ) {
 
 	function generateBundleOutput () {
 		var profiles = [
+			{ description: 'bundle.concat()', method: 'concat', outputdir: 'concat' },
 			{ description: 'bundle.toAmd()', method: 'toAmd', outputdir: 'amdDefaults' },
 			{ description: 'bundle.toCjs()', method: 'toCjs', outputdir: 'cjsDefaults' },
 			{ description: 'bundle.toUmd()', method: 'toUmd', outputdir: 'umdDefaults', options: { name: 'myModule' } },
@@ -175,7 +176,7 @@ require( './build' )().then( function ( esperanto ) {
 						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly
-						if ( !/strict mode/.test( err.message ) ) {
+						if ( !/strict mode/.test( err.message ) && !/bundles that have no imports/.test( err.message ) ) {
 							setTimeout( function () { throw err; });
 						}
 					}
