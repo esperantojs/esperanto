@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.2
+
+* Implement `bundle.concat()` for self-contained bundles ([#48](https://github.com/rich-harris/esperanto/issues/48))
+
 ## 0.6.1
 
 * Fix for ([#45](https://github.com/rich-harris/esperanto/issues/45))
