@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.1 - 2015-01-10
+	esperanto.js v0.6.2 - 2015-01-11
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -12,6 +12,26 @@
 }(this, function (acorn, MagicString, estraverse) { 'use strict';
 
 	var hasOwnProp = Object.prototype.hasOwnProperty;
+
+	function hasNamedImports ( mod ) {
+		var i = mod.imports.length;
+
+		while ( i-- ) {
+			if ( mod.imports[i].isNamed ) {
+				return true;
+			}
+		}
+	}
+
+	function hasNamedExports ( mod ) {
+		var i = mod.exports.length;
+
+		while ( i-- ) {
+			if ( !mod.exports[i].isDefault ) {
+				return true;
+			}
+		}
+	}
 
 	/*
 		This module traverse a module's AST, attaching scope information
@@ -1522,24 +1542,21 @@
 		strictMode: builders_strictMode
 	};
 
-	function hasNamedImports ( mod ) {
-		var i = mod.imports.length;
+	function concat ( bundle, options ) {
+		var body;
 
-		while ( i-- ) {
-			if ( mod.imports[i].isNamed ) {
-				return true;
-			}
+		// This bundle must be self-contained - no imports or exports
+		if ( bundle.externalModules.length || bundle.entryModule.exports.length ) {
+			throw new Error( 'bundle.concat() can only be used with bundles that have no imports/exports' );
 		}
-	}
 
-	function hasNamedExports ( mod ) {
-		var i = mod.exports.length;
+		body = bundle.body.clone()
+			.trimLines()
+			.indent()
+			.prepend( ("(function () { 'use strict';\n\n") )
+			.append( '\n\n})();' );
 
-		while ( i-- ) {
-			if ( !mod.exports[i].isDefault ) {
-				return true;
-			}
-		}
+		return packageResult( body, options, 'toString', true );
 	}
 
 	var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
@@ -1585,7 +1602,9 @@
 				return {
 					toAmd: function(options ) {return transpile( 'amd', options )},
 					toCjs: function(options ) {return transpile( 'cjs', options )},
-					toUmd: function(options ) {return transpile( 'umd', options )}
+					toUmd: function(options ) {return transpile( 'umd', options )},
+
+					concat: function(options ) {return concat( bundle, options || {} )}
 				};
 
 				function transpile ( format, options ) {
