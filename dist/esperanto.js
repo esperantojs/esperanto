@@ -1393,18 +1393,16 @@ function getBundle ( options ) {
 				throw err;
 			}).then( function ( source ) {
 				source = String( source );
+
 				if ( options.transform ) {
-					var transform = options.transform;
-					var transformed = transform( source, modulePath );
-					if ( !transformed ||
-						( typeof transformed !== 'string' &&
-							typeof transformed.then !== 'function' )) {
+					source = options.transform( source, modulePath );
+
+					if ( typeof source !== 'string' && !isThenable( source ) ) {
 						throw new Error( 'transform should return String or Promise' );
 					}
-					return transformed;
-				} else {
-					return source;
 				}
+
+				return source;
 			}).then( function ( source ) {
 				var module, promises;
 
@@ -1464,6 +1462,10 @@ function getBundle ( options ) {
 
 		return promiseById[ moduleId ];
 	}
+}
+
+function isThenable ( obj ) {
+	return obj && typeof obj.then === 'function';
 }
 
 function transformExportDeclaration ( declaration, body ) {
