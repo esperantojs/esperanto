@@ -1,3 +1,5 @@
+import { splitPath } from 'utils/sanitize';
+
 var warned = {};
 
 export default function packageResult ( body, options, methodName, isBundle ) {
@@ -25,7 +27,7 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 			code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 			map = null;
 		} else {
-			code += '\n//# sourceMa' + 'ppingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
+			code += '\n//# sourceMa' + 'ppingURL=./' + splitPath( options.sourceMapFile ).pop() + '.map';
 		}
 	} else {
 		map = null;
@@ -48,8 +50,8 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 function getRelativePath ( from, to ) {
 	var fromParts, toParts, i;
 
-	fromParts = from.split( '/' );
-	toParts = to.split( '/' );
+	fromParts = splitPath( from );
+	toParts = splitPath( to );
 
 	fromParts.pop(); // get dirname
 
