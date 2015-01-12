@@ -1,5 +1,5 @@
 import hasOwnProp from 'utils/hasOwnProp';
-import sanitize from 'utils/sanitize';
+import { default as sanitize, splitPath } from 'utils/sanitize';
 
 export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 	var nameById = {}, getModuleName;
@@ -29,7 +29,7 @@ export default function getModuleNameHelper ( userFn, usedNames = {} ) {
 		}
 
 		else {
-			parts = moduleId.split( '/' );
+			parts = splitPath( moduleId );
 			i = parts.length;
 
 			do {

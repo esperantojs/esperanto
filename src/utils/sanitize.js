@@ -17,3 +17,8 @@ export default function sanitize ( name ) {
 
 	return name;
 }
+
+var pathSplitRE = /\/|\\/;
+export function splitPath ( path ) {
+	return path.split( pathSplitRE );
+}

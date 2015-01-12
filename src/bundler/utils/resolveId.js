@@ -1,3 +1,5 @@
+import { splitPath } from 'utils/sanitize';
+
 /**
  * Resolves an importPath relative to the module that is importing it
  * @param {string} importPath - the (possibly relative) path of an imported module
@@ -10,8 +12,8 @@ export default function resolveId ( importPath, importerPath ) {
 	if ( importPath[0] !== '.' ) {
 		resolved = importPath;
 	} else {
-		importerParts = importerPath.split( '/' );
-		importParts = importPath.split( '/' );
+		importerParts = splitPath( importerPath );
+		importParts = splitPath( importPath );
 
 		importerParts.pop(); // get dirname
 		while ( importParts[0] === '..' ) {

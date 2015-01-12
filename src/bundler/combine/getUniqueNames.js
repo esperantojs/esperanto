@@ -1,5 +1,5 @@
 import hasOwnProp from 'utils/hasOwnProp';
-import sanitize from 'utils/sanitize';
+import { default as sanitize, splitPath } from 'utils/sanitize';
 
 export default function getUniqueNames ( modules, externalModules, userNames ) {
 	var names = {}, used = {};
@@ -32,7 +32,7 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 			return;
 		}
 
-		parts = mod.id.split( '/' );
+		parts = splitPath( mod.id );
 
 		i = parts.length;
 		while ( i-- ) {
