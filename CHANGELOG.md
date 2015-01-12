@@ -1,5 +1,12 @@
 # changelog
 
+## 0.6.3
+
+* Support for Windows file paths
+* `bundle.concat()` can be called without an options argument
+* Options argument passed to `bundle.concat()` can include `intro`, `outro`, `indent` properties which will override defaults (`indent: true` is equivalent to 'automatic', otherwise pass a string)
+* Bundle transform function can return an empty string
+
 ## 0.6.2
 
 * Implement `bundle.concat()` for self-contained bundles ([#48](https://github.com/rich-harris/esperanto/issues/48))

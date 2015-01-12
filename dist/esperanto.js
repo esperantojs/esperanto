@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.2 - 2015-01-11
+	esperanto.js v0.6.3 - 2015-01-12
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -418,6 +418,11 @@ function sanitize ( name ) {
 	return name;
 }
 
+var pathSplitRE = /\/|\\/;
+function splitPath ( path ) {
+	return path.split( pathSplitRE );
+}
+
 function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNames === void 0)usedNames = {};
 	var nameById = {}, getModuleName;
 
@@ -446,7 +451,7 @@ function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNam
 		}
 
 		else {
-			parts = moduleId.split( '/' );
+			parts = splitPath( moduleId );
 			i = parts.length;
 
 			do {
@@ -497,20 +502,14 @@ function getStandaloneModule ( options ) {var $D$0;
 	return mod;
 ;$D$0 = void 0}
 
-/**
- * Resolves an importPath relative to the module that is importing it
- * @param {string} importPath - the (possibly relative) path of an imported module
- * @param {string} importerPath - the (relative to `base`) path of the importing module
- * @returns {string}
- */
 function resolveId ( importPath, importerPath ) {
 	var resolved, importerParts, importParts;
 
 	if ( importPath[0] !== '.' ) {
 		resolved = importPath;
 	} else {
-		importerParts = importerPath.split( '/' );
-		importParts = importPath.split( '/' );
+		importerParts = splitPath( importerPath );
+		importParts = splitPath( importPath );
 
 		importerParts.pop(); // get dirname
 		while ( importParts[0] === '..' ) {
@@ -621,7 +620,7 @@ function getUniqueNames ( modules, externalModules, userNames ) {
 			return;
 		}
 
-		parts = mod.id.split( '/' );
+		parts = splitPath( mod.id );
 
 		i = parts.length;
 		while ( i-- ) {
@@ -1537,7 +1536,7 @@ function packageResult ( body, options, methodName, isBundle ) {
 			code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 			map = null;
 		} else {
-			code += '\n//# sourceMa' + 'ppingURL=./' + options.sourceMapFile.split( '/' ).pop() + '.map';
+			code += '\n//# sourceMa' + 'ppingURL=./' + splitPath( options.sourceMapFile ).pop() + '.map';
 		}
 	} else {
 		map = null;
@@ -1560,8 +1559,8 @@ function packageResult ( body, options, methodName, isBundle ) {
 function getRelativePath ( from, to ) {
 	var fromParts, toParts, i;
 
-	fromParts = from.split( '/' );
-	toParts = to.split( '/' );
+	fromParts = splitPath( from );
+	toParts = splitPath( to );
 
 	fromParts.pop(); // get dirname
 
@@ -2336,18 +2335,26 @@ var bundleBuilders = {
 };
 
 function concat ( bundle, options ) {
-	var body;
+	var body, intro, outro, indent;
 
 	// This bundle must be self-contained - no imports or exports
 	if ( bundle.externalModules.length || bundle.entryModule.exports.length ) {
 		throw new Error( 'bundle.concat() can only be used with bundles that have no imports/exports' );
 	}
 
-	body = bundle.body.clone()
-		.trimLines()
-		.indent()
-		.prepend( ("(function () { 'use strict';\n\n") )
-		.append( '\n\n})();' );
+	body = bundle.body.clone();
+
+	// TODO test these options
+	intro = 'intro' in options ? options.intro : ("(function () { 'use strict';\n\n");
+	outro = 'outro' in options ? options.outro : '\n\n})();';
+
+	if ( !( 'indent' in options ) || options.indent === true ) {
+		indent = body.getIndentString();
+	} else {
+		indent = options.indent || '';
+	}
+
+	body.trimLines().indent( indent ).prepend( intro ).append( outro );
 
 	return packageResult( body, options, 'toString', true );
 }
