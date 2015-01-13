@@ -1,6 +1,8 @@
+import { quote } from 'utils/mappers';
+
 export default function standaloneUmdIntro ( options, indentStr ) {
 	var amdName = options.amdName ?
-		"'" + options.amdName + "', " :
+		quote(options.amdName) + ", " :
 		'';
 
 	var intro =

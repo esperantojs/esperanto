@@ -1,11 +1,12 @@
 import packageResult from 'utils/packageResult';
 import getExportBlock from './utils/getExportBlock';
+import { req } from 'utils/mappers';
 
 export default function cjs ( bundle, body, options ) {
 	var entry = bundle.entryModule;
 
 	var importBlock = bundle.externalModules.map( x => {
-		var statement = `var ${x.name} = require('${x.id}');`;
+		var statement = `var ${x.name} = ${req(x.id)};`;
 
 		if ( x.needsDefault ) {
 			statement += '\n' +

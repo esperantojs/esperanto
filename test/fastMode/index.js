@@ -11,6 +11,7 @@ module.exports = function () {
 			{ file: 'earlyExport', description: 'transpiles exports that are not the final statement' },
 			{ file: 'emptyImport', description: 'transpiles empty imports with no exports' },
 			{ file: 'emptyImportWithDefaultExport', description: 'transpiles empty imports with default exports' },
+			{ file: 'escapedSource', description: 'preserves character escapes in source strings' },
 			{ file: 'exportAnonFunction', description: 'transpiled anonymous default function exports' },
 			{ file: 'exportDefault', description: 'transpiles default exports' },
 			{ file: 'exportFunction', description: 'transpiles named default function exports' },

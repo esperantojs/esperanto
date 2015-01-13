@@ -4,7 +4,7 @@ export default function defaultUmdIntro ( options, indentStr ) {
 	var hasExports = options.hasExports;
 
 	var amdName = options.amdName ?
-		"'" + options.amdName + "', " :
+		quote(options.amdName) + ", " :
 		'';
 	var amdDeps = options.importPaths.length > 0 ?
 		'[' + options.importPaths.map( quote ).join( ', ' ) + '], ' :
