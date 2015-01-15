@@ -2,6 +2,7 @@ var path = require( 'path' ),
 	assert = require( 'assert' ),
 	sander = require( 'sander' ),
 	Promise = sander.Promise,
+	makeWhitespaceVisible = require( '../utils/makeWhitespaceVisible' ),
 	esperanto;
 
 global.assert = assert;
@@ -98,51 +99,21 @@ module.exports = function () {
 		}
 
 		describe( 'ES6 module semantics tests from es6-module-transpiler:', function () {
-			var tests = [
-				{ entry: 'importer', dir: 'bare-import' },
-				{ entry: 'importer', dir: 'bindings' },
-				{ entry: 'c', dir: 'cycles' },
-				{ entry: 'importer', dir: 'cycles-defaults' },
-				{ entry: 'main', dir: 'cycles-immediate' },
-				{ entry: 'importer', dir: 'duplicate-import-fails' },
-				{ entry: 'importer', dir: 'duplicate-import-specifier-fails' },
-				{ entry: 'second', dir: 'export-and-import-reference-share-var' },
-				{ entry: 'importer', dir: 'export-default' },
-				{ entry: 'importer', dir: 'export-default-function' },
-				{ entry: 'importer', dir: 'export-default-named-function' },
-				{ entry: 'third', dir: 'export-from' },
-				//{ entry: 'third', dir: 'export-from-default' }, // pending https://github.com/marijnh/acorn/pull/15
-				{ entry: 'importer', dir: 'export-function' },
-				{ entry: 'importer', dir: 'export-list' },
-				{ entry: 'importer', dir: 'export-mixins' },
-				{ entry: 'index', dir: 'export-not-at-top-level-fails', expectedError: "'import' and 'export' may only appear at the top level" },
-				{ entry: 'importer', dir: 'export-var' },
-				{ entry: 'importer', dir: 'import-as' },
-				{ entry: 'third', dir: 'import-chain' },
-				{ entry: 'index', dir: 'import-not-at-top-level-fails', expectedError: "'import' and 'export' may only appear at the top level" },
-				{ entry: 'mod', dir: 'module-level-declarations' },
-				{ entry: 'importer', dir: 'named-function-expression' },
-				{ entry: 'importer', dir: 'namespace-reassign-import-fails', expectedError: 'Cannot reassign imported binding of namespace `exp`' },
-				{ entry: 'importer', dir: 'namespace-update-import-fails', expectedError: 'Cannot reassign imported binding of namespace `exp`' },
-				{ entry: 'importer', dir: 'namespaces' },
-				{ entry: 'third', dir: 're-export-default-import' },
-				{ entry: 'importer', dir: 'reassign-import-fails', expectedError: 'Cannot reassign imported binding `x`' },
-				{ entry: 'importer', dir: 'reassign-import-not-at-top-level-fails', expectedError: 'Cannot reassign imported binding `x`' },
-				{ entry: 'mod', dir: 'this-binding-undefined' },
-				{ entry: 'importer', dir: 'update-expression-of-import-fails', expectedError: 'Cannot reassign imported binding `a`' }
-			];
+			sander.readdirSync( __dirname, '../es6-module-transpiler-tests/input' ).forEach( function ( dir ) {
+				var config = require( '../es6-module-transpiler-tests/input/' + dir + '/_config' );
 
-			tests.forEach( function ( t ) {
-				it( t.dir, function () {
+				it( dir, function () {
 					// Create CommonJS modules, then require the entry module
-					return sander.readdir( 'es6-module-transpiler-tests/input', t.dir ).then( function ( files ) {
+					return sander.readdir( 'es6-module-transpiler-tests/input', dir ).then( function ( files ) {
 						var promises = files.map( function ( file ) {
-							return sander.readFile( 'es6-module-transpiler-tests/input', t.dir, file ).then( String ).then( function ( source ) {
+							if ( file === '_config.js' ) return;
+
+							return sander.readFile( 'es6-module-transpiler-tests/input', dir, file ).then( String ).then( function ( source ) {
 								var transpiled = esperanto.toCjs( source, {
 									strict: true
 								});
 
-								return sander.writeFile( 'es6-module-transpiler-tests/output', t.dir, file, transpiled.code );
+								return sander.writeFile( 'es6-module-transpiler-tests/output', dir, file, transpiled.code );
 							});
 						});
 
@@ -152,21 +123,21 @@ module.exports = function () {
 						var missingError;
 
 						try {
-							require( path.resolve( 'es6-module-transpiler-tests/output', t.dir, t.entry ) );
-							if ( t.expectedError ) {
+							require( path.resolve( 'es6-module-transpiler-tests/output', dir, config.entry ) );
+							if ( config.expectedError ) {
 								missingError = true;
 							}
 						} catch( err ) {
-							if ( !t.expectedError || !~err.message.indexOf( t.expectedError ) ) {
+							if ( !config.expectedError || !~err.message.indexOf( config.expectedError ) ) {
 								throw err;
 							}
 						}
 
 						if ( missingError ) {
-							throw new Error( 'Expected error "' + t.expectedError + '"' );
+							throw new Error( 'Expected error "' + config.expectedError + '"' );
 						}
 					}, function ( err ) {
-						if ( !t.expectedError || !~err.message.indexOf( t.expectedError ) ) {
+						if ( !config.expectedError || !~err.message.indexOf( config.expectedError ) ) {
 							throw err;
 						}
 					});
@@ -175,19 +146,3 @@ module.exports = function () {
 		});
 	});
 };
-
-function makeWhitespaceVisible ( str ) {
-	return str.replace( /^\t+/gm, function ( match ) {
-		// replace leading tabs
-		return match.replace( /\t/g, '--->' );
-	}).replace( /^( +)/gm, function ( match, $1 ) {
-		// replace leading spaces
-		return $1.replace( / /g, '*' );
-	}).replace( /\t+$/gm, function ( match ) {
-		// replace trailing tabs
-		return match.replace( /\t/g, '--->' );
-	}).replace( /( +)$/gm, function ( match, $1 ) {
-		// replace trailing spaces
-		return $1.replace( / /g, '*' );
-	});
-}
