@@ -1,4 +1,3 @@
 module.exports = {
-	description: 'handles `constructor` edge case',
-	strict: true
+	description: 'handles `constructor` edge case'
 };

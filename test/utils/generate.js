@@ -25,17 +25,19 @@ require( './build' )().then( function ( esperanto ) {
 		}
 
 		function buildAll () {
-			return sander.lsr( '../samples' ).then( function ( samples ) {
+			return sander.readdir( '../samples' ).then( function ( samples ) {
 				return Promise.all( samples.map( build ) );
 			});
 		}
 
 		function build ( sample ) {
 			return sander.readFile( '../samples', sample, 'source.js' ).then( String ).then( function ( source ) {
-				var config = require( '../samples/config/' + sample + '/_config' ),
+				var config = require( '../samples/' + sample + '/_config' ),
 					promises;
 
 				if ( config.strict ) return;
+
+				console.log( 'sample', sample );
 
 				promises = profiles.map( function ( profile ) {
 					var transpiled = esperanto[ profile.method ]( source, {
@@ -45,12 +47,10 @@ require( './build' )().then( function ( esperanto ) {
 						banner: config.banner,
 						footer: config.footer
 					});
-					return sander.writeFile( '../fastMode/output', profile.outputdir, sample, transpiled.code );
+					return sander.writeFile( '../fastMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
 
 				return Promise.all( promises );
-			}).catch( function ( err ) {
-				setTimeout( function () { throw err; });
 			});
 		}
 	}
@@ -78,7 +78,7 @@ require( './build' )().then( function ( esperanto ) {
 
 		function build ( sample ) {
 			return sander.readFile( '../samples', sample, 'source.js' ).then( String ).then( function ( source ) {
-				var config = require( '../samples/config/' + sample + '/_config' ),
+				var config = require( '../samples/' + sample + '/_config' ),
 					promises;
 
 				promises = profiles.map( function ( profile ) {
@@ -89,12 +89,10 @@ require( './build' )().then( function ( esperanto ) {
 						banner: config.banner,
 						footer: config.footer
 					});
-					return sander.writeFile( '../strictMode/output', profile.outputdir, sample, transpiled.code );
+					return sander.writeFile( '../strictMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
 
 				return Promise.all( promises );
-			}).catch( function ( err ) {
-				setTimeout( function () { throw err; });
 			});
 		}
 	}
