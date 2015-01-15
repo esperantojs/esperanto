@@ -151,11 +151,7 @@ require( './build' )().then( function ( esperanto ) {
 
 			if ( /DS_Store/.test( sourceBundle ) ) return;
 
-			try {
-				config = require( '../bundle/input/' + sourceBundle + '/_config' );
-			} catch ( e ) {
-				config = {};
-			}
+			config = require( '../bundle/input/' + sourceBundle + '/_config' );
 
 			return esperanto.bundle({
 				base: path.join( '../bundle/input', sourceBundle ),
