@@ -1,10 +1,11 @@
 import packageResult from 'utils/packageResult';
+import { req } from 'utils/mappers';
 
 export default function cjs ( mod, body, options ) {
 	var exportDeclaration;
 
 	mod.imports.forEach( x => {
-		var replacement = x.isEmpty ? `require('${x.path}');` : `var ${x.name} = require('${x.path}');`;
+		var replacement = x.isEmpty ? `${req(x.path)};` : `var ${x.name} = ${req(x.path)};`;
 		body.replace( x.start, x.end, replacement );
 	});
 

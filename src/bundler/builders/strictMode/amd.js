@@ -36,7 +36,7 @@ export default function amd ( bundle, body, options ) {
 	}
 
 	var intro = introTemplate({
-		amdName: options.amdName ? `'${options.amdName}', ` : '',
+		amdName: options.amdName ? `${quote(options.amdName)}, ` : '',
 		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );

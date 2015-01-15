@@ -53,6 +53,8 @@ module.exports = function () {
 				{ entry: 'importer', dir: 'reassign-import-fails', expectedError: 'Cannot reassign imported binding `x`' },
 				{ entry: 'importer', dir: 'reassign-import-not-at-top-level-fails', expectedError: 'Cannot reassign imported binding `x`' },
 				{ entry: 'mod', dir: 'this-binding-undefined' },
+				{ entry: 'mod', dir: 'this-binding-get-early-error', expectedError: '`this` at the top level is undefined' },
+				{ entry: 'mod', dir: 'this-binding-set-early-error', expectedError: '`this` at the top level is undefined' },
 				{ entry: 'importer', dir: 'update-expression-of-import-fails', expectedError: 'Cannot reassign imported binding `a`' }
 			];
 

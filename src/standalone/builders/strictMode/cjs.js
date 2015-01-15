@@ -1,5 +1,6 @@
 import packageResult from 'utils/packageResult';
 import transformBody from './utils/transformBody';
+import { req } from 'utils/mappers';
 
 export default function cjs ( mod, body, options ) {
 	var importBlock;
@@ -9,10 +10,10 @@ export default function cjs ( mod, body, options ) {
 		var name, replacement;
 
 		if ( x.isEmpty ) {
-			replacement = `require('${x.path}');`;
+			replacement = `${req(x.path)};`;
 		} else {
 			name = mod.getName( x );
-			replacement = `var ${name} = require('${x.path}');`;
+			replacement = `var ${name} = ${req(x.path)};`;
 		}
 
 		return replacement;
