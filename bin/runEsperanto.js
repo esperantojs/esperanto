@@ -62,7 +62,7 @@ function bundle ( options, method ) {
 			amdName: options.amdName,
 			strict: options.strict,
 			sourceMap: options.sourcemap,
-			sourceMapFile: path.resolve( options.output )
+			sourceMapFile: options.sourcemap ? path.resolve( options.output ) : null
 		});
 
 		if ( options.output ) {
@@ -74,7 +74,7 @@ function bundle ( options, method ) {
 
 			return Promise.all( promises );
 		} else {
-			process.stdout.write( transpiled );
+			process.stdout.write( transpiled.code );
 		}
 	});
 }
