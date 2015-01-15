@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { a } from './first';
 
 // This variable declaration is going to be altered because `b` needs to be

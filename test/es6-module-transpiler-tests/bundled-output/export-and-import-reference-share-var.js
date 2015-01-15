@@ -1,11 +1,7 @@
 'use strict';
 
-/* jshint esnext:true */
-
 var a = 1;
 assert.equal(a, 1);
-
-/* jshint esnext:true */
 
 var a_ = a, b = 9, c = 'c';
 

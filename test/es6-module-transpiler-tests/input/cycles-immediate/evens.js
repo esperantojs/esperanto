@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { nextOdd } from './odds';
 
 /**

@@ -2,8 +2,6 @@
 
 var foo = require('./exporter');
 
-/* jshint esnext:true */
-
 assert.equal(foo['default'], 'DEF');
 assert.equal(foo.b, 'b');
 assert.equal(foo.a, 'a');

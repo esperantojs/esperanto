@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { b } from './b';
 
 export function getb() {

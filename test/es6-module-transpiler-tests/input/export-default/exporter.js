@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 var a = 42;
 
 export function change() {

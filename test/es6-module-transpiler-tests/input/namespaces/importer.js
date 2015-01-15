@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import * as foo from './exporter';
 
 assert.equal(foo['default'], 'DEF');

@@ -4,8 +4,6 @@ exports.getb = getb;
 
 var b = require('./b');
 
-/* jshint esnext:true */
-
 function getb() {
   return b.b;
 }

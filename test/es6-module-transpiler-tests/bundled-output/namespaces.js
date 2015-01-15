@@ -6,13 +6,9 @@ var exporter = {
 	get default () { return exporter__default; }
 };
 
-/* jshint esnext:true */
-
 var a = 'a';
 var b = 'b';
 var exporter__default = 'DEF';
-
-/* jshint esnext:true */
 
 assert.equal(exporter['default'], 'DEF');
 assert.equal(exporter.b, 'b');

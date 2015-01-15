@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { a, getb } from './a';
 import { b, geta } from './b';
 
