@@ -48,6 +48,8 @@ export default {
 	bundle: function ( options ) {
 		return getBundle( options ).then( function ( bundle ) {
 			return {
+				external: bundle.externalModules.map( mod => mod.id ),
+
 				toAmd: options => transpile( 'amd', options ),
 				toCjs: options => transpile( 'cjs', options ),
 				toUmd: options => transpile( 'umd', options ),
