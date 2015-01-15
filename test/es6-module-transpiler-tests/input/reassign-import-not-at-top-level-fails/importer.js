@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { x } from './exporter';
 
 export function foo () {

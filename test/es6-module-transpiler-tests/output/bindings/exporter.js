@@ -2,8 +2,6 @@
 
 exports.incr = incr;
 
-/* jshint esnext:true */
-
 var count = 0;
 
 function incr() {

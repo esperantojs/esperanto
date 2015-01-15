@@ -1,7 +1,5 @@
 'use strict';
 
-/* jshint esnext:true */
-
 function nextOdd(n) {
   return isEven(n) ? n + 1 : n + 2;
 }
@@ -17,8 +15,6 @@ var isOdd = (function(isEven) {
   };
 })(isEven);
 
-/* jshint esnext:true */
-
 var nextEven = (function() {
   return function(n) {
     var no = nextOdd(n);
@@ -30,8 +26,6 @@ var nextEven = (function() {
 function isEven(n) {
   return n % 2 === 0;
 }
-
-/* jshint esnext:true */
 
 /**
  * The 'evens' and 'odds' modules are configured in such a way that they both

@@ -1,7 +1,5 @@
 'use strict';
 
-/* jshint esnext:true */
-
 assert.strictEqual( undefined, undefined );
 
 var ctx = {};

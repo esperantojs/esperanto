@@ -2,8 +2,6 @@
 
 exports.change = change;
 
-/* jshint esnext:true */
-
 var a = 42;
 
 function change() {

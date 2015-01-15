@@ -25,15 +25,15 @@ module.exports = function () {
 			{ file: 'namedAmdModule', description: 'creates a named AMD module if amdName is passed' }
 		];
 
-		tests.forEach( function ( t ) {
-			try {
-				t.config = require( '../samples/config/' + t.file );
-			} catch ( err ) {
-				t.config = {};
-			}
+		var tests = sander.readdirSync( __dirname, '../samples' ).map( function ( dir ) {
+			var config = require( '../samples/' + dir + '/_config' ),
+				source = sander.readFileSync( __dirname, '../samples', dir, 'source.js' ).toString();
 
-			t.file += '.js';
-			t.source = sander.readFileSync( 'samples', t.file ).toString();
+			return {
+				id: dir,
+				config: config,
+				source: source
+			};
 		});
 
 		before( function () {
@@ -56,15 +56,17 @@ module.exports = function () {
 
 		function runTests ( dir, method ) {
 			tests.forEach( function ( t ) {
-				it( t.description, function () {
+				if ( t.config.strict ) return;
+
+				it( t.config.description, function () {
 					var actual = esperanto[ method ]( t.source, {
-						name: t.name || 'myModule',
+						name: t.config.name || 'myModule',
 						amdName: t.config.amdName,
 						banner: t.config.banner,
 						footer: t.config.footer
 					});
 
-					return sander.readFile( 'fastMode/output/' + dir, t.file ).then( String ).then( function ( expected ) {
+					return sander.readFile( 'fastMode/output/' + dir, t.id + '.js' ).then( String ).then( function ( expected ) {
 						assert.equal( actual.code, expected, 'Expected\n>\n' + makeWhitespaceVisible( actual.code ) + '\n>\n\nto match\n\n>\n' + makeWhitespaceVisible( expected ) + '\n>' );
 					}).catch( function ( err ) {
 						if ( err.code === 'ENOENT' ) {

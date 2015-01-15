@@ -4,8 +4,6 @@ exports.geta = geta;
 
 var a = require('./a');
 
-/* jshint esnext:true */
-
 function geta() {
   return a.a;
 }
