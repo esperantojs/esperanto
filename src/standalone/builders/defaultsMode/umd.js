@@ -2,15 +2,14 @@ import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from 'utils/packageResult';
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
+import requireName from 'utils/umd/requireName';
 import reorderImports from 'utils/reorderImports';
 
 export default function umd ( mod, body, options ) {
 	var importNames = [];
 	var importPaths = [];
 
-	if ( !options.name ) {
-		throw new Error( 'You must supply a `name` option for UMD modules' );
-	}
+	requireName( options );
 
 	var hasImports = mod.imports.length > 0;
 	var hasExports = mod.exports.length > 0;

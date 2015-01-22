@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.3 - 2015-01-12
+	esperanto.js v0.6.3 - 2015-01-22
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -128,6 +128,9 @@ function annotateAst ( ast ) {
 					break;
 
 				case 'MemberExpression':
+					if ( envDepth === 0 && node.object.type === 'ThisExpression' ) {
+						throw new Error('`this` at the top level is undefined');
+					}
 					!node.computed && ( node.property._skip = true );
 					break;
 
@@ -1623,11 +1626,11 @@ function getName ( m ) {
 }
 
 function quote ( str ) {
-	return "'" + str + "'";
+	return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
 }
 
 function req ( path ) {
-	return 'require(\'' + path + '\')';
+	return 'require(' + quote(path) + ')';
 }
 
 function globalify ( name ) {
@@ -1678,7 +1681,7 @@ function cjs__cjs ( mod, body, options ) {
 	var exportDeclaration;
 
 	mod.imports.forEach( function(x ) {
-		var replacement = x.isEmpty ? (("require('" + (x.path)) + "');") : (("var " + (x.name)) + (" = require('" + (x.path)) + "');");
+		var replacement = x.isEmpty ? (("" + (req(x.path))) + ";") : (("var " + (x.name)) + (" = " + (req(x.path))) + ";");
 		body.replace( x.start, x.end, replacement );
 	});
 
@@ -1710,7 +1713,7 @@ function cjs__cjs ( mod, body, options ) {
 
 function standaloneUmdIntro ( options, indentStr ) {
 	var amdName = options.amdName ?
-		"'" + options.amdName + "', " :
+		quote(options.amdName) + ", " :
 		'';
 
 	var intro =
@@ -1729,7 +1732,7 @@ function defaultUmdIntro ( options, indentStr ) {
 	var hasExports = options.hasExports;
 
 	var amdName = options.amdName ?
-		"'" + options.amdName + "', " :
+		quote(options.amdName) + ", " :
 		'';
 	var amdDeps = options.importPaths.length > 0 ?
 		'[' + options.importPaths.map( quote ).join( ', ' ) + '], ' :
@@ -1757,13 +1760,36 @@ function defaultUmdIntro ( options, indentStr ) {
 	return intro.replace( /\t/g, indentStr );
 }
 
+var EsperantoError = function ( message, data ) {
+	var prop;
+
+	this.message = message;
+	this.stack = (new Error()).stack;
+
+	for ( prop in data ) {
+		if ( data.hasOwnProperty( prop ) ) {
+			this[ prop ] = data[ prop ];
+		}
+	}
+};
+
+EsperantoError.prototype = new Error();
+EsperantoError.prototype.constructor = EsperantoError;
+EsperantoError.prototype.name = 'EsperantoError';
+
+function requireName ( options ) {
+	if ( !options.name ) {
+		throw new EsperantoError( 'You must supply a `name` option for UMD modules', {
+			code: 'MISSING_NAME'
+		});
+	}
+}
+
 function umd__umd ( mod, body, options ) {
 	var importNames = [];
 	var importPaths = [];
 
-	if ( !options.name ) {
-		throw new Error( 'You must supply a `name` option for UMD modules' );
-	}
+	requireName( options );
 
 	var hasImports = mod.imports.length > 0;
 	var hasExports = mod.exports.length > 0;
@@ -2013,10 +2039,10 @@ function strictMode_cjs__cjs ( mod, body, options ) {
 		var name, replacement;
 
 		if ( x.isEmpty ) {
-			replacement = (("require('" + (x.path)) + "');");
+			replacement = (("" + (req(x.path))) + ";");
 		} else {
 			name = mod.getName( x );
-			replacement = (("var " + name) + (" = require('" + (x.path)) + "');");
+			replacement = (("var " + name) + (" = " + (req(x.path))) + ";");
 		}
 
 		return replacement;
@@ -2068,9 +2094,7 @@ function strictUmdIntro ( options, indentStr ) {
 }
 
 function strictMode_umd__umd ( mod, body, options ) {
-	if ( !options.name ) {
-		throw new Error( 'You must supply a `name` option for UMD modules' );
-	}
+	requireName( options );
 
 	reorderImports( mod.imports );
 
@@ -2123,7 +2147,7 @@ function defaultsMode_amd__amd ( bundle, body, options ) {
 	}
 
 	var intro = defaultsMode_amd__introTemplate({
-		amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
+		amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
 		amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
 		names: bundle.externalModules.map( getName ).join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );
@@ -2138,7 +2162,7 @@ function quoteId ( m ) {
 
 function defaultsMode_cjs__cjs ( bundle, body, options ) {
 	var importBlock = bundle.externalModules.map( function(x ) {
-		return (("var " + (x.name)) + (" = require('" + (x.id)) + "');");
+		return (("var " + (x.name)) + (" = " + (req(x.id))) + ";");
 	}).join( '\n' );
 
 	if ( importBlock ) {
@@ -2156,9 +2180,7 @@ function defaultsMode_cjs__cjs ( bundle, body, options ) {
 }
 
 function defaultsMode_umd__umd ( bundle, body, options ) {
-	if ( !options || !options.name ) {
-		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
-	}
+	requireName( options );
 
 	var entry = bundle.entryModule;
 
@@ -2238,7 +2260,7 @@ function builders_strictMode_amd__amd ( bundle, body, options ) {
 	}
 
 	var intro = builders_strictMode_amd__introTemplate({
-		amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
+		amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
 		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );
@@ -2255,7 +2277,7 @@ function builders_strictMode_cjs__cjs ( bundle, body, options ) {
 	var entry = bundle.entryModule;
 
 	var importBlock = bundle.externalModules.map( function(x ) {
-		var statement = (("var " + (x.name)) + (" = require('" + (x.id)) + "');");
+		var statement = (("var " + (x.name)) + (" = " + (req(x.id))) + ";");
 
 		if ( x.needsDefault ) {
 			statement += '\n' +
@@ -2280,9 +2302,7 @@ function builders_strictMode_cjs__cjs ( bundle, body, options ) {
 }
 
 function builders_strictMode_umd__umd ( bundle, body, options ) {
-	if ( !options || !options.name ) {
-		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
-	}
+	requireName( options );
 
 	var entry = bundle.entryModule;
 
