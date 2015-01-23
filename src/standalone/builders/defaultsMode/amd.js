@@ -2,6 +2,7 @@ import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from 'utils/packageResult';
 import hasOwnProp from 'utils/hasOwnProp';
 import template from 'utils/template';
+import resolveId from 'utils/resolveId';
 import { quote } from 'utils/mappers';
 
 var introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
@@ -14,14 +15,16 @@ export default function amd ( mod, body, options ) {
 
 	// gather imports, and remove import declarations
 	mod.imports.forEach( x => {
-		if ( !hasOwnProp.call( seen, x.path ) ) {
-			importPaths.push( x.path );
+		var path = options.absolutePaths ? resolveId( x.path, options.amdName ) : x.path;
+
+		if ( !hasOwnProp.call( seen, path ) ) {
+			importPaths.push( path );
 
 			if ( x.name ) {
 				importNames.push( x.name );
 			}
 
-			seen[ x.path ] = true;
+			seen[ path ] = true;
 		}
 
 		body.remove( x.start, x.next );

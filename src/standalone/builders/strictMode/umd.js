@@ -24,6 +24,7 @@ export default function umd ( mod, body, options ) {
 			importPaths,
 			importNames,
 			amdName: options.amdName,
+			absolutePaths: options.absolutePaths,
 			name: options.name,
 		}, body.getIndentString() );
 	}

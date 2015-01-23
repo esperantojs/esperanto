@@ -49,6 +49,7 @@ module.exports = function () {
 						name: 'myModule',
 						strict: true,
 						amdName: t.config.amdName,
+						absolutePaths: t.config.absolutePaths,
 						banner: t.config.banner,
 						footer: t.config.footer
 					}).code;

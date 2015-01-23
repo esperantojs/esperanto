@@ -1,6 +1,6 @@
 import path from 'path';
 import hasOwnProp from 'utils/hasOwnProp';
-import resolveId from './utils/resolveId';
+import resolveId from 'utils/resolveId';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
 import combine from './combine';

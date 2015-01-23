@@ -30,3 +30,9 @@ export default function resolveId ( importPath, importerPath ) {
 
 	return resolved.replace( /\.js$/, '' );
 }
+
+export function resolveAgainst ( importerPath ) {
+	return function ( importPath ) {
+		return resolveId( importPath, importerPath );
+	};
+}

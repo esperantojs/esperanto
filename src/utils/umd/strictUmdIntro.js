@@ -1,4 +1,5 @@
 import { globalify, quote, req } from 'utils/mappers';
+import { resolveAgainst } from 'utils/resolveId';
 
 export default function strictUmdIntro ( options, indentStr ) {
 	var hasExports = options.hasExports;
@@ -8,7 +9,7 @@ export default function strictUmdIntro ( options, indentStr ) {
 		'';
 	var amdDeps = hasExports || options.importPaths.length > 0 ?
 		'[' +
-			( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths ).map( quote ).join( ', ' ) +
+			( hasExports ? [ 'exports' ] : [] ).concat( options.absolutePaths ? options.importPaths.map( resolveAgainst( options.amdName ) ) : options.importPaths ).map( quote ).join( ', ' ) +
 		'], ' :
 		'';
 	var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );

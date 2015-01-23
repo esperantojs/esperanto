@@ -62,6 +62,7 @@ module.exports = function () {
 					var actual = esperanto[ method ]( t.source, {
 						name: t.config.name || 'myModule',
 						amdName: t.config.amdName,
+						absolutePaths: t.config.absolutePaths,
 						banner: t.config.banner,
 						footer: t.config.footer
 					});

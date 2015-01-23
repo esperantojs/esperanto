@@ -3,6 +3,7 @@ import MagicString from 'magic-string';
 import annotateAst from 'utils/ast/annotate';
 import findImportsAndExports from 'utils/ast/findImportsAndExports';
 import reorderImports from 'utils/reorderImports';
+import resolveId from 'utils/resolveId';
 import getModuleNameHelper from './getModuleNameHelper';
 
 export default function getStandaloneModule ( options ) {
@@ -30,4 +31,11 @@ export default function getStandaloneModule ( options ) {
 	mod.exports = exports;
 
 	return mod;
+}
+
+function makePathsAbsolute( imports, name ) {
+	var i = imports.length;
+	while ( i-- ) {
+		imports[i].path = resolveId( imports[i].path, name );
+	}
 }

@@ -25,6 +25,10 @@ function transpileMethod ( format ) {
 			alreadyWarned = true;
 		}
 
+		if ( options.absolutePaths && !options.amdName ) {
+			throw new Error( 'You must specify an `amdName` in order to use the `absolutePaths` option' );
+		}
+
 		if ( !options.strict ) {
 			// ensure there are no named imports/exports. TODO link to a wiki page...
 			if ( hasNamedImports( mod ) || hasNamedExports( mod ) ) {
