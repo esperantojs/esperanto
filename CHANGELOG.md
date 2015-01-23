@@ -1,5 +1,14 @@
 # changelog
 
+## 0.6.4
+
+* Fixes duplicate import bug ([#63](https://github.com/esperantojs/esperanto/issues/63))
+* Module names are correctly escaped ([#50](https://github.com/esperantojs/esperanto/issues/50))
+* Accessing properties on top-level `this` throws error at parse time
+* CLI: if no `--output` option is given, bundle is written to stdout (if no separate sourcemap) ([#60](https://github.com/esperantojs/esperanto/issues/60))
+* CLI: Better errors ([#66](https://github.com/esperantojs/esperanto/issues/66))
+* Test suite refactor
+
 ## 0.6.3
 
 * Support for Windows file paths
@@ -9,37 +18,37 @@
 
 ## 0.6.2
 
-* Implement `bundle.concat()` for self-contained bundles ([#48](https://github.com/rich-harris/esperanto/issues/48))
+* Implement `bundle.concat()` for self-contained bundles ([#48](https://github.com/esperantojs/esperanto/issues/48))
 
 ## 0.6.1
 
-* Fix for ([#45](https://github.com/rich-harris/esperanto/issues/45))
-* External modules only have `__default` appended where necessary ([#46](https://github.com/rich-harris/esperanto/issues/46))
+* Fix for ([#45](https://github.com/esperantojs/esperanto/issues/45))
+* External modules only have `__default` appended where necessary ([#46](https://github.com/esperantojs/esperanto/issues/46))
 
 ## 0.6.0
 
-* UMD export detects CJS environment *before* AMD ([#42](https://github.com/rich-harris/esperanto/issues/42))
-* `this` at module top-level is replaced with `undefined`, as per the spec ([#43](https://github.com/rich-harris/esperanto/issues/43))
+* UMD export detects CJS environment *before* AMD ([#42](https://github.com/esperantojs/esperanto/issues/42))
+* `this` at module top-level is replaced with `undefined`, as per the spec ([#43](https://github.com/esperantojs/esperanto/issues/43))
 * More compact CommonJS export
 * Bundler transform function receives path as second argument
 
 ## 0.5.10
 
 * One-to-one conversions get the same compact UMD form as bundles
-* Default imports are not hedged unnecessarily ([#40](https://github.com/rich-harris/esperanto/issues/40))
+* Default imports are not hedged unnecessarily ([#40](https://github.com/esperantojs/esperanto/issues/40))
 
 ## 0.5.9
 
-* More concise UMD output ([#36](https://github.com/rich-harris/esperanto/issues/36))
+* More concise UMD output ([#36](https://github.com/esperantojs/esperanto/issues/36))
 
 ## 0.5.8
 
-* Functions are always exported early ([#37](https://github.com/rich-harris/esperanto/issues/37))
+* Functions are always exported early ([#37](https://github.com/esperantojs/esperanto/issues/37))
 * Modules can be transformed before bundling with `esperanto.bundle({ transform: someFunction })`, where `someFunction` returns either a string, or a promise that resolves to a string
 
 ## 0.5.7
 
-* Classes are exported after declaration, not before ([#33](https://github.com/rich-harris/esperanto/issues/33))
+* Classes are exported after declaration, not before ([#33](https://github.com/esperantojs/esperanto/issues/33))
 
 ## 0.5.6
 
@@ -60,7 +69,7 @@
 
 ## 0.5.2
 
-* Imported objects (other than namespace imports) can be assigned properties ([#29](https://github.com/rich-harris/esperanto/issues/29))
+* Imported objects (other than namespace imports) can be assigned properties ([#29](https://github.com/esperantojs/esperanto/issues/29))
 * Default imports can be exported as named exports from the entry module in a bundle
 
 ## 0.5.1
@@ -69,13 +78,13 @@
 
 ## 0.5.0
 
-* Chained imports/exports are renamed correctly within a bundle ([#17](https://github.com/rich-harris/esperanto/issues/17))
+* Chained imports/exports are renamed correctly within a bundle ([#17](https://github.com/esperantojs/esperanto/issues/17))
 * Bundle exports are written at assignment time, rather than at the end of the bundle with an `Object.defineProperty` hack
 * Attempting to import a non-exported identifier within the same bundle throws an error
-* External modules are imported correctly ([#28](https://github.com/rich-harris/esperanto/issues/28))
-* Identifiers are only rewritten as necessary ([#25](https://github.com/rich-harris/esperanto/issues/25))
-* Redundant assignments in a bundle (`mod__default = mod__foo`) are avoided ([#14](https://github.com/rich-harris/esperanto/issues/14))
-* Shadowed imports are handled ([#18](https://github.com/rich-harris/esperanto/issues/18))
+* External modules are imported correctly ([#28](https://github.com/esperantojs/esperanto/issues/28))
+* Identifiers are only rewritten as necessary ([#25](https://github.com/esperantojs/esperanto/issues/25))
+* Redundant assignments in a bundle (`mod__default = mod__foo`) are avoided ([#14](https://github.com/esperantojs/esperanto/issues/14))
+* Shadowed imports are handled ([#18](https://github.com/esperantojs/esperanto/issues/18))
 * Modules are indented consistently within a bundle
 
 ## 0.4.10
@@ -93,7 +102,7 @@
 
 ## 0.4.7
 
-* In standalone conversions, import names are inferred from the source code where possible (batch/default imports), and will avoid naming collisions ([#15](https://github.com/rich-harris/esperanto/issues/15))
+* In standalone conversions, import names are inferred from the source code where possible (batch/default imports), and will avoid naming collisions ([#15](https://github.com/esperantojs/esperanto/issues/15))
 
 ## 0.4.6
 

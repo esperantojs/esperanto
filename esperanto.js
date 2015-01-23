@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.3 - 2015-01-23
+	esperanto.js v0.6.4 - 2015-01-23
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -7,10 +7,10 @@
 
 'use strict';
 
-var path = require('path');
-var sander = require('sander');
 var acorn = require('acorn');
 var MagicString = require('magic-string');
+var path = require('path');
+var sander = require('sander');
 var estraverse = require('estraverse');
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
