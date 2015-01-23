@@ -98,16 +98,13 @@ function processImport ( node, passthrough ) {
 	// TODO have different types of imports - batch, default, named
 	if ( x.specifiers.length === 0 ) {
 		x.isEmpty = true;
-	} else if ( x.specifiers.length === 1 ) {
-		if ( x.specifiers[0].isDefault ) {
-			x.isDefault = true;
-			x.name = x.specifiers[0].as;
-		}
+	} else if ( x.specifiers.length === 1 && x.specifiers[0].isDefault ) {
+		x.isDefault = true;
+		x.name = x.specifiers[0].as;
 
-		if ( x.specifiers[0].isBatch ) {
-			x.isBatch = true;
-			x.name = x.specifiers[0].name;
-		}
+	} else if ( x.specifiers.length === 1 && x.specifiers[0].isBatch ) {
+		x.isBatch = true;
+		x.name = x.specifiers[0].name;
 	} else {
 		x.isNamed = true;
 	}

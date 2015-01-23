@@ -1,6 +1,5 @@
 import template from 'utils/template';
 import packageResult from 'utils/packageResult';
-import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
 import { quote } from 'utils/mappers';
@@ -13,9 +12,6 @@ export default function amd ( mod, body, options ) {
 	var importPaths,
 		importNames,
 		intro;
-
-	// ensure empty imports are at the end
-	reorderImports( mod.imports );
 
 	[ importPaths, importNames ] = getImportSummary( mod );
 

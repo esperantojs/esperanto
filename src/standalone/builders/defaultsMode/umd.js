@@ -1,13 +1,14 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from 'utils/packageResult';
+import hasOwnProp from 'utils/hasOwnProp';
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
 import requireName from 'utils/umd/requireName';
-import reorderImports from 'utils/reorderImports';
 
 export default function umd ( mod, body, options ) {
 	var importNames = [];
 	var importPaths = [];
+	var seen = {};
 
 	requireName( options );
 
@@ -20,15 +21,16 @@ export default function umd ( mod, body, options ) {
 			amdName: options.amdName,
 		}, body.getIndentString() );
 	} else {
-		// ensure empty imports are at the end
-		reorderImports( mod.imports );
-
 		// gather imports, and remove import declarations
-		mod.imports.forEach( ( x, i ) => {
-			importPaths[i] = x.path;
+		mod.imports.forEach( x => {
+			if ( !hasOwnProp.call( seen, x.path ) ) {
+				importPaths.push( x.path );
 
-			if ( x.name ) {
-				importNames[i] = x.name;
+				if ( x.name ) {
+					importNames.push( x.name );
+				}
+
+				seen[ x.path ] = true;
 			}
 
 			body.remove( x.start, x.next );
