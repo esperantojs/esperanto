@@ -32,7 +32,7 @@ export default function strictUmdIntro ( options, indentStr ) {
 	factory(${globalDeps})
 }(this, function (${args}) { 'use strict';
 
-${defaultsBlock}`
+${defaultsBlock}`;
 
 	return intro.replace( /\t/g, indentStr );
 }
