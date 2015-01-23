@@ -2,14 +2,11 @@ import packageResult from 'utils/packageResult';
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import strictUmdIntro from 'utils/umd/strictUmdIntro';
 import requireName from 'utils/umd/requireName';
-import reorderImports from 'utils/reorderImports';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
 
 export default function umd ( mod, body, options ) {
 	requireName( options );
-
-	reorderImports( mod.imports );
 
 	var [ importPaths, importNames ] = getImportSummary( mod );
 

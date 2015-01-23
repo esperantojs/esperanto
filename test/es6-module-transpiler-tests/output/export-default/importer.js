@@ -1,7 +1,6 @@
 'use strict';
 
 var value = require('./exporter');
-var value = require('./exporter');
 
 assert.equal(value['default'], 42);
 

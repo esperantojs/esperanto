@@ -58,7 +58,7 @@ module.exports = function () {
 			tests.forEach( function ( t ) {
 				if ( t.config.strict ) return;
 
-				it( t.config.description, function () {
+				( t.config.solo ? it.only : it )( t.config.description, function () {
 					var actual = esperanto[ method ]( t.source, {
 						name: t.config.name || 'myModule',
 						amdName: t.config.amdName,
