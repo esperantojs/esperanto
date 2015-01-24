@@ -1,5 +1,5 @@
 module.exports = {
-	external: [ 'external' ],
+	imports: [ 'external' ],
 	names: {
 		external: 'Correct'
 	}

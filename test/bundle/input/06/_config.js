@@ -1,3 +1,3 @@
 module.exports = {
-	external: [ 'utils/external' ]
+	imports: [ 'utils/external' ]
 };

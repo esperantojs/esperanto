@@ -1,3 +1,3 @@
 module.exports = {
-	external: [ 'external' ]
+	imports: [ 'external' ]
 };
