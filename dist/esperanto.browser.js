@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.4 - 2015-01-23
+	esperanto.js v0.6.5 - 2015-01-24
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -440,37 +440,6 @@
 		return path.split( pathSplitRE );
 	}
 
-	function resolveId ( importPath, importerPath ) {
-		var resolved, importerParts, importParts;
-
-		if ( importPath[0] !== '.' ) {
-			resolved = importPath;
-		} else {
-			importerParts = splitPath( importerPath );
-			importParts = splitPath( importPath );
-
-			importerParts.pop(); // get dirname
-			while ( importParts[0] === '..' ) {
-				importParts.shift();
-				importerParts.pop();
-			}
-
-			while ( importParts[0] === '.' ) {
-				importParts.shift();
-			}
-
-			resolved = importerParts.concat( importParts ).join( '/' );
-		}
-
-		return resolved.replace( /\.js$/, '' );
-	}
-
-	function resolveAgainst ( importerPath ) {
-		return function ( importPath ) {
-			return resolveId( importPath, importerPath );
-		};
-	}
-
 	function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNames === void 0)usedNames = {};
 		var nameById = {}, getModuleName;
 
@@ -551,13 +520,6 @@
 
 		return mod;
 	;$D$0 = void 0}
-
-	function makePathsAbsolute( imports, name ) {
-		var i = imports.length;
-		while ( i-- ) {
-			imports[i].path = resolveId( imports[i].path, name );
-		}
-	}
 
 	function transformExportDeclaration ( declaration, body ) {
 		var exportedValue;
@@ -684,6 +646,37 @@
 			return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
 				return $1 in data ? data[ $1 ] : match;
 			});
+		};
+	}
+
+	function resolveId ( importPath, importerPath ) {
+		var resolved, importerParts, importParts;
+
+		if ( importPath[0] !== '.' ) {
+			resolved = importPath;
+		} else {
+			importerParts = splitPath( importerPath );
+			importParts = splitPath( importPath );
+
+			importerParts.pop(); // get dirname
+			while ( importParts[0] === '..' ) {
+				importParts.shift();
+				importerParts.pop();
+			}
+
+			while ( importParts[0] === '.' ) {
+				importParts.shift();
+			}
+
+			resolved = importerParts.concat( importParts ).join( '/' );
+		}
+
+		return resolved.replace( /\.js$/, '' );
+	}
+
+	function resolveAgainst ( importerPath ) {
+		return function ( importPath ) {
+			return resolveId( importPath, importerPath );
 		};
 	}
 
@@ -1151,7 +1144,6 @@
 			importedNamespaces = {},
 			exportNames,
 			alreadyExported = {},
-			shouldExportEarly = {},
 			earlyExports,
 			lateExports;
 
@@ -1355,7 +1347,7 @@
 \n		factory(" + globalDeps) + (")\
 \n	}(this, function (" + args) + (") { 'use strict';\
 \n\
-\n	" + defaultsBlock) + "")
+\n	" + defaultsBlock) + "");
 
 		return intro.replace( /\t/g, indentStr );
 	}
@@ -1690,6 +1682,9 @@
 		bundle: function ( options ) {
 			return undefined__default( options ).then( function ( bundle ) {
 				return {
+					imports: bundle.externalModules.map( function(mod ) {return mod.id} ),
+					exports: flattenExports( bundle.entryModule.exports ),
+
 					toAmd: function(options ) {return transpile( 'amd', options )},
 					toCjs: function(options ) {return transpile( 'cjs', options )},
 					toUmd: function(options ) {return transpile( 'umd', options )},
@@ -1732,6 +1727,26 @@
 			});
 		}
 	};
+
+	function flattenExports ( exports ) {
+		var flattened = [];
+
+		exports.forEach( function(x ) {
+			if ( x.isDefault ) {
+				flattened.push( 'default' );
+			}
+
+			else if ( x.name ) {
+				flattened.push( x.name );
+			}
+
+			else if ( x.specifiers ) {
+				flattened.push.apply( flattened, x.specifiers.map( getName ) );
+			}
+		});
+
+		return flattened;
+	}
 
 	return esperanto;
 

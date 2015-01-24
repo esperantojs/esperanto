@@ -1,5 +1,11 @@
 # changelog
 
+## 0.6.5
+
+* Relative AMD dependency paths can be made absolute with `absolutePaths: true` - requires `amdName` to be specified ([#58](https://github.com/esperantojs/esperanto/issues/58))
+* Within a bundle, built-in names like `Math` and `Promise` are avoided ([#70](https://github.com/esperantojs/esperanto/issues/70))
+* Bundle imports and exports are reported as `bundle.imports` and `bundle.exports` ([#59](https://github.com/esperantojs/esperanto/issues/59))
+
 ## 0.6.4
 
 * Fixes duplicate import bug ([#63](https://github.com/esperantojs/esperanto/issues/63))

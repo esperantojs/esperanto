@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.4 - 2015-01-23
+	esperanto.js v0.6.5 - 2015-01-24
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -442,37 +442,6 @@ function splitPath ( path ) {
 	return path.split( pathSplitRE );
 }
 
-function resolveId ( importPath, importerPath ) {
-	var resolved, importerParts, importParts;
-
-	if ( importPath[0] !== '.' ) {
-		resolved = importPath;
-	} else {
-		importerParts = splitPath( importerPath );
-		importParts = splitPath( importPath );
-
-		importerParts.pop(); // get dirname
-		while ( importParts[0] === '..' ) {
-			importParts.shift();
-			importerParts.pop();
-		}
-
-		while ( importParts[0] === '.' ) {
-			importParts.shift();
-		}
-
-		resolved = importerParts.concat( importParts ).join( '/' );
-	}
-
-	return resolved.replace( /\.js$/, '' );
-}
-
-function resolveAgainst ( importerPath ) {
-	return function ( importPath ) {
-		return resolveId( importPath, importerPath );
-	};
-}
-
 function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNames === void 0)usedNames = {};
 	var nameById = {}, getModuleName;
 
@@ -554,11 +523,35 @@ function getStandaloneModule ( options ) {var $D$0;
 	return mod;
 ;$D$0 = void 0}
 
-function makePathsAbsolute( imports, name ) {
-	var i = imports.length;
-	while ( i-- ) {
-		imports[i].path = resolveId( imports[i].path, name );
+function resolveId ( importPath, importerPath ) {
+	var resolved, importerParts, importParts;
+
+	if ( importPath[0] !== '.' ) {
+		resolved = importPath;
+	} else {
+		importerParts = splitPath( importerPath );
+		importParts = splitPath( importPath );
+
+		importerParts.pop(); // get dirname
+		while ( importParts[0] === '..' ) {
+			importParts.shift();
+			importerParts.pop();
+		}
+
+		while ( importParts[0] === '.' ) {
+			importParts.shift();
+		}
+
+		resolved = importerParts.concat( importParts ).join( '/' );
 	}
+
+	return resolved.replace( /\.js$/, '' );
+}
+
+function resolveAgainst ( importerPath ) {
+	return function ( importPath ) {
+		return resolveId( importPath, importerPath );
+	};
 }
 
 function sortModules ( entry, moduleLookup ) {
@@ -623,8 +616,14 @@ function resolveChains ( modules, moduleLookup ) {
 	return chains;
 }
 
+// from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+var builtins = 'Array ArrayBuffer DataView Date Error EvalError Float32Array Float64Array Function Generator GeneratorFunction Infinity Int16Array Int32Array Int8Array InternalError Intl Iterator JSON Map Math NaN Number Object ParallelArray Promise Proxy RangeError ReferenceError Reflect RegExp Set StopIteration String Symbol SyntaxError TypeError TypedArray URIError Uint16Array Uint32Array Uint8Array Uint8ClampedArray WeakMap WeakSet decodeURI decodeURIComponent encodeURI encodeURIComponent escape eval isFinite isNaN null parseFloat parseInt undefined unescape uneval'.split( ' ' );
+
 function getUniqueNames ( modules, externalModules, userNames ) {
 	var names = {}, used = {};
+
+	// copy builtins
+	builtins.forEach( function(n ) {return used[n] = true} );
 
 	// copy user-specified names
 	if ( userNames ) {
@@ -762,10 +761,10 @@ function topLevelScopeConflicts ( bundle ) {
 	var conflicts = {}, inBundle = {};
 
 	bundle.modules.forEach( function(mod ) {
-		var names =
+		var names = builtins
 
 			// all top defined identifiers are in top scope
-			mod.ast._topLevelNames
+			.concat( mod.ast._topLevelNames )
 
 			// all unattributed identifiers could collide with top scope
 			.concat( getUnscopedNames( mod ) )
@@ -873,12 +872,6 @@ function populateIdentifierReplacements ( bundle ) {
 						// - see https://github.com/Rich-Harris/esperanto/issues/32
 						else if ( mod ) {
 							replacement = mod.identifierReplacements.default;
-						}
-
-						else {
-							replacement = hasOwnProp.call( conflicts, moduleName ) || otherModulesDeclare( bundle.moduleLookup[ moduleId ], moduleName ) ?
-								moduleName + '__default' :
-								moduleName;
 						}
 					} else if ( !externalModule ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
@@ -1913,7 +1906,6 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 		importedNamespaces = {},
 		exportNames,
 		alreadyExported = {},
-		shouldExportEarly = {},
 		earlyExports,
 		lateExports;
 
@@ -2117,7 +2109,7 @@ function strictUmdIntro ( options, indentStr ) {
 \n	factory(" + globalDeps) + (")\
 \n}(this, function (" + args) + (") { 'use strict';\
 \n\
-\n" + defaultsBlock) + "")
+\n" + defaultsBlock) + "");
 
 	return intro.replace( /\t/g, indentStr );
 }
@@ -2452,6 +2444,9 @@ var esperanto = {
 	bundle: function ( options ) {
 		return getBundle( options ).then( function ( bundle ) {
 			return {
+				imports: bundle.externalModules.map( function(mod ) {return mod.id} ),
+				exports: flattenExports( bundle.entryModule.exports ),
+
 				toAmd: function(options ) {return transpile( 'amd', options )},
 				toCjs: function(options ) {return transpile( 'cjs', options )},
 				toUmd: function(options ) {return transpile( 'umd', options )},
@@ -2494,5 +2489,25 @@ var esperanto = {
 		});
 	}
 };
+
+function flattenExports ( exports ) {
+	var flattened = [];
+
+	exports.forEach( function(x ) {
+		if ( x.isDefault ) {
+			flattened.push( 'default' );
+		}
+
+		else if ( x.name ) {
+			flattened.push( x.name );
+		}
+
+		else if ( x.specifiers ) {
+			flattened.push.apply( flattened, x.specifiers.map( getName ) );
+		}
+	});
+
+	return flattened;
+}
 
 module.exports = esperanto;
