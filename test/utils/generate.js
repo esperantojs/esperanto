@@ -43,6 +43,7 @@ require( './build' )().then( function ( esperanto ) {
 					var transpiled = esperanto[ profile.method ]( source, {
 						name: profile.options && profile.options.name,
 						amdName: config.amdName,
+						absolutePaths: config.absolutePaths,
 						strict: profile.options && profile.options.strict,
 						banner: config.banner,
 						footer: config.footer
@@ -85,6 +86,7 @@ require( './build' )().then( function ( esperanto ) {
 					var transpiled = esperanto[ profile.method ]( source, {
 						name: profile.options && profile.options.name,
 						amdName: config.amdName,
+						absolutePaths: config.absolutePaths,
 						strict: profile.options && profile.options.strict,
 						banner: config.banner,
 						footer: config.footer

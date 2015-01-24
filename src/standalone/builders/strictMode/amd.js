@@ -1,5 +1,6 @@
 import template from 'utils/template';
 import packageResult from 'utils/packageResult';
+import { resolveAgainst } from 'utils/resolveId';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
 import { quote } from 'utils/mappers';
@@ -22,7 +23,7 @@ export default function amd ( mod, body, options ) {
 
 	intro = introTemplate({
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
-		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+		paths: importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
 	}).replace( /\t/g, body.getIndentString() );
 

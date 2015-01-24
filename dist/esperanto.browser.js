@@ -440,6 +440,37 @@
 		return path.split( pathSplitRE );
 	}
 
+	function resolveId ( importPath, importerPath ) {
+		var resolved, importerParts, importParts;
+
+		if ( importPath[0] !== '.' ) {
+			resolved = importPath;
+		} else {
+			importerParts = splitPath( importerPath );
+			importParts = splitPath( importPath );
+
+			importerParts.pop(); // get dirname
+			while ( importParts[0] === '..' ) {
+				importParts.shift();
+				importerParts.pop();
+			}
+
+			while ( importParts[0] === '.' ) {
+				importParts.shift();
+			}
+
+			resolved = importerParts.concat( importParts ).join( '/' );
+		}
+
+		return resolved.replace( /\.js$/, '' );
+	}
+
+	function resolveAgainst ( importerPath ) {
+		return function ( importPath ) {
+			return resolveId( importPath, importerPath );
+		};
+	}
+
 	function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNames === void 0)usedNames = {};
 		var nameById = {}, getModuleName;
 
@@ -520,6 +551,13 @@
 
 		return mod;
 	;$D$0 = void 0}
+
+	function makePathsAbsolute( imports, name ) {
+		var i = imports.length;
+		while ( i-- ) {
+			imports[i].path = resolveId( imports[i].path, name );
+		}
+	}
 
 	function transformExportDeclaration ( declaration, body ) {
 		var exportedValue;
@@ -679,14 +717,16 @@
 
 		// gather imports, and remove import declarations
 		mod.imports.forEach( function(x ) {
-			if ( !hasOwnProp.call( seen, x.path ) ) {
-				importPaths.push( x.path );
+			var path = options.absolutePaths ? resolveId( x.path, options.amdName ) : x.path;
+
+			if ( !hasOwnProp.call( seen, path ) ) {
+				importPaths.push( path );
 
 				if ( x.name ) {
 					importNames.push( x.name );
 				}
 
-				seen[ x.path ] = true;
+				seen[ path ] = true;
 			}
 
 			body.remove( x.start, x.next );
@@ -774,7 +814,7 @@
 			quote(options.amdName) + ", " :
 			'';
 		var amdDeps = options.importPaths.length > 0 ?
-			'[' + options.importPaths.map( quote ).join( ', ' ) + '], ' :
+			'[' + ( options.absolutePaths ? options.importPaths.map( resolveAgainst( options.amdName ) ) : options.importPaths ).map( quote ).join( ', ' ) + '], ' :
 			'';
 		var cjsDeps = options.importPaths.map( req ).join( ', ' );
 		var globalDeps = options.importNames.map( globalify ).join( ', ' );
@@ -862,6 +902,7 @@
 				importPaths: importPaths,
 				importNames: importNames,
 				amdName: options.amdName,
+				absolutePaths: options.absolutePaths,
 				name: options.name
 			}, body.getIndentString() );
 		}
@@ -1241,7 +1282,7 @@
 
 		intro = strictMode_amd__introTemplate({
 			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
-			paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
+			paths: importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
 		}).replace( /\t/g, body.getIndentString() );
 
@@ -1291,7 +1332,7 @@
 			'';
 		var amdDeps = hasExports || options.importPaths.length > 0 ?
 			'[' +
-				( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths ).map( quote ).join( ', ' ) +
+				( hasExports ? [ 'exports' ] : [] ).concat( options.absolutePaths ? options.importPaths.map( resolveAgainst( options.amdName ) ) : options.importPaths ).map( quote ).join( ', ' ) +
 			'], ' :
 			'';
 		var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
@@ -1338,6 +1379,7 @@
 				importPaths: importPaths,
 				importNames: importNames,
 				amdName: options.amdName,
+				absolutePaths: options.absolutePaths,
 				name: options.name,
 			}, body.getIndentString() );
 		}
@@ -1619,6 +1661,10 @@
 				// TODO link to a wiki page explaining this, or something
 				console.log( deprecateMessage );
 				alreadyWarned = true;
+			}
+
+			if ( options.absolutePaths && !options.amdName ) {
+				throw new Error( 'You must specify an `amdName` in order to use the `absolutePaths` option' );
 			}
 
 			if ( !options.strict ) {

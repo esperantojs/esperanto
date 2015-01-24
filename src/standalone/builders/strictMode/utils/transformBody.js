@@ -10,7 +10,6 @@ export default function transformBody ( mod, body, options ) {
 		importedNamespaces = {},
 		exportNames,
 		alreadyExported = {},
-		shouldExportEarly = {},
 		earlyExports,
 		lateExports;
 
