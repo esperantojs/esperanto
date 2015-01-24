@@ -26,6 +26,13 @@
 		return a * b;
 	}
 
+	var num = Math.max( 1, 2, 3 );
+	var resolved = Promise.resolve( num );
+
+	function foo () {
+		return resolved;
+	}
+
 	var promise = new _Promise();
 	promise.keep();
 

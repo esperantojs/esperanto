@@ -1,5 +1,6 @@
 import Promise from './Promise';
 import * as Math from './Math';
+import foo from './foo';
 
 var promise = new Promise();
 promise.keep();
