@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 export function foo() {
   return 121;
 }

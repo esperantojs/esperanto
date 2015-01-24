@@ -25,39 +25,29 @@ require( './build' )().then( function ( esperanto ) {
 		}
 
 		function buildAll () {
-			return sander.lsr( '../samples' ).then( function ( sourceFiles ) {
-				return Promise.all( sourceFiles.map( build ) );
+			return sander.readdir( '../samples' ).then( function ( samples ) {
+				return Promise.all( samples.map( build ) );
 			});
 		}
 
-		function build ( sourceFile ) {
-			if ( sourceFile === 'config' ) return;
+		function build ( sample ) {
+			return sander.readFile( '../samples', sample, 'source.js' ).then( String ).then( function ( source ) {
+				var config = require( '../samples/' + sample + '/_config' ),
+					promises;
 
-			return sander.readFile( '../samples', sourceFile ).then( String ).then( function ( source ) {
-				var config, promises;
+				if ( config.strict ) return;
 
-				try {
-					config = require( '../samples/config/' + sourceFile );
-				} catch ( err ) {
-					config = {};
-				}
+				console.log( 'sample', sample );
 
 				promises = profiles.map( function ( profile ) {
-					try {
-						var transpiled = esperanto[ profile.method ]( source, {
-							name: profile.options && profile.options.name,
-							amdName: config.amdName,
-							strict: profile.options && profile.options.strict,
-							banner: config.banner,
-							footer: config.footer
-						});
-						return sander.writeFile( '../fastMode/output', profile.outputdir, sourceFile, transpiled.code );
-					} catch ( err ) {
-						// some modules can't be transpiled with defaultOnly
-						if ( !/strict mode/.test( err.message ) ) {
-							setTimeout( function () { throw err; });
-						}
-					}
+					var transpiled = esperanto[ profile.method ]( source, {
+						name: profile.options && profile.options.name,
+						amdName: config.amdName,
+						strict: profile.options && profile.options.strict,
+						banner: config.banner,
+						footer: config.footer
+					});
+					return sander.writeFile( '../fastMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
 
 				return Promise.all( promises );
@@ -81,39 +71,25 @@ require( './build' )().then( function ( esperanto ) {
 		}
 
 		function buildAll () {
-			return sander.readdir( '../samples' ).then( function ( sourceFiles ) {
-				return Promise.all( sourceFiles.map( build ) );
+			return sander.readdir( '../samples' ).then( function ( samples ) {
+				return Promise.all( samples.map( build ) );
 			});
 		}
 
-		function build ( sourceFile ) {
-			if ( sourceFile === 'config' ) return;
-
-			return sander.readFile( '../samples', sourceFile ).then( String ).then( function ( source ) {
-				var config, promises;
-
-				try {
-					config = require( '../samples/config/' + sourceFile );
-				} catch ( err ) {
-					config = {};
-				}
+		function build ( sample ) {
+			return sander.readFile( '../samples', sample, 'source.js' ).then( String ).then( function ( source ) {
+				var config = require( '../samples/' + sample + '/_config' ),
+					promises;
 
 				promises = profiles.map( function ( profile ) {
-					try {
-						var transpiled = esperanto[ profile.method ]( source, {
-							name: profile.options && profile.options.name,
-							amdName: config.amdName,
-							strict: profile.options && profile.options.strict,
-							banner: config.banner,
-							footer: config.footer
-						});
-						return sander.writeFile( '../strictMode/output', profile.outputdir, sourceFile, transpiled.code );
-					} catch ( err ) {
-						// some modules can't be transpiled with defaultOnly
-						if ( !/defaultOnly/.test( err.message ) ) {
-							setTimeout( function () { throw err; });
-						}
-					}
+					var transpiled = esperanto[ profile.method ]( source, {
+						name: profile.options && profile.options.name,
+						amdName: config.amdName,
+						strict: profile.options && profile.options.strict,
+						banner: config.banner,
+						footer: config.footer
+					});
+					return sander.writeFile( '../strictMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
 
 				return Promise.all( promises );
@@ -151,11 +127,7 @@ require( './build' )().then( function ( esperanto ) {
 
 			if ( /DS_Store/.test( sourceBundle ) ) return;
 
-			try {
-				config = require( '../bundle/input/' + sourceBundle + '/_config' );
-			} catch ( e ) {
-				config = {};
-			}
+			config = require( '../bundle/input/' + sourceBundle + '/_config' );
 
 			return esperanto.bundle({
 				base: path.join( '../bundle/input', sourceBundle ),

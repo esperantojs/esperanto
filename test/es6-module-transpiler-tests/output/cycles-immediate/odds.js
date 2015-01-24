@@ -4,8 +4,6 @@ exports.nextOdd = nextOdd;
 
 var evens = require('./evens');
 
-/* jshint esnext:true */
-
 function nextOdd(n) {
   return evens.isEven(n) ? n + 1 : n + 2;
 }

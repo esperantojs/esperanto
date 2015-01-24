@@ -1,4 +1,5 @@
 import hasOwnProp from 'utils/hasOwnProp';
+import builtins from 'utils/builtins';
 import getUnscopedNames from './getUnscopedNames';
 import getRenamedImports from './getRenamedImports';
 
@@ -6,10 +7,10 @@ export default function topLevelScopeConflicts ( bundle ) {
 	var conflicts = {}, inBundle = {};
 
 	bundle.modules.forEach( mod => {
-		var names =
+		var names = builtins
 
 			// all top defined identifiers are in top scope
-			mod.ast._topLevelNames
+			.concat( mod.ast._topLevelNames )
 
 			// all unattributed identifiers could collide with top scope
 			.concat( getUnscopedNames( mod ) )

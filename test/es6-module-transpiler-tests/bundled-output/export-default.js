@@ -1,7 +1,5 @@
 'use strict';
 
-/* jshint esnext:true */
-
 var a = 42;
 
 function change() {
@@ -16,8 +14,6 @@ var value = a;
 // value of `a` will be used and will be incorrect.
 a = 0;
 assert.equal(a, 0);
-
-/* jshint esnext:true */
 
 assert.equal(value, 42);
 

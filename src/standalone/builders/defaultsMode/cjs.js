@@ -1,11 +1,19 @@
+import hasOwnProp from 'utils/hasOwnProp';
 import packageResult from 'utils/packageResult';
+import { req } from 'utils/mappers';
 
 export default function cjs ( mod, body, options ) {
-	var exportDeclaration;
+	var seen = {}, exportDeclaration;
 
 	mod.imports.forEach( x => {
-		var replacement = x.isEmpty ? `require('${x.path}');` : `var ${x.name} = require('${x.path}');`;
-		body.replace( x.start, x.end, replacement );
+		if ( !hasOwnProp.call( seen, x.path ) ) {
+			var replacement = x.isEmpty ? `${req(x.path)};` : `var ${x.name} = ${req(x.path)};`;
+			body.replace( x.start, x.end, replacement );
+
+			seen[ x.path ] = true;
+		} else {
+			body.remove( x.start, x.next );
+		}
 	});
 
 	exportDeclaration = mod.exports[0];
@@ -29,7 +37,7 @@ export default function cjs ( mod, body, options ) {
 		}
 	}
 
-	body.prepend( "'use strict';\n\n" ).trimLines()
+	body.prepend( "'use strict';\n\n" ).trimLines();
 
 	return packageResult( body, options, 'toCjs' );
 }

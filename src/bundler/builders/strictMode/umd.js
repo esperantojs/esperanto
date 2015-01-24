@@ -1,13 +1,12 @@
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import strictUmdIntro from 'utils/umd/strictUmdIntro';
+import requireName from 'utils/umd/requireName';
 import packageResult from 'utils/packageResult';
 import { getId, getName } from 'utils/mappers';
 import getExportBlock from './utils/getExportBlock';
 
 export default function umd ( bundle, body, options ) {
-	if ( !options || !options.name ) {
-		throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
-	}
+	requireName( options );
 
 	var entry = bundle.entryModule;
 

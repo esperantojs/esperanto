@@ -4,8 +4,6 @@ exports.isEven = isEven;
 
 var odds = require('./odds');
 
-/* jshint esnext:true */
-
 var nextEven = (function() {
   return function(n) {
     var no = odds.nextOdd(n);

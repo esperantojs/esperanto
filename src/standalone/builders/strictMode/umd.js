@@ -1,16 +1,12 @@
 import packageResult from 'utils/packageResult';
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import strictUmdIntro from 'utils/umd/strictUmdIntro';
-import reorderImports from 'utils/reorderImports';
+import requireName from 'utils/umd/requireName';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
 
 export default function umd ( mod, body, options ) {
-	if ( !options.name ) {
-		throw new Error( 'You must supply a `name` option for UMD modules' );
-	}
-
-	reorderImports( mod.imports );
+	requireName( options );
 
 	var [ importPaths, importNames ] = getImportSummary( mod );
 

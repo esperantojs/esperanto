@@ -1,26 +1,27 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
-import packageResult from '../../../utils/packageResult';
-import reorderImports from 'utils/reorderImports';
+import packageResult from 'utils/packageResult';
+import hasOwnProp from 'utils/hasOwnProp';
 import template from 'utils/template';
 import { quote } from 'utils/mappers';
 
 var introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
 
 export default function amd ( mod, body, options ) {
-	var importNames = [],
+	var seen = {},
+		importNames = [],
 		importPaths = [],
-		intro,
-		i;
-
-	// ensure empty imports are at the end
-	reorderImports( mod.imports );
+		intro;
 
 	// gather imports, and remove import declarations
-	mod.imports.forEach( ( x, i ) => {
-		importPaths[i] = x.path;
+	mod.imports.forEach( x => {
+		if ( !hasOwnProp.call( seen, x.path ) ) {
+			importPaths.push( x.path );
 
-		if ( x.name ) {
-			importNames[i] = x.name;
+			if ( x.name ) {
+				importNames.push( x.name );
+			}
+
+			seen[ x.path ] = true;
 		}
 
 		body.remove( x.start, x.next );

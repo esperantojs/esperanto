@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { isEven } from './evens';
 
 export function nextOdd(n) {

@@ -1,11 +1,17 @@
+import hasOwnProp from 'utils/hasOwnProp';
+
 export default function getImportSummary ( mod ) {
-	var importPaths = [], importNames = [];
+	var importPaths = [], importNames = [], seen = {};
 
-	mod.imports.forEach( ( x, i ) => {
-		importPaths[i] = x.path;
+	mod.imports.forEach( x => {
+		if ( !hasOwnProp.call( seen, x.path ) ) {
+			importPaths.push( x.path );
 
-		if ( x.specifiers.length ) { // don't add empty imports
-			importNames[i] = mod.getName( x );
+			if ( x.specifiers.length ) { // don't add empty imports
+				importNames.push( mod.getName( x ) );
+			}
+
+			seen[ x.path ] = true;
 		}
 	});
 

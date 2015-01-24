@@ -1,6 +1,7 @@
 var path = require( 'path' ),
 	sander = require( 'sander' ),
 	Promise = sander.Promise,
+	handleError = require( './handleError' ),
 	esperanto = require( '../' );
 
 var methods = {
@@ -19,10 +20,14 @@ module.exports = function ( options ) {
 
 	method = methods[ options.type ] || 'toAmd';
 
-	if ( options.bundle ) {
-		bundle( options, method ).catch( debug );
-	} else {
-		convert( options, method ).catch( debug );
+	try {
+		if ( options.bundle ) {
+			bundle( options, method ).catch( handleError );
+		} else {
+			convert( options, method ).catch( handleError );
+		}
+	} catch ( err ) {
+		handleError( err );
 	}
 };
 
@@ -30,8 +35,7 @@ function bundle ( options, method ) {
 	var bundleOptions, file;
 
 	if ( !options.input ) {
-		console.error( 'You must specify an --input (-i) option when bundling' );
-		process.exit( 1 );
+		handleError({ code: 'MISSING_INPUT_OPTION' });
 	}
 
 	bundleOptions = {
@@ -62,7 +66,7 @@ function bundle ( options, method ) {
 			amdName: options.amdName,
 			strict: options.strict,
 			sourceMap: options.sourcemap,
-			sourceMapFile: path.resolve( options.output )
+			sourceMapFile: options.sourcemap ? path.resolve( options.output ) : null
 		});
 
 		if ( options.output ) {
@@ -74,7 +78,7 @@ function bundle ( options, method ) {
 
 			return Promise.all( promises );
 		} else {
-			process.stdout.write( transpiled );
+			process.stdout.write( transpiled.code );
 		}
 	});
 }
@@ -119,8 +123,7 @@ function readFromStdin () {
 		var data = '';
 
 		if ( process.stdin.isTTY ) {
-			console.log( 'No input detected! Try using the --input (-i) option' );
-			process.exit( 1 );
+			handleError({ code: 'NO_INPUT_DETECTED' });
 		}
 
 		process.stdin.setEncoding( 'utf8' );
@@ -137,11 +140,5 @@ function readFromStdin () {
 		});
 
 		process.stdin.on( 'error', reject );
-	});
-}
-
-function debug ( err ) {
-	setTimeout( function () {
-		throw err;
 	});
 }

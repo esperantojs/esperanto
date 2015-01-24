@@ -1,3 +1,5 @@
 module.exports = {
-	imports: [ 'foo' ]
+	description: 'both named and default bindings can be imported from an external module',
+	imports: [ 'foo' ],
+	strict: true
 };

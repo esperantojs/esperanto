@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.3 - 2015-01-12
+	esperanto.js v0.6.4 - 2015-01-23
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -126,6 +126,9 @@
 						break;
 
 					case 'MemberExpression':
+						if ( envDepth === 0 && node.object.type === 'ThisExpression' ) {
+							throw new Error('`this` at the top level is undefined');
+						}
 						!node.computed && ( node.property._skip = true );
 						break;
 
@@ -288,16 +291,13 @@
 		// TODO have different types of imports - batch, default, named
 		if ( x.specifiers.length === 0 ) {
 			x.isEmpty = true;
-		} else if ( x.specifiers.length === 1 ) {
-			if ( x.specifiers[0].isDefault ) {
-				x.isDefault = true;
-				x.name = x.specifiers[0].as;
-			}
+		} else if ( x.specifiers.length === 1 && x.specifiers[0].isDefault ) {
+			x.isDefault = true;
+			x.name = x.specifiers[0].as;
 
-			if ( x.specifiers[0].isBatch ) {
-				x.isBatch = true;
-				x.name = x.specifiers[0].name;
-			}
+		} else if ( x.specifiers.length === 1 && x.specifiers[0].isBatch ) {
+			x.isBatch = true;
+			x.name = x.specifiers[0].name;
 		} else {
 			x.isNamed = true;
 		}
@@ -394,6 +394,25 @@
 		}
 
 		return result;
+	}
+
+	/**
+	 * Reorders an array of imports so that empty imports (those with
+	   no specifier, e.g. `import 'polyfills'`) are at the end. That
+	   way they can be excluded from the factory function's arguments
+	 * @param {array} imports - the imports to reorder
+	 */
+	function reorderImports ( imports ) {
+		var i = imports.length, x;
+
+		while ( i-- ) {
+			x = imports[i];
+
+			if ( x.isEmpty ) {
+				imports.splice( i, 1 );
+				imports.push( x );
+			}
+		}
 	}
 
 	var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
@@ -493,6 +512,8 @@
 		mod.getName = getModuleNameHelper( options.getModuleName, mod.ast._declared );
 
 		imports = ($D$0 = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = $D$0[1], $D$0;
+
+		reorderImports( imports );
 
 		mod.imports = imports;
 		mod.exports = exports;
@@ -614,25 +635,6 @@
 	}
 
 	/**
-	 * Reorders an array of imports so that empty imports (those with
-	   no specifier, e.g. `import 'polyfills'`) are at the end. That
-	   way they can be excluded from the factory function's arguments
-	 * @param {array} imports - the imports to reorder
-	 */
-	function reorderImports ( imports ) {
-		var i = imports.length, x;
-
-		while ( i-- ) {
-			x = imports[i];
-
-			if ( x.isEmpty ) {
-				imports.splice( i, 1 );
-				imports.push( x );
-			}
-		}
-	}
-
-	/**
 	 * Creates a template function from a template string. The template
 	   may have `<%= someVar %>` interpolators, and the returned function
 	   should be called with a data object e.g. `{ someVar: 'someData' }`
@@ -656,11 +658,11 @@
 	}
 
 	function quote ( str ) {
-		return "'" + str + "'";
+		return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
 	}
 
 	function req ( path ) {
-		return 'require(\'' + path + '\')';
+		return 'require(' + quote(path) + ')';
 	}
 
 	function globalify ( name ) {
@@ -670,20 +672,21 @@
 	var amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
 
 	function amd__amd ( mod, body, options ) {
-		var importNames = [],
+		var seen = {},
+			importNames = [],
 			importPaths = [],
-			intro,
-			i;
-
-		// ensure empty imports are at the end
-		reorderImports( mod.imports );
+			intro;
 
 		// gather imports, and remove import declarations
-		mod.imports.forEach( function( x, i )  {
-			importPaths[i] = x.path;
+		mod.imports.forEach( function(x ) {
+			if ( !hasOwnProp.call( seen, x.path ) ) {
+				importPaths.push( x.path );
 
-			if ( x.name ) {
-				importNames[i] = x.name;
+				if ( x.name ) {
+					importNames.push( x.name );
+				}
+
+				seen[ x.path ] = true;
 			}
 
 			body.remove( x.start, x.next );
@@ -708,11 +711,17 @@
 	}
 
 	function cjs__cjs ( mod, body, options ) {
-		var exportDeclaration;
+		var seen = {}, exportDeclaration;
 
 		mod.imports.forEach( function(x ) {
-			var replacement = x.isEmpty ? (("require('" + (x.path)) + "');") : (("var " + (x.name)) + (" = require('" + (x.path)) + "');");
-			body.replace( x.start, x.end, replacement );
+			if ( !hasOwnProp.call( seen, x.path ) ) {
+				var replacement = x.isEmpty ? (("" + (req(x.path))) + ";") : (("var " + (x.name)) + (" = " + (req(x.path))) + ";");
+				body.replace( x.start, x.end, replacement );
+
+				seen[ x.path ] = true;
+			} else {
+				body.remove( x.start, x.next );
+			}
 		});
 
 		exportDeclaration = mod.exports[0];
@@ -736,14 +745,14 @@
 			}
 		}
 
-		body.prepend( "'use strict';\n\n" ).trimLines()
+		body.prepend( "'use strict';\n\n" ).trimLines();
 
 		return packageResult( body, options, 'toCjs' );
 	}
 
 	function standaloneUmdIntro ( options, indentStr ) {
 		var amdName = options.amdName ?
-			"'" + options.amdName + "', " :
+			quote(options.amdName) + ", " :
 			'';
 
 		var intro =
@@ -762,7 +771,7 @@
 		var hasExports = options.hasExports;
 
 		var amdName = options.amdName ?
-			"'" + options.amdName + "', " :
+			quote(options.amdName) + ", " :
 			'';
 		var amdDeps = options.importPaths.length > 0 ?
 			'[' + options.importPaths.map( quote ).join( ', ' ) + '], ' :
@@ -790,13 +799,37 @@
 		return intro.replace( /\t/g, indentStr );
 	}
 
+	var EsperantoError = function ( message, data ) {
+		var prop;
+
+		this.message = message;
+		this.stack = (new Error()).stack;
+
+		for ( prop in data ) {
+			if ( data.hasOwnProperty( prop ) ) {
+				this[ prop ] = data[ prop ];
+			}
+		}
+	};
+
+	EsperantoError.prototype = new Error();
+	EsperantoError.prototype.constructor = EsperantoError;
+	EsperantoError.prototype.name = 'EsperantoError';
+
+	function requireName ( options ) {
+		if ( !options.name ) {
+			throw new EsperantoError( 'You must supply a `name` option for UMD modules', {
+				code: 'MISSING_NAME'
+			});
+		}
+	}
+
 	function umd__umd ( mod, body, options ) {
 		var importNames = [];
 		var importPaths = [];
+		var seen = {};
 
-		if ( !options.name ) {
-			throw new Error( 'You must supply a `name` option for UMD modules' );
-		}
+		requireName( options );
 
 		var hasImports = mod.imports.length > 0;
 		var hasExports = mod.exports.length > 0;
@@ -807,15 +840,16 @@
 				amdName: options.amdName,
 			}, body.getIndentString() );
 		} else {
-			// ensure empty imports are at the end
-			reorderImports( mod.imports );
-
 			// gather imports, and remove import declarations
-			mod.imports.forEach( function( x, i )  {
-				importPaths[i] = x.path;
+			mod.imports.forEach( function(x ) {
+				if ( !hasOwnProp.call( seen, x.path ) ) {
+					importPaths.push( x.path );
 
-				if ( x.name ) {
-					importNames[i] = x.name;
+					if ( x.name ) {
+						importNames.push( x.name );
+					}
+
+					seen[ x.path ] = true;
 				}
 
 				body.remove( x.start, x.next );
@@ -1172,13 +1206,17 @@
 	;$D$1 = void 0}
 
 	function getImportSummary ( mod ) {
-		var importPaths = [], importNames = [];
+		var importPaths = [], importNames = [], seen = {};
 
-		mod.imports.forEach( function( x, i )  {
-			importPaths[i] = x.path;
+		mod.imports.forEach( function(x ) {
+			if ( !hasOwnProp.call( seen, x.path ) ) {
+				importPaths.push( x.path );
 
-			if ( x.specifiers.length ) { // don't add empty imports
-				importNames[i] = mod.getName( x );
+				if ( x.specifiers.length ) { // don't add empty imports
+					importNames.push( mod.getName( x ) );
+				}
+
+				seen[ x.path ] = true;
 			}
 		});
 
@@ -1193,9 +1231,6 @@
 		var importPaths,
 			importNames,
 			intro;
-
-		// ensure empty imports are at the end
-		reorderImports( mod.imports );
 
 		importPaths = ($D$2 = getImportSummary( mod ))[0], importNames = $D$2[1], $D$2;
 
@@ -1219,27 +1254,31 @@
 	;$D$2 = void 0}
 
 	function strictMode_cjs__cjs ( mod, body, options ) {
-		var importBlock;
+		var importBlock, seen = {};
 
 		// Create block of require statements
 		importBlock = mod.imports.map( function(x ) {
 			var name, replacement;
 
-			if ( x.isEmpty ) {
-				replacement = (("require('" + (x.path)) + "');");
-			} else {
-				name = mod.getName( x );
-				replacement = (("var " + name) + (" = require('" + (x.path)) + "');");
+			if ( !hasOwnProp.call( seen, x.path ) ) {
+				if ( x.isEmpty ) {
+					replacement = (("" + (req(x.path))) + ";");
+				} else {
+					name = mod.getName( x );
+					replacement = (("var " + name) + (" = " + (req(x.path))) + ";");
+				}
+
+				seen[ x.path ] = true;
 			}
 
 			return replacement;
-		}).join( '\n' );
+		}).filter( Boolean ).join( '\n' );
 
 		transformBody( mod, body, {
 			header: importBlock,
 		});
 
-		body.prepend( "'use strict';\n\n" ).trimLines()
+		body.prepend( "'use strict';\n\n" ).trimLines();
 
 		return packageResult( body, options, 'toCjs' );
 	}
@@ -1281,11 +1320,7 @@
 	}
 
 	function strictMode_umd__umd ( mod, body, options ) {
-		if ( !options.name ) {
-			throw new Error( 'You must supply a `name` option for UMD modules' );
-		}
-
-		reorderImports( mod.imports );
+		requireName( options );
 
 		var importPaths = (importNames = getImportSummary( mod ))[0], importNames = importNames[1];
 
@@ -1336,7 +1371,7 @@
 		}
 
 		var intro = defaultsMode_amd__introTemplate({
-			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
+			amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
 			amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
 			names: bundle.externalModules.map( getName ).join( ', ' )
 		}).replace( /\t/g, body.getIndentString() );
@@ -1351,7 +1386,7 @@
 
 	function defaultsMode_cjs__cjs ( bundle, body, options ) {
 		var importBlock = bundle.externalModules.map( function(x ) {
-			return (("var " + (x.name)) + (" = require('" + (x.id)) + "');");
+			return (("var " + (x.name)) + (" = " + (req(x.id))) + ";");
 		}).join( '\n' );
 
 		if ( importBlock ) {
@@ -1369,9 +1404,7 @@
 	}
 
 	function defaultsMode_umd__umd ( bundle, body, options ) {
-		if ( !options || !options.name ) {
-			throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
-		}
+		requireName( options );
 
 		var entry = bundle.entryModule;
 
@@ -1451,7 +1484,7 @@
 		}
 
 		var intro = builders_strictMode_amd__introTemplate({
-			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
+			amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
 			amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
 		}).replace( /\t/g, body.getIndentString() );
@@ -1468,7 +1501,7 @@
 		var entry = bundle.entryModule;
 
 		var importBlock = bundle.externalModules.map( function(x ) {
-			var statement = (("var " + (x.name)) + (" = require('" + (x.id)) + "');");
+			var statement = (("var " + (x.name)) + (" = " + (req(x.id))) + ";");
 
 			if ( x.needsDefault ) {
 				statement += '\n' +
@@ -1493,9 +1526,7 @@
 	}
 
 	function builders_strictMode_umd__umd ( bundle, body, options ) {
-		if ( !options || !options.name ) {
-			throw new Error( 'You must specify an export name, e.g. `bundle.toUmd({ name: "myModule" })`' );
-		}
+		requireName( options );
 
 		var entry = bundle.entryModule;
 

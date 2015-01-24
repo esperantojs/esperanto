@@ -7,11 +7,11 @@ export function getName ( m ) {
 }
 
 export function quote ( str ) {
-	return "'" + str + "'";
+	return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
 }
 
 export function req ( path ) {
-	return 'require(\'' + path + '\')';
+	return 'require(' + quote(path) + ')';
 }
 
 export function globalify ( name ) {

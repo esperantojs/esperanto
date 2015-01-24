@@ -1,5 +1,3 @@
-/* jshint esnext:true */
-
 import { count, incr } from './exporter';
 
 assert.equal(count, 0);
