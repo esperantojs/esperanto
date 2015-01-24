@@ -168,8 +168,12 @@ module.exports = function () {
 
 							options = profile.options || {};
 
-							if ( config.external || bundle.external.length ) {
-								assert.deepEqual( bundle.external, config.external );
+							if ( config.imports || bundle.imports.length ) {
+								assert.deepEqual( bundle.imports, config.imports );
+							}
+
+							if ( config.exports || bundle.exports.length ) {
+								assert.deepEqual( bundle.exports, config.exports );
 							}
 
 							actual = bundle[ profile.method ]({
