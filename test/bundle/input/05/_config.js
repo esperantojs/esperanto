@@ -1,4 +1,5 @@
 module.exports = {
 	description: 'exports named exports',
-	strict: true
+	strict: true,
+	exports: [ 'four', 'five', 'six' ]
 };

@@ -6,6 +6,7 @@ import getBundle from 'bundler/getBundle';
 import moduleBuilders from 'standalone/builders';
 import bundleBuilders from 'bundler/builders';
 import concat from 'bundler/builders/concat';
+import { getName } from 'utils/mappers';
 
 var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
 	alreadyWarned = false;
@@ -48,6 +49,9 @@ export default {
 	bundle: function ( options ) {
 		return getBundle( options ).then( function ( bundle ) {
 			return {
+				imports: bundle.externalModules.map( mod => mod.id ),
+				exports: flattenExports( bundle.entryModule.exports ),
+
 				toAmd: options => transpile( 'amd', options ),
 				toCjs: options => transpile( 'cjs', options ),
 				toUmd: options => transpile( 'umd', options ),
@@ -90,3 +94,23 @@ export default {
 		});
 	}
 };
+
+function flattenExports ( exports ) {
+	var flattened = [];
+
+	exports.forEach( x => {
+		if ( x.isDefault ) {
+			flattened.push( 'default' );
+		}
+
+		else if ( x.name ) {
+			flattened.push( x.name );
+		}
+
+		else if ( x.specifiers ) {
+			flattened.push.apply( flattened, x.specifiers.map( getName ) );
+		}
+	});
+
+	return flattened;
+}

@@ -81,7 +81,7 @@ module.exports = function () {
 				sander.readdirSync( __dirname, 'input' ).forEach( function ( dir ) {
 					var config = require( './input/' + dir + '/_config' );
 
-					( config.solo ? it.only : it )( config.description, function () {
+					( config.solo ? it.only : it )( dir + ': ' + config.description, function () {
 						return esperanto.bundle({
 							base: path.resolve( 'bundle/input', dir ),
 							entry: config.entry || 'main',
@@ -92,6 +92,14 @@ module.exports = function () {
 							var options, actual;
 
 							options = profile.options || {};
+
+							if ( config.imports || bundle.imports.length ) {
+								assert.deepEqual( bundle.imports, config.imports );
+							}
+
+							if ( config.exports || bundle.exports.length ) {
+								assert.deepEqual( bundle.exports, config.exports );
+							}
 
 							actual = bundle[ profile.method ]({
 								strict: options.strict,

@@ -1,4 +1,5 @@
 module.exports = {
 	description: 'exports chains correctly in strict mode',
-	strict: true
+	strict: true,
+	exports: [ 'foo', 'bar', 'baz', 'qux' ]
 };
