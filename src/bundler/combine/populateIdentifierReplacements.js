@@ -92,12 +92,6 @@ export default function populateIdentifierReplacements ( bundle ) {
 						else if ( mod ) {
 							replacement = mod.identifierReplacements.default;
 						}
-
-						else {
-							replacement = hasOwnProp.call( conflicts, moduleName ) || otherModulesDeclare( bundle.moduleLookup[ moduleId ], moduleName ) ?
-								moduleName + '__default' :
-								moduleName;
-						}
 					} else if ( !externalModule ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							moduleName + '__' + specifierName :

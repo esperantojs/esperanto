@@ -1,8 +1,12 @@
 import hasOwnProp from 'utils/hasOwnProp';
+import builtins from 'utils/builtins';
 import { default as sanitize, splitPath } from 'utils/sanitize';
 
 export default function getUniqueNames ( modules, externalModules, userNames ) {
 	var names = {}, used = {};
+
+	// copy builtins
+	builtins.forEach( n => used[n] = true );
 
 	// copy user-specified names
 	if ( userNames ) {
