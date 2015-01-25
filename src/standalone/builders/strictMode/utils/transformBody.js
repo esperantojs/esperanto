@@ -11,7 +11,12 @@ export default function transformBody ( mod, body, options ) {
 		exportNames,
 		alreadyExported = {},
 		earlyExports,
-		lateExports;
+		lateExports,
+		exportObject = options.exportObject;
+
+	if (!exportObject) {
+		throw new Error('Missing required option exportObject.');
+	}
 
 	[ chains, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
 	exportNames = getExportNames( mod.exports );
@@ -48,7 +53,7 @@ export default function transformBody ( mod, body, options ) {
 				if ( x.isDefault ) {
 					// export default function answer () { return 42; }
 					body.remove( x.start, x.valueStart );
-					body.insert( x.end, `\nexports['default'] = ${x.name};` );
+					body.insert( x.end, `\n${exportObject}['default'] = ${x.name};` );
 				} else {
 					// export function answer () { return 42; }
 					body.remove( x.start, x.valueStart );
@@ -58,7 +63,7 @@ export default function transformBody ( mod, body, options ) {
 			case 'anonFunction':   // export default function () {}
 			case 'anonClass':      // export default class () {}
 			case 'expression':     // export default 40 + 2;
-				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
+				body.replace( x.start, x.valueStart, `${exportObject}['default'] = ` );
 				return;
 
 			case 'named':          // export { foo, bar };
@@ -79,13 +84,13 @@ export default function transformBody ( mod, body, options ) {
 
 		if ( chains.hasOwnProperty( name ) ) {
 			// special case - a binding from another module
-			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { get: function () { return ${chains[name]}; }});` );
+			earlyExports.push( `Object.defineProperty(${exportObject}, '${exportAs}', { get: function () { return ${chains[name]}; }});` );
 		} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
 			// functions should be exported early, in
 			// case of cyclic dependencies
-			earlyExports.push( `exports.${exportAs} = ${name};` );
+			earlyExports.push( `${exportObject}.${exportAs} = ${name};` );
 		} else if ( !alreadyExported.hasOwnProperty( name ) ) {
-			lateExports.push( `exports.${exportAs} = ${name};` );
+			lateExports.push( `${exportObject}.${exportAs} = ${name};` );
 		}
 	});
 

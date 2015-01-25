@@ -2,6 +2,7 @@ import packageResult from 'utils/packageResult';
 import hasOwnProp from 'utils/hasOwnProp';
 import transformBody from './utils/transformBody';
 import { req } from 'utils/mappers';
+import getExportObjectName from 'utils/getExportObjectName';
 
 export default function cjs ( mod, body, options ) {
 	var importBlock, seen = {};
@@ -24,9 +25,19 @@ export default function cjs ( mod, body, options ) {
 		return replacement;
 	}).filter( Boolean ).join( '\n' );
 
+	var exportObject = getExportObjectName(mod);
+
 	transformBody( mod, body, {
 		header: importBlock,
+		exportObject: exportObject,
 	});
+
+	if ( exportObject !== 'exports' ) {
+		body.indent();
+		body.trimLines();
+		body.prepend( `function (${exportObject}) {\n` );
+		body.append( '\n}( exports );\n' );
+	}
 
 	body.prepend( "'use strict';\n\n" ).trimLines();
 
