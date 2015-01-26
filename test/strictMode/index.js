@@ -21,6 +21,10 @@ module.exports = function () {
 		});
 
 		before( function () {
+			if ( process.env.BUILD_TIMEOUT ) {
+				this.timeout( parseInt( process.env.BUILD_TIMEOUT ) );
+			}
+
 			return sander.Promise.all([
 				require( '../utils/build' )().then( function ( lib ) {
 					esperanto = lib;
