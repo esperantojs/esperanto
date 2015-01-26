@@ -12,6 +12,10 @@ module.exports = function () {
 		var profiles;
 
 		before( function () {
+			if ( process.env.BUILD_TIMEOUT ) {
+				this.timeout( parseInt( process.env.BUILD_TIMEOUT ) );
+			}
+
 			return Promise.all([
 				require( '../utils/build' )().then( function ( lib ) {
 					esperanto = lib;
