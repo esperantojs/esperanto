@@ -33,7 +33,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "scripts/build.sh",
+    "build": "node scripts/build.js",
     "test": "mocha",
     "prepublish": "npm run build"
   }
