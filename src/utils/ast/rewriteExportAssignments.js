@@ -16,6 +16,11 @@ export default function rewriteExportAssignments ( body, node, exports, scope, a
 	}
 
 	name = assignee.name;
+
+	if ( scope.contains( name, true ) ) {
+		return; // shadows an export
+	}
+
 	if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
 		if ( !!capturedUpdates ) {
 			capturedUpdates.push({
