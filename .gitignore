@@ -6,6 +6,5 @@ out
 demo/dist
 test/lib
 lib
-.*
 cli-test
 sandbox
