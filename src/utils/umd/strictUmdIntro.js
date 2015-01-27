@@ -1,10 +1,8 @@
 import { globalify, quote, req } from 'utils/mappers';
 import { resolveAgainst } from 'utils/resolveId';
-import getExportObjectName from 'utils/getExportObjectName';
 
 export default function strictUmdIntro ( options, indentStr ) {
 	var hasExports = options.hasExports;
-	var exportObject = options.exportObject || 'exports';
 
 	var amdName = options.amdName ?
 		"'" + options.amdName + "', " :
@@ -17,7 +15,7 @@ export default function strictUmdIntro ( options, indentStr ) {
 	var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
 	var globalDeps = ( hasExports ? [ `(global.${options.name} = {})` ] : [] )
 		.concat( options.importNames.map( globalify ) ).join( ', ' );
-	var args = ( hasExports ? [ exportObject ] : [] ).concat( options.importNames ).join( ', ' );
+	var args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
 
 	var defaultsBlock = '';
 	if ( options.externalDefaults && options.externalDefaults.length > 0 ) {

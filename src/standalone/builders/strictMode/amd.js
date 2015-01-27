@@ -4,7 +4,6 @@ import { resolveAgainst } from 'utils/resolveId';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
 import { quote } from 'utils/mappers';
-import getExportObjectName from 'utils/getExportObjectName';
 
 var introTemplate;
 
@@ -17,11 +16,9 @@ export default function amd ( mod, body, options ) {
 
 	[ importPaths, importNames ] = getImportSummary( mod );
 
-	var exportObject = getExportObjectName( mod );
-
 	if ( mod.exports.length ) {
 		importPaths.unshift( 'exports' );
-		importNames.unshift( exportObject );
+		importNames.unshift( 'exports' );
 	}
 
 	intro = introTemplate({
@@ -32,8 +29,7 @@ export default function amd ( mod, body, options ) {
 
 	transformBody( mod, body, {
 		intro: intro,
-		outro: '\n\n});',
-		exportObject: exportObject,
+		outro: '\n\n});'
 	});
 
 	return packageResult( body, options, 'toAmd' );
