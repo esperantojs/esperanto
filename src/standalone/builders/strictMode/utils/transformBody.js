@@ -2,6 +2,7 @@ import gatherImports from './gatherImports';
 import getExportNames from './getExportNames';
 import getReadOnlyIdentifiers from 'utils/getReadOnlyIdentifiers';
 import traverseAst from 'utils/ast/traverse';
+import hasOwnProp from 'utils/hasOwnProp';
 
 export default function transformBody ( mod, body, options ) {
 	var chains,
@@ -17,6 +18,9 @@ export default function transformBody ( mod, body, options ) {
 	exportNames = getExportNames( mod.exports );
 
 	[ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
+
+	// ensure no conflict with `exports`
+	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
 
 	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
 
@@ -102,4 +106,12 @@ export default function transformBody ( mod, body, options ) {
 	if ( options.intro && options.outro ) {
 		body.indent().prepend( options.intro ).trimLines().append( options.outro );
 	}
+}
+
+function deconflict ( name, declared ) {
+	while ( hasOwnProp.call( declared, name ) ) {
+		name = '_' + name;
+	}
+
+	return name;
 }
