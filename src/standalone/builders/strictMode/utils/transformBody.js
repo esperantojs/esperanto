@@ -83,7 +83,7 @@ export default function transformBody ( mod, body, options ) {
 
 		if ( chains.hasOwnProperty( name ) ) {
 			// special case - a binding from another module
-			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { get: function () { return ${chains[name]}; }});` );
+			earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { enumerable: true, get: function () { return ${chains[name]}; }});` );
 		} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
 			// functions should be exported early, in
 			// case of cyclic dependencies

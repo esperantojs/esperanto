@@ -2,6 +2,7 @@
 node_modules
 sample/output
 .gobble
+.gobble-build
 out
 demo/dist
 test/lib
