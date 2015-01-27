@@ -1,4 +1,4 @@
-# esperanto
+# esperanto [![Build Status](https://travis-ci.org/esperantojs/esperanto.svg?branch=master)](https://travis-ci.org/esperantojs/esperanto)
 
 A better way to transpile ES6 modules to AMD and CommonJS:
 

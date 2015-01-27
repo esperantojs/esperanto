@@ -64,7 +64,7 @@ export default function annotateAst ( ast ) {
 
 						// If this is the root scope, this may need to be
 						// exported early, so we make a note of it
-						if ( !scope.parent ) {
+						if ( !scope.parent && node.type === 'FunctionDeclaration' ) {
 							topLevelFunctionNames.push( node.id.name );
 						}
 					}
