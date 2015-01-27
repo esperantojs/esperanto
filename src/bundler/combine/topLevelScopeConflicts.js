@@ -1,6 +1,6 @@
 import hasOwnProp from 'utils/hasOwnProp';
 import builtins from 'utils/builtins';
-import getUnscopedNames from './getUnscopedNames';
+import getUnscopedNames from 'utils/ast/getUnscopedNames';
 import getRenamedImports from './getRenamedImports';
 
 export default function topLevelScopeConflicts ( bundle ) {
