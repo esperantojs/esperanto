@@ -1,5 +1,12 @@
 # changelog
 
+## 0.6.6
+
+* Conflicts between module names and unscoped (i.e. global) names and `exports` are prevented ([#74](https://github.com/esperantojs/esperanto/issues/74)), ([#79](https://github.com/esperantojs/esperanto/issues/79))
+* Names in function expressions (as opposed to declarations) are disregarded ([#73](https://github.com/esperantojs/esperanto/issues/73))
+* Re-exports remain enumerable
+* Continuous integration via Travis-CI
+
 ## 0.6.5
 
 * Relative AMD dependency paths can be made absolute with `absolutePaths: true` - requires `amdName` to be specified ([#58](https://github.com/esperantojs/esperanto/issues/58))
