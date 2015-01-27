@@ -4,7 +4,6 @@ import strictUmdIntro from 'utils/umd/strictUmdIntro';
 import requireName from 'utils/umd/requireName';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
-import getExportObjectName from 'utils/getExportObjectName';
 
 export default function umd ( mod, body, options ) {
 	requireName( options );
@@ -13,7 +12,6 @@ export default function umd ( mod, body, options ) {
 
 	var hasImports = mod.imports.length > 0;
 	var hasExports = mod.exports.length > 0;
-	var exportObject = getExportObjectName( mod );
 
 	var intro;
 	if (!hasImports && !hasExports) {
@@ -28,14 +26,12 @@ export default function umd ( mod, body, options ) {
 			amdName: options.amdName,
 			absolutePaths: options.absolutePaths,
 			name: options.name,
-			exportObject,
 		}, body.getIndentString() );
 	}
 
 	transformBody( mod, body, {
 		intro: intro,
-		outro: '\n\n}));',
-		exportObject,
+		outro: '\n\n}));'
 	});
 
 	return packageResult( body, options, 'toUmd' );
