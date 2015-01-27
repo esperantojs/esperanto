@@ -1,6 +1,6 @@
 'use strict';
 
-Object.defineProperty(exports, 'a', { get: function () { return first.a; }});
+Object.defineProperty(exports, 'a', { enumerable: true, get: function () { return first.a; }});
 
 var first = require('./first');
 
