@@ -26,6 +26,7 @@ export default function cjs ( mod, body, options ) {
 
 	transformBody( mod, body, {
 		header: importBlock,
+		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
 	body.prepend( "'use strict';\n\n" ).trimLines();

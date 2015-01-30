@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.5 - 2015-01-24
+	esperanto.js v0.6.6 - 2015-01-28
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -99,7 +99,7 @@ function annotateAst ( ast ) {
 
 						// If this is the root scope, this may need to be
 						// exported early, so we make a note of it
-						if ( !scope.parent ) {
+						if ( !scope.parent && node.type === 'FunctionDeclaration' ) {
 							topLevelFunctionNames.push( node.id.name );
 						}
 					}
@@ -398,6 +398,52 @@ function processExport ( node, source ) {
 	return result;
 }
 
+function getUnscopedNames ( mod ) {
+	var unscoped = [], importedNames, scope;
+
+	function imported ( name ) {
+		if ( !importedNames ) {
+			importedNames = {};
+			mod.imports.forEach( function(i ) {
+				!i.passthrough && i.specifiers.forEach( function(s ) {
+					importedNames[ s.as ] = true;
+				});
+			});
+		}
+		return hasOwnProp.call( importedNames, name );
+	}
+
+	estraverse.traverse( mod.ast, {
+		enter: function ( node ) {
+			// we're only interested in references, not property names etc
+			if ( node._skip ) return this.skip();
+
+			if ( node._scope ) {
+				scope = node._scope;
+			}
+
+			if ( node.type === 'Identifier' &&
+					 !scope.contains( node.name ) &&
+					 !imported( node.name ) &&
+					 !~unscoped.indexOf( node.name ) ) {
+				unscoped.push( node.name );
+			}
+		},
+
+		leave: function ( node ) {
+			if ( node.type === 'Program' ) {
+				return;
+			}
+
+			if ( node._scope ) {
+				scope = scope.parent;
+			}
+		}
+	});
+
+	return unscoped;
+}
+
 /**
  * Reorders an array of imports so that empty imports (those with
    no specifier, e.g. `import 'polyfills'`) are at the end. That
@@ -497,7 +543,7 @@ function getModuleNameHelper ( userFn ) {var usedNames = arguments[1];if(usedNam
 }
 
 function getStandaloneModule ( options ) {var $D$0;
-	var mod, imports, exports;
+	var mod, imports, exports, conflicts = {};
 
 	mod = {
 		body: new MagicString( options.source ),
@@ -507,18 +553,25 @@ function getStandaloneModule ( options ) {var $D$0;
 		})
 	};
 
-	if ( options.strict ) {
-		annotateAst( mod.ast );
-	}
-
-	mod.getName = getModuleNameHelper( options.getModuleName, mod.ast._declared );
-
 	imports = ($D$0 = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = $D$0[1], $D$0;
 
 	reorderImports( imports );
 
 	mod.imports = imports;
 	mod.exports = exports;
+
+	if ( options.strict ) {
+		annotateAst( mod.ast );
+
+		// TODO there's probably an easier way to get this array
+		Object.keys( mod.ast._declared ).concat( getUnscopedNames( mod ) ).forEach( function(n ) {
+			conflicts[n] = true;
+		});
+	} else {
+		conflicts = mod.ast._declared;
+	}
+
+	mod.getName = getModuleNameHelper( options.getModuleName, conflicts );
 
 	return mod;
 ;$D$0 = void 0}
@@ -617,7 +670,8 @@ function resolveChains ( modules, moduleLookup ) {
 }
 
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-var builtins = 'Array ArrayBuffer DataView Date Error EvalError Float32Array Float64Array Function Generator GeneratorFunction Infinity Int16Array Int32Array Int8Array InternalError Intl Iterator JSON Map Math NaN Number Object ParallelArray Promise Proxy RangeError ReferenceError Reflect RegExp Set StopIteration String Symbol SyntaxError TypeError TypedArray URIError Uint16Array Uint32Array Uint8Array Uint8ClampedArray WeakMap WeakSet decodeURI decodeURIComponent encodeURI encodeURIComponent escape eval isFinite isNaN null parseFloat parseInt undefined unescape uneval'.split( ' ' );
+// we add `exports` to this list, to avoid conflicst
+var builtins = 'Array ArrayBuffer DataView Date Error EvalError Float32Array Float64Array Function Generator GeneratorFunction Infinity Int16Array Int32Array Int8Array InternalError Intl Iterator JSON Map Math NaN Number Object ParallelArray Promise Proxy RangeError ReferenceError Reflect RegExp Set StopIteration String Symbol SyntaxError TypeError TypedArray URIError Uint16Array Uint32Array Uint8Array Uint8ClampedArray WeakMap WeakSet decodeURI decodeURIComponent encodeURI encodeURIComponent escape eval exports isFinite isNaN null parseFloat parseInt undefined unescape uneval'.split( ' ' );
 
 function getUniqueNames ( modules, externalModules, userNames ) {
 	var names = {}, used = {};
@@ -693,52 +747,6 @@ function populateExternalModuleImports ( bundle ) {
 			});
 		});
 	});
-}
-
-function getUnscopedNames ( mod ) {
-	var unscoped = [], importedNames, scope;
-
-	function imported ( name ) {
-		if ( !importedNames ) {
-			importedNames = {};
-			mod.imports.forEach( function(i ) {
-				!i.passthrough && i.specifiers.forEach( function(s ) {
-					importedNames[ s.as ] = true;
-				});
-			});
-		}
-		return hasOwnProp.call( importedNames, name );
-	}
-
-	estraverse.traverse( mod.ast, {
-		enter: function ( node ) {
-			// we're only interested in references, not property names etc
-			if ( node._skip ) return this.skip();
-
-			if ( node._scope ) {
-				scope = node._scope;
-			}
-
-			if ( node.type === 'Identifier' &&
-					 !scope.contains( node.name ) &&
-					 !imported( node.name ) &&
-					 !~unscoped.indexOf( node.name ) ) {
-				unscoped.push( node.name );
-			}
-		},
-
-		leave: function ( node ) {
-			if ( node.type === 'Program' ) {
-				return;
-			}
-
-			if ( node._scope ) {
-				scope = scope.parent;
-			}
-		}
-	});
-
-	return unscoped;
 }
 
 function getRenamedImports ( mod ) {
@@ -1042,6 +1050,11 @@ function rewriteExportAssignments ( body, node, exports, scope, alreadyExported,
 	}
 
 	name = assignee.name;
+
+	if ( scope.contains( name, true ) ) {
+		return; // shadows an export
+	}
+
 	if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
 		if ( !!capturedUpdates ) {
 			capturedUpdates.push({
@@ -1363,7 +1376,7 @@ function getModule ( mod ) {var $D$2;
 	return mod;
 ;$D$2 = void 0}
 
-var Promise = sander.Promise;
+var getBundle__Promise = sander.Promise;
 
 function getBundle ( options ) {
 	var entry = options.entry.replace( /\.js$/, '' ),
@@ -1462,7 +1475,7 @@ function getBundle ( options ) {
 					return fetchModule( x.id );
 				});
 
-				return Promise.all( promises );
+				return getBundle__Promise.all( promises );
 			}).catch( function ( err ) {
 				var externalModule;
 
@@ -1914,6 +1927,9 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 
 	importedBindings = ($D$3 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$3[1], $D$3;
 
+	// ensure no conflict with `exports`
+	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
+
 	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
 
 	// Remove import statements from the body of the module
@@ -1975,7 +1991,7 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 
 		if ( chains.hasOwnProperty( name ) ) {
 			// special case - a binding from another module
-			earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { get: function () { return " + (chains[name])) + "; }});") );
+			earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { enumerable: true, get: function () { return " + (chains[name])) + "; }});") );
 		} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
 			// functions should be exported early, in
 			// case of cyclic dependencies
@@ -1999,6 +2015,14 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 		body.indent().prepend( options.intro ).trimLines().append( options.outro );
 	}
 ;$D$3 = void 0}
+
+function deconflict ( name, declared ) {
+	while ( hasOwnProp.call( declared, name ) ) {
+		name = '_' + name;
+	}
+
+	return name;
+}
 
 function getImportSummary ( mod ) {
 	var importPaths = [], importNames = [], seen = {};
@@ -2134,7 +2158,7 @@ function strictMode_umd__umd ( mod, body, options ) {
 			importNames: importNames,
 			amdName: options.amdName,
 			absolutePaths: options.absolutePaths,
-			name: options.name,
+			name: options.name
 		}, body.getIndentString() );
 	}
 

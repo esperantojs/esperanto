@@ -31,7 +31,8 @@ export default function umd ( mod, body, options ) {
 
 	transformBody( mod, body, {
 		intro: intro,
-		outro: '\n\n}));'
+		outro: '\n\n}));',
+		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
 	return packageResult( body, options, 'toUmd' );

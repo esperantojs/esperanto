@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.5 - 2015-01-24
+	esperanto.js v0.6.6 - 2015-01-28
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -97,7 +97,7 @@
 
 							// If this is the root scope, this may need to be
 							// exported early, so we make a note of it
-							if ( !scope.parent ) {
+							if ( !scope.parent && node.type === 'FunctionDeclaration' ) {
 								topLevelFunctionNames.push( node.id.name );
 							}
 						}
@@ -396,6 +396,52 @@
 		return result;
 	}
 
+	function getUnscopedNames ( mod ) {
+		var unscoped = [], importedNames, scope;
+
+		function imported ( name ) {
+			if ( !importedNames ) {
+				importedNames = {};
+				mod.imports.forEach( function(i ) {
+					!i.passthrough && i.specifiers.forEach( function(s ) {
+						importedNames[ s.as ] = true;
+					});
+				});
+			}
+			return hasOwnProp.call( importedNames, name );
+		}
+
+		estraverse.traverse( mod.ast, {
+			enter: function ( node ) {
+				// we're only interested in references, not property names etc
+				if ( node._skip ) return this.skip();
+
+				if ( node._scope ) {
+					scope = node._scope;
+				}
+
+				if ( node.type === 'Identifier' &&
+						 !scope.contains( node.name ) &&
+						 !imported( node.name ) &&
+						 !~unscoped.indexOf( node.name ) ) {
+					unscoped.push( node.name );
+				}
+			},
+
+			leave: function ( node ) {
+				if ( node.type === 'Program' ) {
+					return;
+				}
+
+				if ( node._scope ) {
+					scope = scope.parent;
+				}
+			}
+		});
+
+		return unscoped;
+	}
+
 	/**
 	 * Reorders an array of imports so that empty imports (those with
 	   no specifier, e.g. `import 'polyfills'`) are at the end. That
@@ -495,7 +541,7 @@
 	}
 
 	function getStandaloneModule ( options ) {var $D$0;
-		var mod, imports, exports;
+		var mod, imports, exports, conflicts = {};
 
 		mod = {
 			body: new MagicString( options.source ),
@@ -505,18 +551,25 @@
 			})
 		};
 
-		if ( options.strict ) {
-			annotateAst( mod.ast );
-		}
-
-		mod.getName = getModuleNameHelper( options.getModuleName, mod.ast._declared );
-
 		imports = ($D$0 = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = $D$0[1], $D$0;
 
 		reorderImports( imports );
 
 		mod.imports = imports;
 		mod.exports = exports;
+
+		if ( options.strict ) {
+			annotateAst( mod.ast );
+
+			// TODO there's probably an easier way to get this array
+			Object.keys( mod.ast._declared ).concat( getUnscopedNames( mod ) ).forEach( function(n ) {
+				conflicts[n] = true;
+			});
+		} else {
+			conflicts = mod.ast._declared;
+		}
+
+		mod.getName = getModuleNameHelper( options.getModuleName, conflicts );
 
 		return mod;
 	;$D$0 = void 0}
@@ -1045,6 +1098,11 @@
 		}
 
 		name = assignee.name;
+
+		if ( scope.contains( name, true ) ) {
+			return; // shadows an export
+		}
+
 		if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
 			if ( !!capturedUpdates ) {
 				capturedUpdates.push({
@@ -1152,6 +1210,9 @@
 
 		importedBindings = ($D$1 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$1[1], $D$1;
 
+		// ensure no conflict with `exports`
+		identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
+
 		traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
 
 		// Remove import statements from the body of the module
@@ -1213,7 +1274,7 @@
 
 			if ( chains.hasOwnProperty( name ) ) {
 				// special case - a binding from another module
-				earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { get: function () { return " + (chains[name])) + "; }});") );
+				earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { enumerable: true, get: function () { return " + (chains[name])) + "; }});") );
 			} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
 				// functions should be exported early, in
 				// case of cyclic dependencies
@@ -1237,6 +1298,14 @@
 			body.indent().prepend( options.intro ).trimLines().append( options.outro );
 		}
 	;$D$1 = void 0}
+
+	function deconflict ( name, declared ) {
+		while ( hasOwnProp.call( declared, name ) ) {
+			name = '_' + name;
+		}
+
+		return name;
+	}
 
 	function getImportSummary ( mod ) {
 		var importPaths = [], importNames = [], seen = {};
@@ -1372,7 +1441,7 @@
 				importNames: importNames,
 				amdName: options.amdName,
 				absolutePaths: options.absolutePaths,
-				name: options.name,
+				name: options.name
 			}, body.getIndentString() );
 		}
 
@@ -1680,7 +1749,7 @@
 		toUmd: transpileMethod( 'umd' ),
 
 		bundle: function ( options ) {
-			return undefined__default( options ).then( function ( bundle ) {
+			return getBundle( options ).then( function ( bundle ) {
 				return {
 					imports: bundle.externalModules.map( function(mod ) {return mod.id} ),
 					exports: flattenExports( bundle.entryModule.exports ),
