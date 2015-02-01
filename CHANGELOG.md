@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.7
+
+* Using the `_evilES3SafeReExports` will cause re-exported bindings to be done with direct property assignment rather than `Object.defineProperty()`. In most cases, the resulting behaviour will be no different, but it could result in undefined bindings in cases of cyclical dependencies, and values are fixed at the time of re-export rather than live.
+
 ## 0.6.6
 
 * Conflicts between module names and unscoped (i.e. global) names and `exports` are prevented ([#74](https://github.com/esperantojs/esperanto/issues/74)), ([#79](https://github.com/esperantojs/esperanto/issues/79))
