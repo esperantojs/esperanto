@@ -55,7 +55,8 @@ module.exports = function () {
 						amdName: t.config.amdName,
 						absolutePaths: t.config.absolutePaths,
 						banner: t.config.banner,
-						footer: t.config.footer
+						footer: t.config.footer,
+						_evilES3SafeReExports: t.config._evilES3SafeReExports
 					}).code;
 
 					return sander.readFile( 'strictMode/output/' + dir, t.id + '.js' ).then( String ).then( function ( expected ) {
