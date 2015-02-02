@@ -1,0 +1,1 @@
+global.sideEffectyOutput = global.myGlobalFunction();

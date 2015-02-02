@@ -9,6 +9,7 @@ export default function umd ( mod, body, options ) {
 	var importNames = [];
 	var importPaths = [];
 	var seen = {};
+	var placeholders = 0;
 
 	requireName( options );
 
@@ -27,7 +28,13 @@ export default function umd ( mod, body, options ) {
 				importPaths.push( x.path );
 
 				if ( x.name ) {
+					while ( placeholders ) {
+						importNames.push( '__dep' + importNames.length + '__' );
+						placeholders--;
+					}
 					importNames.push( x.name );
+				} else {
+					placeholders++;
 				}
 
 				seen[ x.path ] = true;

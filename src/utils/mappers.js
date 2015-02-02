@@ -15,5 +15,9 @@ export function req ( path ) {
 }
 
 export function globalify ( name ) {
-	return 'global.' + name;
+  	if ( /^__dep\d+__$/.test( name ) ) {
+		return 'undefined';
+	} else {
+		return 'global.' + name;
+	}
 }

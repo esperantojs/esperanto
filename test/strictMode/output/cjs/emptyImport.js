@@ -1,4 +1,4 @@
 'use strict';
 
-var bar = require('foo');
 require('polyfills');
+var bar = require('foo');
