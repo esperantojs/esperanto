@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.6 - 2015-01-28
+	esperanto.js v0.6.7 - 2015-02-04
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -584,6 +584,10 @@ function resolveId ( importPath, importerPath ) {
 	} else {
 		importerParts = splitPath( importerPath );
 		importParts = splitPath( importPath );
+
+		if ( importParts[0] === '.' ) {
+			importParts.shift();
+		}
 
 		importerParts.pop(); // get dirname
 		while ( importParts[0] === '..' ) {
@@ -1991,7 +1995,11 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 
 		if ( chains.hasOwnProperty( name ) ) {
 			// special case - a binding from another module
-			earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { enumerable: true, get: function () { return " + (chains[name])) + "; }});") );
+			if ( !options._evilES3SafeReExports ) {
+				earlyExports.push( (("Object.defineProperty(exports, '" + exportAs) + ("', { enumerable: true, get: function () { return " + (chains[name])) + "; }});") );
+			} else {
+				lateExports.push( (("exports." + exportAs) + (" = " + (chains[name])) + ";") );
+			}
 		} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
 			// functions should be exported early, in
 			// case of cyclic dependencies
@@ -2066,7 +2074,8 @@ function strictMode_amd__amd ( mod, body, options ) {var $D$4;
 
 	utils_transformBody__transformBody( mod, body, {
 		intro: intro,
-		outro: '\n\n});'
+		outro: '\n\n});',
+		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
 	return packageResult( body, options, 'toAmd' );
@@ -2095,6 +2104,7 @@ function strictMode_cjs__cjs ( mod, body, options ) {
 
 	utils_transformBody__transformBody( mod, body, {
 		header: importBlock,
+		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
 	body.prepend( "'use strict';\n\n" ).trimLines();
@@ -2164,7 +2174,8 @@ function strictMode_umd__umd ( mod, body, options ) {
 
 	utils_transformBody__transformBody( mod, body, {
 		intro: intro,
-		outro: '\n\n}));'
+		outro: '\n\n}));',
+		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
 	return packageResult( body, options, 'toUmd' );
@@ -2403,7 +2414,7 @@ function concat ( bundle, options ) {
 
 	// This bundle must be self-contained - no imports or exports
 	if ( bundle.externalModules.length || bundle.entryModule.exports.length ) {
-		throw new Error( 'bundle.concat() can only be used with bundles that have no imports/exports' );
+		throw new Error( (("bundle.concat() can only be used with bundles that have no imports/exports (imports: [" + (bundle.externalModules.map(function(x){return x.id}).join(', '))) + ("], exports: [" + (bundle.entryModule.exports.join(', '))) + "])") );
 	}
 
 	body = bundle.body.clone();
