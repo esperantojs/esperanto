@@ -89,7 +89,8 @@ require( './build' )().then( function ( esperanto ) {
 						absolutePaths: config.absolutePaths,
 						strict: profile.options && profile.options.strict,
 						banner: config.banner,
-						footer: config.footer
+						footer: config.footer,
+						_evilES3SafeReExports: config._evilES3SafeReExports
 					});
 					return sander.writeFile( '../strictMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
