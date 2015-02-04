@@ -11,7 +11,8 @@ export default function amd ( mod, body, options ) {
 	var seen = {},
 		importNames = [],
 		importPaths = [],
-		intro;
+		intro,
+		placeholders = 0;
 
 	// gather imports, and remove import declarations
 	mod.imports.forEach( x => {
@@ -21,7 +22,13 @@ export default function amd ( mod, body, options ) {
 			importPaths.push( path );
 
 			if ( x.name ) {
+				while ( placeholders ) {
+					importNames.push( '__dep' + importNames.length + '__' );
+					placeholders--;
+				}
 				importNames.push( x.name );
+			} else {
+				placeholders++;
 			}
 
 			seen[ path ] = true;
