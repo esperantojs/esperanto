@@ -5,7 +5,7 @@ export default function concat ( bundle, options ) {
 
 	// This bundle must be self-contained - no imports or exports
 	if ( bundle.externalModules.length || bundle.entryModule.exports.length ) {
-		throw new Error( 'bundle.concat() can only be used with bundles that have no imports/exports' );
+		throw new Error( `bundle.concat() can only be used with bundles that have no imports/exports (imports: [${bundle.externalModules.map(x=>x.id).join(', ')}], exports: [${bundle.entryModule.exports.join(', ')}])` );
 	}
 
 	body = bundle.body.clone();
