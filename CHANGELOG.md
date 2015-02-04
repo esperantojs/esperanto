@@ -1,5 +1,11 @@
 # changelog
 
+## 0.6.8
+
+* Module load order is guaranteed by import order - empty imports are represented by `__dep0__` etc within the module, or `undefined` globally ([#92](https://github.com/esperantojs/esperanto/issues/92))
+* Fix absolute path resolution in cases like `./../foo` ([#97](https://github.com/esperantojs/esperanto/issues/97))
+* If `bundle.concat()` fails due to external dependencies, or exports from the entry module, the error message lists them
+
 ## 0.6.7
 
 * Using the `_evilES3SafeReExports` will cause re-exported bindings to be done with direct property assignment rather than `Object.defineProperty()`. In most cases, the resulting behaviour will be no different, but it could result in undefined bindings in cases of cyclical dependencies, and values are fixed at the time of re-export rather than live.
