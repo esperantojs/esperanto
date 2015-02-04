@@ -15,6 +15,10 @@ export default function resolveId ( importPath, importerPath ) {
 		importerParts = splitPath( importerPath );
 		importParts = splitPath( importPath );
 
+		if ( importParts[0] === '.' ) {
+			importParts.shift();
+		}
+
 		importerParts.pop(); // get dirname
 		while ( importParts[0] === '..' ) {
 			importParts.shift();
