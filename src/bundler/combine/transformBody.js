@@ -50,7 +50,8 @@ export default function transformBody ( bundle, mod, body ) {
 				if ( name === identifierReplacements.default ) {
 					body.remove( x.start, x.end );
 				} else {
-					body.replace( x.start, x.end, `var ${identifierReplacements.default} = ${identifierReplacements[name]};` );
+					let original = hasOwnProp.call( identifierReplacements, name ) ? identifierReplacements[ name ] : name;
+					body.replace( x.start, x.end, `var ${identifierReplacements.default} = ${original};` );
 				}
 			}
 
