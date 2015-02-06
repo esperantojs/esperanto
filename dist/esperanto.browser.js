@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.8 - 2015-02-04
+	esperanto.js v0.6.9 - 2015-02-06
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -612,18 +612,20 @@
 				throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
 			}
 
+			var sourceMapFile = options.sourceMapFile[0] === '/' ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+
 			map = body.generateMap({
 				includeContent: true,
 				hires: true,
-				file: options.sourceMapFile,
-				source: !isBundle ? getRelativePath( options.sourceMapFile, options.sourceMapSource ) : null
+				file: sourceMapFile,
+				source: !isBundle ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 			});
 
 			if ( options.sourceMap === 'inline' ) {
 				code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 				map = null;
 			} else {
-				code += '\n//# sourceMa' + 'ppingURL=./' + splitPath( options.sourceMapFile ).pop() + '.map';
+				code += '\n//# sourceMa' + 'ppingURL=' + sourceMapFile + '.map';
 			}
 		} else {
 			map = null;
@@ -1764,7 +1766,7 @@
 		toUmd: transpileMethod( 'umd' ),
 
 		bundle: function ( options ) {
-			return getBundle( options ).then( function ( bundle ) {
+			return undefined__default( options ).then( function ( bundle ) {
 				return {
 					imports: bundle.externalModules.map( function(mod ) {return mod.id} ),
 					exports: flattenExports( bundle.entryModule.exports ),

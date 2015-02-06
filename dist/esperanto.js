@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.8 - 2015-02-04
+	esperanto.js v0.6.9 - 2015-02-06
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1360,7 +1360,7 @@ function getModule ( mod ) {var $D$2;
 	return mod;
 ;$D$2 = void 0}
 
-var getBundle__Promise = sander.Promise;
+var Promise = sander.Promise;
 
 function getBundle ( options ) {
 	var entry = options.entry.replace( /\.js$/, '' ),
@@ -1459,7 +1459,7 @@ function getBundle ( options ) {
 					return fetchModule( x.id );
 				});
 
-				return getBundle__Promise.all( promises );
+				return Promise.all( promises );
 			}).catch( function ( err ) {
 				var externalModule;
 
@@ -1549,18 +1549,20 @@ function packageResult ( body, options, methodName, isBundle ) {
 			throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
 		}
 
+		var sourceMapFile = options.sourceMapFile[0] === '/' ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+
 		map = body.generateMap({
 			includeContent: true,
 			hires: true,
-			file: options.sourceMapFile,
-			source: !isBundle ? getRelativePath( options.sourceMapFile, options.sourceMapSource ) : null
+			file: sourceMapFile,
+			source: !isBundle ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 		});
 
 		if ( options.sourceMap === 'inline' ) {
 			code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 			map = null;
 		} else {
-			code += '\n//# sourceMa' + 'ppingURL=./' + splitPath( options.sourceMapFile ).pop() + '.map';
+			code += '\n//# sourceMa' + 'ppingURL=' + sourceMapFile + '.map';
 		}
 	} else {
 		map = null;

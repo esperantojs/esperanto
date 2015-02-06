@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.9
+
+* `sourceMapFile` can be an absolute path, in which case it is left unchanged ([#101](https://github.com/esperantojs/esperanto/issues/101))
+
 ## 0.6.8
 
 * Module load order is guaranteed by import order - empty imports are represented by `__dep0__` etc within the module, or `undefined` globally ([#92](https://github.com/esperantojs/esperanto/issues/92))
