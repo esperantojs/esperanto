@@ -67,6 +67,17 @@ module.exports = function () {
 					assert.equal( loc.column, 0 );
 				});
 			});
+
+			it( 'accepts an absolute path for sourceMapFile', function () {
+				var result = esperanto.toAmd( sample, {
+					sourceMap: true,
+					sourceMapFile: '/path/to/output.js',
+					sourceMapSource: 'input.js',
+					name: 'myModule'
+				});
+
+				assert.ok( /sourceMappingURL=\/path\/to\/output.js/.test( result.code ) );
+			});
 		});
 
 		describe( 'bundler', function () {

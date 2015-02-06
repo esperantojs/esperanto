@@ -16,18 +16,20 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 			throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
 		}
 
+		let sourceMapFile = options.sourceMapFile[0] === '/' ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+
 		map = body.generateMap({
 			includeContent: true,
 			hires: true,
-			file: options.sourceMapFile,
-			source: !isBundle ? getRelativePath( options.sourceMapFile, options.sourceMapSource ) : null
+			file: sourceMapFile,
+			source: !isBundle ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 		});
 
 		if ( options.sourceMap === 'inline' ) {
 			code += '\n//# sourceMa' + 'ppingURL=' + map.toUrl();
 			map = null;
 		} else {
-			code += '\n//# sourceMa' + 'ppingURL=./' + splitPath( options.sourceMapFile ).pop() + '.map';
+			code += '\n//# sourceMa' + 'ppingURL=' + sourceMapFile + '.map';
 		}
 	} else {
 		map = null;
