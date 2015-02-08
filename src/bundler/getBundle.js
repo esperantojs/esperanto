@@ -65,7 +65,7 @@ export default function getBundle ( options ) {
 					module = getModule({
 						source: source,
 						id: moduleId,
-						file: modulePath.substring( base.length ),
+						relativePath: path.relative( base, modulePath ),
 						path: modulePath
 					});
 
@@ -73,7 +73,7 @@ export default function getBundle ( options ) {
 					moduleLookup[ moduleId ] = module;
 
 					promises = module.imports.map( x => {
-						x.id = resolveId( x.path, module.file );
+						x.id = resolveId( x.path, module.relativePath );
 
 						if ( x.id === moduleId ) {
 							throw new Error( 'A module (' + moduleId + ') cannot import itself' );
@@ -120,9 +120,9 @@ export default function getBundle ( options ) {
 }
 
 function resolvePath ( base, moduleId, importerPath, resolver ) {
-	return tryPath( base + moduleId + '.js' )
+	return tryPath( path.resolve( base, moduleId + '.js' ) )
 		.catch( function () {
-			return tryPath( base + moduleId + path.sep + 'index.js' );
+			return tryPath( path.resolve( base, moduleId, 'index.js' ) );
 		})
 		.catch( function ( err ) {
 			if ( resolver ) {
