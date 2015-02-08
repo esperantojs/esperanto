@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.10
+
+* The `resolvePath` option can be used with `esperanto.bundle()` to locate modules, if they do not exist relative to `base`. It should return an absolute path as a string, or a promise that resolves to one ([#68](https://github.com/esperantojs/esperanto/issues/68))
+
 ## 0.6.9
 
 * `sourceMapFile` can be an absolute path, in which case it is left unchanged ([#101](https://github.com/esperantojs/esperanto/issues/101))
