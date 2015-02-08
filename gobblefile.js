@@ -29,7 +29,6 @@ browser = gobble( 'src' ).transform( 'esperanto-bundle', {
 
 	// bundle magic-string and its dependency, vlq
 	resolvePath: function ( importee, importer ) {
-		console.log( 'resolving %s against %s', importee, importer );
 		return new Promise( function ( fulfil, reject ) {
 			var callback = function ( err, result ) {
 				if ( err ) {
@@ -44,9 +43,13 @@ browser = gobble( 'src' ).transform( 'esperanto-bundle', {
 				packageFilter: function ( pkg ) {
 					if ( pkg[ 'jsnext:main' ] ) {
 						pkg.main = pkg[ 'jsnext:main' ];
+						return pkg;
 					}
 
-					return pkg;
+					var err = new Error( 'package ' + pkg.name + ' does not supply a jsnext:main field' );
+					err.code = 'ENOENT'; // hack
+					reject( err );
+					return {};
 				}
 			}, callback );
 		});
