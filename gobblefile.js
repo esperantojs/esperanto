@@ -1,5 +1,9 @@
-var gobble = require( 'gobble' ),
-	banner, node, browser;
+var gobble = require( 'gobble' );
+var path = require( 'path' );
+var resolve = require( 'resolve' );
+var Promise = require( 'sander' ).Promise;
+
+var banner, node, browser;
 
 gobble.cwd( __dirname );
 
@@ -21,7 +25,31 @@ browser = gobble( 'src' ).transform( 'esperanto-bundle', {
 	name: 'esperanto',
 	skip: [ 'bundler/getBundle' ],
 	banner: banner,
-	sourceMap: false
+	sourceMap: false,
+
+	// bundle magic-string and its dependency, vlq
+	/*resolvePath: function ( importee, importer ) {
+		return new Promise( function ( fulfil, reject ) {
+			var callback = function ( err, result ) {
+				if ( err ) {
+					reject( err );
+				} else {
+					fulfil( result );
+				}
+			};
+
+			resolve( importee, {
+				basedir: path.dirname( importer ),
+				packageFilter: function ( pkg ) {
+					if ( pkg[ 'jsnext:main' ] ) {
+						pkg.main = pkg[ 'jsnext:main' ];
+					}
+
+					return pkg;
+				}
+			}, callback );
+		});
+	}*/
 });
 
 module.exports = gobble([ node, browser ]).transform( 'es6-transpiler', {
