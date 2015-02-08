@@ -28,7 +28,8 @@ browser = gobble( 'src' ).transform( 'esperanto-bundle', {
 	sourceMap: false,
 
 	// bundle magic-string and its dependency, vlq
-	/*resolvePath: function ( importee, importer ) {
+	resolvePath: function ( importee, importer ) {
+		console.log( 'resolving %s against %s', importee, importer );
 		return new Promise( function ( fulfil, reject ) {
 			var callback = function ( err, result ) {
 				if ( err ) {
@@ -49,7 +50,7 @@ browser = gobble( 'src' ).transform( 'esperanto-bundle', {
 				}
 			}, callback );
 		});
-	}*/
+	}
 });
 
 module.exports = gobble([ node, browser ]).transform( 'es6-transpiler', {
