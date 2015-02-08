@@ -91,7 +91,8 @@ module.exports = function () {
 							entry: config.entry || 'main',
 							skip: config.skip,
 							names: config.names,
-							transform: config.transform
+							transform: config.transform,
+							resolvePath: config.resolvePath
 						}).then( function ( bundle ) {
 							var options, actual;
 

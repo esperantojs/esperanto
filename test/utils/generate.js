@@ -137,7 +137,8 @@ require( './build' )().then( function ( esperanto ) {
 				entry: 'main',
 				skip: config.skip,
 				names: config.names,
-				transform: config.transform
+				transform: config.transform,
+				resolvePath: config.resolvePath
 			}).then( function ( bundle ) {
 				var promises = profiles.map( function ( profile ) {
 					try {

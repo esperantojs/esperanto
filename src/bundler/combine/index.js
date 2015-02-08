@@ -46,7 +46,7 @@ export default function combine ( bundle ) {
 		});
 
 		body.addSource({
-			filename: path.resolve( bundle.base, mod.file ),
+			filename: path.resolve( bundle.base, mod.relativePath ),
 			content: transformBody( bundle, mod, mod.body.clone() ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});

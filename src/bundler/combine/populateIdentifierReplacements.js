@@ -32,7 +32,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 	// then determine which existing identifiers
 	// need to be replaced
 	bundle.modules.forEach( mod => {
-		var moduleIdentifiers, x;
+		var moduleIdentifiers;
 
 		moduleIdentifiers = mod.identifierReplacements;
 
