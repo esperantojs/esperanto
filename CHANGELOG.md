@@ -1,5 +1,10 @@
 # changelog
 
+## 0.6.11
+
+* Use robust `module.relativePath` internally rather than `module.file` - necessary for bundled external modules with dependencies of their own
+* Browser-flavoured version of Esperanto (`dist/esperanto.browser.js`) bundles ES6 dependencies (`magic-string` and its `vlq` dependency), as both a convenience and a form of dogfooding
+
 ## 0.6.10
 
 * The `resolvePath` option can be used with `esperanto.bundle()` to locate modules, if they do not exist relative to `base`. It should return an absolute path as a string, or a promise that resolves to one ([#68](https://github.com/esperantojs/esperanto/issues/68))
