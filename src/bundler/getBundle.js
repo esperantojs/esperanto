@@ -24,7 +24,7 @@ export default function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return fetchModule( entry ).then( () => {
+	return fetchModule( entry, null ).then( () => {
 		var entryModule, bundle;
 
 		entryModule = moduleLookup[ entry ];
@@ -48,68 +48,53 @@ export default function getBundle ( options ) {
 		return bundle;
 	});
 
-	function fetchModule ( moduleId ) {
-		var modulePath;
-
-		modulePath = path.resolve( base, moduleId + '.js' );
-
+	function fetchModule ( moduleId, importerPath ) {
 		if ( !hasOwnProp.call( promiseById, moduleId ) ) {
-			promiseById[ moduleId ] = sander.readFile( modulePath ).catch( function ( err ) {
-				if ( err.code === 'ENOENT' ) {
-					modulePath = modulePath.replace( /\.js$/, '/index.js' );
-					return sander.readFile( modulePath );
-				}
+			promiseById[ moduleId ] = resolvePath( base, moduleId, importerPath, options.resolvePath ).then( modulePath => {
+				return sander.readFile( modulePath ).then( String ).then( function ( source ) {
+					var module, promises;
 
-				throw err;
-			}).then( function ( source ) {
-				source = String( source );
+					if ( options.transform ) {
+						source = options.transform( source, modulePath );
 
-				if ( options.transform ) {
-					source = options.transform( source, modulePath );
-
-					if ( typeof source !== 'string' && !isThenable( source ) ) {
-						throw new Error( 'transform should return String or Promise' );
+						if ( typeof source !== 'string' && !isThenable( source ) ) {
+							throw new Error( 'transform should return String or Promise' );
+						}
 					}
-				}
 
-				return source;
-			}).then( function ( source ) {
-				var module, promises;
+					module = getModule({
+						source: source,
+						id: moduleId,
+						file: modulePath.substring( base.length ),
+						path: modulePath
+					});
 
-				module = getModule({
-					source: source,
-					id: moduleId,
-					file: modulePath.substring( base.length ),
-					path: modulePath
+					modules.push( module );
+					moduleLookup[ moduleId ] = module;
+
+					promises = module.imports.map( x => {
+						x.id = resolveId( x.path, module.file );
+
+						if ( x.id === moduleId ) {
+							throw new Error( 'A module (' + moduleId + ') cannot import itself' );
+						}
+
+						// Some modules can be skipped
+						if ( skip && ~skip.indexOf( x.id ) ) {
+							return;
+						}
+
+						// short-circuit cycles
+						if ( hasOwnProp.call( promiseById, x.id ) ) {
+							return;
+						}
+
+						return fetchModule( x.id, modulePath );
+					});
+
+					return Promise.all( promises );
 				});
-
-				modules.push( module );
-				moduleLookup[ moduleId ] = module;
-
-				promises = module.imports.map( x => {
-					x.id = resolveId( x.path, module.file );
-
-					if ( x.id === moduleId ) {
-						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
-					}
-
-					// Some modules can be skipped
-					if ( skip && ~skip.indexOf( x.id ) ) {
-						return;
-					}
-
-					// short-circuit cycles
-					if ( hasOwnProp.call( promiseById, x.id ) ) {
-						return;
-					}
-
-					return fetchModule( x.id );
-				});
-
-				return Promise.all( promises );
-			}).catch( function ( err ) {
-				var externalModule;
-
+			}, function ( err ) {
 				if ( err.code === 'ENOENT' ) {
 					if ( moduleId === entry ) {
 						throw new Error( 'Could not find entry module (' + entry + ')' );
@@ -117,7 +102,7 @@ export default function getBundle ( options ) {
 
 					// Most likely an external module
 					if ( !hasOwnProp.call( externalModuleLookup, moduleId ) ) {
-						externalModule = {
+						let externalModule = {
 							id: moduleId
 						};
 
@@ -132,6 +117,26 @@ export default function getBundle ( options ) {
 
 		return promiseById[ moduleId ];
 	}
+}
+
+function resolvePath ( base, moduleId, importerPath, resolver ) {
+	return tryPath( base + moduleId + '.js' )
+		.catch( function () {
+			return tryPath( base + moduleId + path.sep + 'index.js' );
+		})
+		.catch( function ( err ) {
+			if ( resolver ) {
+				return resolver( moduleId, importerPath );
+			} else {
+				throw err;
+			}
+		});
+}
+
+function tryPath ( path ) {
+	return sander.stat( path ).then( function () {
+		return path;
+	});
 }
 
 function isThenable ( obj ) {

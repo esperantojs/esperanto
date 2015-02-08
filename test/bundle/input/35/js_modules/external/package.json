@@ -1,0 +1,6 @@
+{
+	"name": "external",
+	"version": "0.1.0",
+	"main": "dist/external.js",
+	"jsnext:main": "src/external.js"
+}
