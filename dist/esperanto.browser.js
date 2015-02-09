@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.11 - 2015-02-08
+	esperanto.js v0.6.12 - 2015-02-09
 	http://esperantojs.org
 
 	Released under the MIT License.

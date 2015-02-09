@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.11 - 2015-02-08
+	esperanto.js v0.6.12 - 2015-02-09
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1367,7 +1367,7 @@ function getBundle ( options ) {
 	var entry = options.entry.replace( /\.js$/, '' ),
 		modules = [],
 		moduleLookup = {},
-		promiseById = {},
+		promiseByPath = {},
 		skip = options.skip,
 		names = options.names,
 		base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/',
@@ -1378,98 +1378,102 @@ function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return fetchModule( entry, null ).then( function()  {
-		var entryModule, bundle;
+	return resolvePath( base, entry, null ).then( function(entryPath ) {
+		return fetchModule( entry, entryPath ).then( function()  {
+			var entryModule, bundle;
 
-		entryModule = moduleLookup[ entry ];
-		modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
+			entryModule = moduleLookup[ entry ];
+			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
-		bundle = {
-			entry: entry,
-			entryModule: entryModule,
-			base: base,
-			modules: modules,
-			moduleLookup: moduleLookup,
-			externalModules: externalModules,
-			externalModuleLookup: externalModuleLookup,
-			skip: skip,
-			names: names,
-			chains: resolveChains( modules, moduleLookup )
-		};
+			bundle = {
+				entry: entry,
+				entryModule: entryModule,
+				base: base,
+				modules: modules,
+				moduleLookup: moduleLookup,
+				externalModules: externalModules,
+				externalModuleLookup: externalModuleLookup,
+				skip: skip,
+				names: names,
+				chains: resolveChains( modules, moduleLookup )
+			};
 
-		combine( bundle );
+			combine( bundle );
 
-		return bundle;
+			return bundle;
+		});
+	}, function ( err ) {
+		if ( err.code === 'ENOENT' ) {
+			throw new Error( 'Could not find entry module (' + entry + ')' );
+		}
+
+		throw err;
 	});
 
-	function fetchModule ( moduleId, importerPath ) {
-		if ( !hasOwnProp.call( promiseById, moduleId ) ) {
-			promiseById[ moduleId ] = resolvePath( base, moduleId, importerPath, options.resolvePath ).then( function(modulePath ) {
-				return sander.readFile( modulePath ).then( String ).then( function ( source ) {
-					var module, promises;
+	function fetchModule ( moduleId, modulePath ) {
+		if ( !hasOwnProp.call( promiseByPath, modulePath ) ) {
+			promiseByPath[ modulePath ] = sander.readFile( modulePath ).then( String ).then( function ( source ) {
+				var module, promises;
 
-					if ( options.transform ) {
-						source = options.transform( source, modulePath );
+				if ( options.transform ) {
+					source = options.transform( source, modulePath );
 
-						if ( typeof source !== 'string' && !isThenable( source ) ) {
-							throw new Error( 'transform should return String or Promise' );
-						}
+					if ( typeof source !== 'string' && !isThenable( source ) ) {
+						throw new Error( 'transform should return String or Promise' );
+					}
+				}
+
+				module = getModule({
+					source: source,
+					id: moduleId,
+					relativePath: path.relative( base, modulePath ),
+					path: modulePath
+				});
+
+				modules.push( module );
+				moduleLookup[ moduleId ] = module;
+
+				promises = module.imports.map( function(x ) {
+					x.id = resolveId( x.path, module.relativePath );
+
+					if ( x.id === moduleId ) {
+						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
 					}
 
-					module = getModule({
-						source: source,
-						id: moduleId,
-						relativePath: path.relative( base, modulePath ),
-						path: modulePath
-					});
+					// Some modules can be skipped
+					if ( skip && ~skip.indexOf( x.id ) ) {
+						return;
+					}
 
-					modules.push( module );
-					moduleLookup[ moduleId ] = module;
-
-					promises = module.imports.map( function(x ) {
-						x.id = resolveId( x.path, module.relativePath );
-
-						if ( x.id === moduleId ) {
-							throw new Error( 'A module (' + moduleId + ') cannot import itself' );
-						}
-
-						// Some modules can be skipped
-						if ( skip && ~skip.indexOf( x.id ) ) {
-							return;
-						}
-
+					return resolvePath( base, x.id, modulePath, options.resolvePath ).then( function(modulePath ) {
 						// short-circuit cycles
-						if ( hasOwnProp.call( promiseById, x.id ) ) {
+						if ( hasOwnProp.call( promiseByPath, modulePath ) ) {
 							return;
 						}
 
 						return fetchModule( x.id, modulePath );
-					});
+					}, function handleError ( err ) {
+						if ( err.code === 'ENOENT' ) {
+							// Most likely an external module
+							if ( !hasOwnProp.call( externalModuleLookup, x.id ) ) {
+								var externalModule = {
+									id: x.id
+								};
 
-					return getBundle__Promise.all( promises );
+								externalModules.push( externalModule );
+								externalModuleLookup[ x.id ] = externalModule;
+							}
+						} else {
+							throw err;
+						}
+					} );
 				});
-			}, function ( err ) {
-				if ( err.code === 'ENOENT' ) {
-					if ( moduleId === entry ) {
-						throw new Error( 'Could not find entry module (' + entry + ')' );
-					}
 
-					// Most likely an external module
-					if ( !hasOwnProp.call( externalModuleLookup, moduleId ) ) {
-						var externalModule = {
-							id: moduleId
-						};
-
-						externalModules.push( externalModule );
-						externalModuleLookup[ moduleId ] = externalModule;
-					}
-				} else {
-					throw err;
-				}
+				return getBundle__Promise.all( promises );
 			});
 		}
 
-		return promiseById[ moduleId ];
+		return promiseByPath[ modulePath ];
 	}
 }
 

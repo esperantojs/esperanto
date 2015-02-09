@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.12
+
+* Bundled external modules are deduplicated in the rare case that they import themselves ([#103](https://github.com/esperantojs/esperanto/issues/103))
+
 ## 0.6.11
 
 * Use robust `module.relativePath` internally rather than `module.file` - necessary for bundled external modules with dependencies of their own
