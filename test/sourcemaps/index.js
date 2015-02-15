@@ -6,7 +6,7 @@ var path = require( 'path' ),
 module.exports = function () {
 	describe( 'sourcemap', function () {
 		this.timeout( 20000 );
-		
+
 		before( function () {
 			if ( process.env.BUILD_TIMEOUT ) {
 				this.timeout( parseInt( process.env.BUILD_TIMEOUT ) );

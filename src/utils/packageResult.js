@@ -16,7 +16,7 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 			throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
 		}
 
-		let sourceMapFile = options.sourceMapFile[0] === '/' ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+		let sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 
 		map = body.generateMap({
 			includeContent: true,
@@ -47,6 +47,10 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 			return code;
 		}
 	};
+}
+
+function isAbsolutePath ( path ) {
+	return /^(?:[A-Z]:)?[\/\\]/i.test( path );
 }
 
 function getRelativePath ( from, to ) {
