@@ -18,7 +18,7 @@ export default function defaultUmdIntro ( options, indentStr ) {
 		(hasExports ? 'module.exports = ' : '') + `factory(${cjsDeps})`;
 
 	var globalExport =
-		(hasExports ? `global.${options.name} = ` : '') + `factory(${globalDeps})`;
+		(hasExports && options.name ? `global.${options.name} = ` : '') + `factory(${globalDeps})`;
 
 
 	var intro =
