@@ -94,7 +94,7 @@ module.exports = function () {
 							transform: config.transform,
 							resolvePath: config.resolvePath
 						}).then( function ( bundle ) {
-							var options, actual;
+							var options, transpiled, actual;
 
 							options = profile.options || {};
 
@@ -106,15 +106,19 @@ module.exports = function () {
 								assert.deepEqual( bundle.exports, config.exports );
 							}
 
-							actual = bundle[ profile.method ]({
+							transpiled = bundle[ profile.method ]({
 								strict: options.strict,
 								name: options.name,
 								amdName: config.amdName,
 								banner: config.banner,
 								footer: config.footer
-							}).code;
+							});
 
-							return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( expected ) {
+							actual = makeWhitespaceVisible( transpiled.code );
+
+							return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
+								var expected = makeWhitespaceVisible( str );
+
 								if ( config.error ) {
 									throw new Error( 'No error was raised' );
 								}
@@ -123,16 +127,10 @@ module.exports = function () {
 									throw new Error( 'Test should fail in non-strict mode' );
 								}
 
-								assert.equal( actual, expected, 'Expected\n>\n' +
-									makeWhitespaceVisible( actual ) +
-								'\n>\n\nto match\n\n>\n' +
-									makeWhitespaceVisible( expected ) +
-								'\n>' );
+								assert.equal( actual, expected, 'Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
 							}).catch( function ( err ) {
 								if ( err.code === 'ENOENT' ) {
-									assert.equal( actual, '', 'Expected\n>\n' +
-										makeWhitespaceVisible( actual ) +
-									'\n>\n\nto match non-existent file' );
+									assert.equal( actual, '', 'Expected\n>\n' + actual + '\n>\n\nto match non-existent file' );
 								} else {
 									throw err;
 								}

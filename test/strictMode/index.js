@@ -49,7 +49,7 @@ module.exports = function () {
 		function runTests ( dir, method ) {
 			tests.forEach( function ( t ) {
 				( t.config.solo ? it.only : it )( t.config.description, function () {
-					var actual = esperanto[ method ]( t.source, {
+					var transpiled = esperanto[ method ]( t.source, {
 						name: 'myModule',
 						strict: true,
 						amdName: t.config.amdName,
@@ -57,19 +57,17 @@ module.exports = function () {
 						banner: t.config.banner,
 						footer: t.config.footer,
 						_evilES3SafeReExports: t.config._evilES3SafeReExports
-					}).code;
+					});
 
-					return sander.readFile( 'strictMode/output/' + dir, t.id + '.js' ).then( String ).then( function ( expected ) {
-						assert.equal( actual, expected, 'Expected\n>\n' +
-							makeWhitespaceVisible( actual ) +
-						'\n>\n\nto match\n\n>\n' +
-							makeWhitespaceVisible( expected ) +
-						'\n>' );
+					var actual = makeWhitespaceVisible( transpiled.code );
+
+					return sander.readFile( 'strictMode/output/' + dir, t.id + '.js' ).then( String ).then( function ( str ) {
+						var expected = makeWhitespaceVisible( str );
+
+						assert.equal( actual, expected, 'Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
 					}, function ( err ) {
 						if ( err.code === 'ENOENT' ) {
-							assert.equal( actual, '', 'Expected\n>\n' +
-								makeWhitespaceVisible( actual ) +
-							'\n>\n\nto match non-existent file' );
+							assert.equal( actual, '', 'Expected\n>\n' + actual + '\n>\n\nto match non-existent file' );
 						} else {
 							throw err;
 						}
