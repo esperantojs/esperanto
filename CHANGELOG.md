@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.13
+
+* Windows fixes
+
 ## 0.6.12
 
 * Bundled external modules are deduplicated in the rare case that they import themselves ([#103](https://github.com/esperantojs/esperanto/issues/103))
