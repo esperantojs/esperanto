@@ -7,6 +7,8 @@ module.exports = function () {
 	describe( 'fast mode', function () {
 		var tests;
 
+		this.timeout( 20000 );
+
 		tests = [
 			{ file: 'earlyExport', description: 'transpiles exports that are not the final statement' },
 			{ file: 'emptyImport', description: 'transpiles empty imports with no exports' },

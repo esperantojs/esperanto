@@ -9,6 +9,8 @@ global.assert = assert;
 
 module.exports = function () {
 	describe( 'strict mode', function () {
+		this.timeout( 20000 );
+
 		var tests = sander.readdirSync( __dirname, '../samples' ).map( function ( dir ) {
 			var config = require( '../samples/' + dir + '/_config' ),
 				source = sander.readFileSync( __dirname, '../samples', dir, 'source.js' ).toString();
