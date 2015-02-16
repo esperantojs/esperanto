@@ -12,17 +12,26 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 	code = body.toString();
 
 	if ( !!options.sourceMap ) {
-		if ( !options.sourceMapFile || ( !isBundle && !options.sourceMapSource )  ) {
-			throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
+		if ( options.sourceMap !== 'inline' && !options.sourceMapFile) {
+			throw new Error( 'You must provide `sourceMapFile` option' );
 		}
 
-		let sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+		if ( !isBundle && !options.sourceMapSource ) {
+			throw new Error( 'You must provide `sourceMapSource` option' );
+		}
+
+		let sourceMapFile;
+		if (options.sourceMap === 'inline') {
+			sourceMapFile = null;
+		} else {
+			sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+		}
 
 		map = body.generateMap({
 			includeContent: true,
 			hires: true,
 			file: sourceMapFile,
-			source: !isBundle ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
+			source: (sourceMapFile && !isBundle) ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 		});
 
 		if ( options.sourceMap === 'inline' ) {

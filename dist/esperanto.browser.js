@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.12 - 2015-02-09
+	esperanto.js v0.6.13 - 2015-02-16
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -70,8 +70,8 @@
 	function getRelativePath__getRelativePath ( from, to ) {
 		var fromParts, toParts, i;
 
-		fromParts = from.split( '/' );
-		toParts = to.split( '/' );
+		fromParts = from.split( /[\/\\]/ );
+		toParts = to.split( /[\/\\]/ );
 
 		fromParts.pop(); // get dirname
 
@@ -144,7 +144,7 @@
 			);
 
 			return new SourceMap({
-				file: options.file.split( '/' ).pop(),
+				file: options.file.split( /[\/\\]/ ).pop(),
 				sources: this.sources.map( function ( source ) {
 					return getRelativePath__getRelativePath( options.file, source.filename );
 				}),
@@ -567,7 +567,7 @@
 			var self = this,
 				mappings = this.mappings,
 				reverseMappings = reverse( mappings, this.str.length ),
-				pattern = /^[^\n]/gm,
+				pattern = /^[^\r\n]/gm,
 				match,
 				inserts = [],
 				adjustments,
@@ -1463,11 +1463,20 @@
 		code = body.toString();
 
 		if ( !!options.sourceMap ) {
-			if ( !options.sourceMapFile || ( !isBundle && !options.sourceMapSource )  ) {
-				throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
+			var optionErrors = [];
+			if ( options.sourceMap !== 'inline' && !options.sourceMapFile) {
+				optionErrors.push('`sourceMapFile`');
 			}
 
-			var sourceMapFile = options.sourceMapFile[0] === '/' ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+			if ( !isBundle && !options.sourceMapSource ) {
+				optionErrors.push('`sourceMapSource`');
+			}
+
+			if ( optionErrors.length > 0 ) {
+				throw new Error( 'You must provide ' + optionErrors.join(' and ') + ' option' + (optionErrors.length > 1 ? 's' : '') );
+			}
+
+			var sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 
 			map = body.generateMap({
 				includeContent: true,
@@ -1498,6 +1507,10 @@
 				return code;
 			}
 		};
+	}
+
+	function isAbsolutePath ( path ) {
+		return /^(?:[A-Z]:)?[\/\\]/i.test( path );
 	}
 
 	function packageResult__getRelativePath ( from, to ) {

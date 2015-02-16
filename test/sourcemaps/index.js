@@ -80,6 +80,14 @@ module.exports = function () {
 
 				assert.ok( /sourceMappingURL=\/path\/to\/output.js/.test( result.code ) );
 			});
+
+			it( 'does not require a sourceMapFile for `sourceMap: "inline"`', function() {
+				var result = esperanto.toAmd( sample, {
+					sourceMap: 'inline',
+					sourceMapSource: 'input.js',
+					name: 'myModule'
+				});
+			});
 		});
 
 		describe( 'bundler', function () {
