@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.14
+
+* The `sourceMapFile` requirement is waived when `options.sourceMap === 'inline'` ([#105](https://github.com/esperantojs/esperanto/issues/105))
+
 ## 0.6.13
 
 * Windows fixes
