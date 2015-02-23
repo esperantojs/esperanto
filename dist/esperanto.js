@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.12 - 2015-02-09
+	esperanto.js v0.6.13 - 2015-02-16
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1555,11 +1555,20 @@ function packageResult ( body, options, methodName, isBundle ) {
 	code = body.toString();
 
 	if ( !!options.sourceMap ) {
-		if ( !options.sourceMapFile || ( !isBundle && !options.sourceMapSource )  ) {
-			throw new Error( 'You must provide `sourceMapSource` and `sourceMapFile` options' );
+		var optionErrors = [];
+		if ( options.sourceMap !== 'inline' && !options.sourceMapFile) {
+			optionErrors.push('`sourceMapFile`');
 		}
 
-		var sourceMapFile = options.sourceMapFile[0] === '/' ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+		if ( !isBundle && !options.sourceMapSource ) {
+			optionErrors.push('`sourceMapSource`');
+		}
+
+		if ( optionErrors.length > 0 ) {
+			throw new Error( 'You must provide ' + optionErrors.join(' and ') + ' option' + (optionErrors.length > 1 ? 's' : '') );
+		}
+
+		var sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 
 		map = body.generateMap({
 			includeContent: true,
@@ -1590,6 +1599,10 @@ function packageResult ( body, options, methodName, isBundle ) {
 			return code;
 		}
 	};
+}
+
+function isAbsolutePath ( path ) {
+	return /^(?:[A-Z]:)?[\/\\]/i.test( path );
 }
 
 function getRelativePath ( from, to ) {
