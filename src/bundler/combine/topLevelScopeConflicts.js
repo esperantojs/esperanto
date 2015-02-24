@@ -1,10 +1,12 @@
 import hasOwnProp from 'utils/hasOwnProp';
 import builtins from 'utils/builtins';
 import getUnscopedNames from 'utils/ast/getUnscopedNames';
+import { getName } from 'utils/mappers';
 import getRenamedImports from './getRenamedImports';
 
 export default function topLevelScopeConflicts ( bundle ) {
 	var conflicts = {}, inBundle = {};
+	var importNames = bundle.externalModules.map( getName );
 
 	bundle.modules.forEach( mod => {
 		var names = builtins
@@ -14,6 +16,8 @@ export default function topLevelScopeConflicts ( bundle ) {
 
 			// all unattributed identifiers could collide with top scope
 			.concat( getUnscopedNames( mod ) )
+
+			.concat( importNames )
 
 			.concat( getRenamedImports( mod ) );
 
