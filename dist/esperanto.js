@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.14 - 2015-02-23
+	esperanto.js v0.6.15 - 2015-02-24
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -733,6 +733,30 @@ function populateExternalModuleImports ( bundle ) {
 	});
 }
 
+function getId ( m ) {
+	return m.id;
+}
+
+function getName ( m ) {
+	return m.name;
+}
+
+function quote ( str ) {
+	return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
+}
+
+function req ( path ) {
+	return 'require(' + quote(path) + ')';
+}
+
+function globalify ( name ) {
+  	if ( /^__dep\d+__$/.test( name ) ) {
+		return 'undefined';
+	} else {
+		return 'global.' + name;
+	}
+}
+
 function getRenamedImports ( mod ) {
 	var renamed = [];
 
@@ -751,6 +775,7 @@ function getRenamedImports ( mod ) {
 
 function topLevelScopeConflicts ( bundle ) {
 	var conflicts = {}, inBundle = {};
+	var importNames = bundle.externalModules.map( getName );
 
 	bundle.modules.forEach( function(mod ) {
 		var names = builtins
@@ -760,6 +785,8 @@ function topLevelScopeConflicts ( bundle ) {
 
 			// all unattributed identifiers could collide with top scope
 			.concat( getUnscopedNames( mod ) )
+
+			.concat( importNames )
 
 			.concat( getRenamedImports( mod ) );
 
@@ -1361,7 +1388,7 @@ function getModule ( mod ) {var $D$2;
 	return mod;
 ;$D$2 = void 0}
 
-var getBundle__Promise = sander.Promise;
+var Promise = sander.Promise;
 
 function getBundle ( options ) {
 	var entry = options.entry.replace( /\.js$/, '' ),
@@ -1469,7 +1496,7 @@ function getBundle ( options ) {
 					} );
 				});
 
-				return getBundle__Promise.all( promises );
+				return Promise.all( promises );
 			});
 		}
 
@@ -1642,30 +1669,6 @@ function template ( str ) {
 			return $1 in data ? data[ $1 ] : match;
 		});
 	};
-}
-
-function getId ( m ) {
-	return m.id;
-}
-
-function getName ( m ) {
-	return m.name;
-}
-
-function quote ( str ) {
-	return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
-}
-
-function req ( path ) {
-	return 'require(' + quote(path) + ')';
-}
-
-function globalify ( name ) {
-  	if ( /^__dep\d+__$/.test( name ) ) {
-		return 'undefined';
-	} else {
-		return 'global.' + name;
-	}
 }
 
 var amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );

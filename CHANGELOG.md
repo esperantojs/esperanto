@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.15
+
+* Clashes with names for external dependencies are avoided ([#114](https://github.com/esperantojs/esperanto/issues/114))
+
 ## 0.6.14
 
 * The `sourceMapFile` requirement is waived when `options.sourceMap === 'inline'` ([#105](https://github.com/esperantojs/esperanto/issues/105))
