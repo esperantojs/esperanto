@@ -76,6 +76,7 @@ module.exports = function () {
 			{ description: 'bundle.concat()', method: 'concat', outputdir: 'concat' },
 			{ description: 'bundle.toAmd()', method: 'toAmd', outputdir: 'amdDefaults' },
 			{ description: 'bundle.toUmd()', method: 'toUmd', outputdir: 'umdDefaults', options: { name: 'myModule' } },
+			{ description: 'bundle.toUmd()', method: 'toUmd', outputdir: 'umdDefaultsNameless', options: {} },
 			{ description: 'bundle.toCjs()', method: 'toCjs', outputdir: 'cjsDefaults' },
 			{ description: 'bundle.toAmd({ strict: true })', method: 'toAmd', outputdir: 'amd', options: { strict: true } },
 			{ description: 'bundle.toUmd({ strict: true })', method: 'toUmd', outputdir: 'umd', options: { strict: true, name: 'myModule' } },

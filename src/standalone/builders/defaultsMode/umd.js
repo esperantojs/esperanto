@@ -3,15 +3,12 @@ import packageResult from 'utils/packageResult';
 import hasOwnProp from 'utils/hasOwnProp';
 import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
-import requireName from 'utils/umd/requireName';
 
 export default function umd ( mod, body, options ) {
 	var importNames = [];
 	var importPaths = [];
 	var seen = {};
 	var placeholders = 0;
-
-	requireName( options );
 
 	var hasImports = mod.imports.length > 0;
 	var hasExports = mod.exports.length > 0;

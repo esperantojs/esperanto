@@ -13,7 +13,7 @@ export default function strictUmdIntro ( options, indentStr ) {
 		'], ' :
 		'';
 	var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
-	var globalDeps = ( hasExports ? [ `(global.${options.name} = {})` ] : [] )
+	var globalDeps = ( hasExports && options.name ? [ `(global.${options.name} = {})` ] : [] )
 		.concat( options.importNames.map( globalify ) ).join( ', ' );
 	var args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
 
