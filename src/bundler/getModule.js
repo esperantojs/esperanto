@@ -2,6 +2,7 @@ import acorn from 'acorn';
 import MagicString from 'magic-string';
 import findImportsAndExports from 'utils/ast/findImportsAndExports';
 import annotateAst from 'utils/ast/annotate';
+import disallowConflictingImports from '../utils/disallowConflictingImports';
 
 export default function getModule ( mod ) {
 	var imports, exports;
@@ -26,6 +27,8 @@ export default function getModule ( mod ) {
 	}
 
 	[ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
+
+	disallowConflictingImports( imports );
 
 	mod.imports = imports;
 	mod.exports = exports;

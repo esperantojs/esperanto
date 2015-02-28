@@ -65,13 +65,27 @@ module.exports = function () {
 				if ( t.config.strict ) return;
 
 				( t.config.solo ? it.only : it )( t.config.description, function () {
-					var transpiled = esperanto[ method ]( t.source, {
-						name: t.config.name || 'myModule',
-						amdName: t.config.amdName,
-						absolutePaths: t.config.absolutePaths,
-						banner: t.config.banner,
-						footer: t.config.footer
-					});
+					var transpiled;
+
+					try {
+						transpiled = esperanto[ method ]( t.source, {
+							name: t.config.name || 'myModule',
+							amdName: t.config.amdName,
+							absolutePaths: t.config.absolutePaths,
+							banner: t.config.banner,
+							footer: t.config.footer
+						});
+					} catch ( err ) {
+						if ( t.config.expectedError && ~err.message.indexOf( t.config.expectedError ) ) {
+							return;
+						}
+
+						throw err;
+					}
+
+					if ( t.config.expectedError ) {
+						throw new Error( 'Expected error: ' + t.config.expectedError );
+					}
 
 					var actual = makeWhitespaceVisible( transpiled.code );
 

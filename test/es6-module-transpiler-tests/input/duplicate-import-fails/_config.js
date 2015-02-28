@@ -1,3 +1,4 @@
 module.exports = {
-	entry: 'importer'
+	entry: 'importer',
+	expectedError: 'Duplicated import (\'a\')'
 };

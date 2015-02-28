@@ -51,15 +51,29 @@ module.exports = function () {
 		function runTests ( dir, method ) {
 			tests.forEach( function ( t ) {
 				( t.config.solo ? it.only : it )( t.config.description, function () {
-					var transpiled = esperanto[ method ]( t.source, {
-						name: 'myModule',
-						strict: true,
-						amdName: t.config.amdName,
-						absolutePaths: t.config.absolutePaths,
-						banner: t.config.banner,
-						footer: t.config.footer,
-						_evilES3SafeReExports: t.config._evilES3SafeReExports
-					});
+					var transpiled;
+
+					try {
+						transpiled = esperanto[ method ]( t.source, {
+							name: 'myModule',
+							strict: true,
+							amdName: t.config.amdName,
+							absolutePaths: t.config.absolutePaths,
+							banner: t.config.banner,
+							footer: t.config.footer,
+							_evilES3SafeReExports: t.config._evilES3SafeReExports
+						});
+					} catch ( err ) {
+						if ( t.config.expectedError && ~err.message.indexOf( t.config.expectedError ) ) {
+							return;
+						}
+
+						throw err;
+					}
+
+					if ( t.config.expectedError ) {
+						throw new Error( 'Expected error: ' + t.config.expectedError );
+					}
 
 					var actual = makeWhitespaceVisible( transpiled.code );
 
@@ -116,7 +130,8 @@ module.exports = function () {
 						if ( missingError ) {
 							throw new Error( 'Expected error "' + config.expectedError + '"' );
 						}
-					}, function ( err ) {
+					})
+					.catch( function ( err ) {
 						if ( !config.expectedError || !~err.message.indexOf( config.expectedError ) ) {
 							throw err;
 						}

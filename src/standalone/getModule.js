@@ -4,6 +4,7 @@ import annotateAst from 'utils/ast/annotate';
 import findImportsAndExports from 'utils/ast/findImportsAndExports';
 import getUnscopedNames from 'utils/ast/getUnscopedNames';
 import getModuleNameHelper from './getModuleNameHelper';
+import disallowConflictingImports from '../utils/disallowConflictingImports';
 
 export default function getStandaloneModule ( options ) {
 	var mod, imports, exports, conflicts = {};
@@ -18,6 +19,7 @@ export default function getStandaloneModule ( options ) {
 
 	[ imports, exports ] = findImportsAndExports( mod, options.source, mod.ast );
 
+	disallowConflictingImports( imports );
 
 	mod.imports = imports;
 	mod.exports = exports;

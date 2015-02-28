@@ -116,14 +116,14 @@ module.exports = function () {
 								footer: config.footer
 							});
 
+							if ( config.error ) {
+								throw new Error( 'Expected error but none was raised' );
+							}
+
 							actual = makeWhitespaceVisible( transpiled.code );
 
 							return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
 								var expected = makeWhitespaceVisible( str );
-
-								if ( config.error ) {
-									throw new Error( 'No error was raised' );
-								}
 
 								if ( config.strict && !options.strict ) {
 									throw new Error( 'Test should fail in non-strict mode' );
