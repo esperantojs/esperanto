@@ -19,9 +19,9 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 	// infer names from default imports
 	modules.forEach( mod => {
 		mod.imports.forEach( x => {
-			if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.name ) ) {
-				names[ x.id ] = x.name;
-				used[ x.name ] = true;
+			if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
+				names[ x.id ] = x.as;
+				used[ x.as ] = true;
 			}
 		});
 	});

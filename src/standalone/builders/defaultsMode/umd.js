@@ -27,12 +27,12 @@ export default function umd ( mod, body, options ) {
 			if ( !hasOwnProp.call( seen, x.path ) ) {
 				importPaths.push( x.path );
 
-				if ( x.name ) {
+				if ( x.as ) {
 					while ( placeholders ) {
 						importNames.push( '__dep' + importNames.length + '__' );
 						placeholders--;
 					}
-					importNames.push( x.name );
+					importNames.push( x.as );
 				} else {
 					placeholders++;
 				}

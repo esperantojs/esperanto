@@ -7,7 +7,7 @@ export default function cjs ( mod, body, options ) {
 
 	mod.imports.forEach( x => {
 		if ( !hasOwnProp.call( seen, x.path ) ) {
-			var replacement = x.isEmpty ? `${req(x.path)};` : `var ${x.name} = ${req(x.path)};`;
+			var replacement = x.isEmpty ? `${req(x.path)};` : `var ${x.as} = ${req(x.path)};`;
 			body.replace( x.start, x.end, replacement );
 
 			seen[ x.path ] = true;

@@ -21,12 +21,12 @@ export default function amd ( mod, body, options ) {
 		if ( !hasOwnProp.call( seen, path ) ) {
 			importPaths.push( path );
 
-			if ( x.name ) {
+			if ( x.as ) {
 				while ( placeholders ) {
 					importNames.push( '__dep' + importNames.length + '__' );
 					placeholders--;
 				}
-				importNames.push( x.name );
+				importNames.push( x.as );
 			} else {
 				placeholders++;
 			}

@@ -14,8 +14,7 @@ export default function cjs ( mod, body, options ) {
 			if ( x.isEmpty ) {
 				replacement = `${req(x.path)};`;
 			} else {
-				name = mod.getName( x );
-				replacement = `var ${name} = ${req(x.path)};`;
+				replacement = `var ${x.name} = ${req(x.path)};`;
 			}
 
 			seen[ x.path ] = true;
