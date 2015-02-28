@@ -12,7 +12,7 @@ export default function getImportSummary ( mod ) {
 					importNames.push( '__dep' + importNames.length + '__' );
 					placeholders--;
 				}
-				importNames.push( mod.getName( x ) );
+				importNames.push( x.name );
 			} else {
 				placeholders++;
 			}

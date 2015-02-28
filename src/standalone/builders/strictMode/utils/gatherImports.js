@@ -1,9 +1,7 @@
-export default function gatherImports ( imports, getName ) {
+export default function gatherImports ( imports ) {
 	var chains = {}, identifierReplacements = {};
 
 	imports.forEach( x => {
-		var moduleName = getName( x );
-
 		x.specifiers.forEach( s => {
 			var name, replacement;
 
@@ -12,7 +10,7 @@ export default function gatherImports ( imports, getName ) {
 			}
 
 			name = s.as;
-			replacement = moduleName + ( s.isDefault ? `['default']` : `.${s.name}` );
+			replacement = x.name + ( s.isDefault ? `['default']` : `.${s.name}` );
 
 			if ( !x.passthrough ) {
 				identifierReplacements[ name ] = replacement;

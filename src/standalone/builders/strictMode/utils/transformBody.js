@@ -14,7 +14,7 @@ export default function transformBody ( mod, body, options ) {
 		earlyExports,
 		lateExports;
 
-	[ chains, identifierReplacements ] = gatherImports( mod.imports, mod.getName );
+	[ chains, identifierReplacements ] = gatherImports( mod.imports );
 	exportNames = getExportNames( mod.exports );
 
 	[ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );

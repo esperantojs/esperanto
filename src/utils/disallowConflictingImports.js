@@ -4,8 +4,8 @@ export default function disallowConflictingImports ( imports ) {
 	let usedNames = {};
 
 	imports.forEach( x => {
-		if ( x.name ) {
-			checkName( x.name );
+		if ( x.as ) {
+			checkName( x.as );
 		}
 
 		else {
