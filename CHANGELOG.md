@@ -1,5 +1,12 @@
 # changelog
 
+## 0.6.16
+
+* Prevent import naming collisions ([#116](https://github.com/esperantojs/esperanto/issues/116))
+* Throw error on duplicate imports ([#95](https://github.com/esperantojs/esperanto/issues/95))
+* Prevent internal assigment exports clashing within a bundle ([#117](https://github.com/esperantojs/esperanto/issues/117))
+* Update chalk to 1.0.0
+
 ## 0.6.15
 
 * Clashes with names for external dependencies are avoided ([#114](https://github.com/esperantojs/esperanto/issues/114))
