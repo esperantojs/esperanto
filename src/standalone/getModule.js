@@ -40,7 +40,7 @@ export default function getStandaloneModule ( options ) {
 }
 
 function determineImportNames ( imports, userFn, usedNames ) {
-	var nameById = {};
+	var nameById = {}, inferredNames = {};
 
 	usedNames = usedNames || {};
 
@@ -65,15 +65,8 @@ function determineImportNames ( imports, userFn, usedNames ) {
 			}
 		}
 
-		else if ( x.isDefault || x.isBatch ) {
-			name = x.as;
-		}
-
 		else {
 			parts = splitPath( moduleId );
-
-
-			let remaining = 10;
 
 			do {
 				i = parts.length;
@@ -87,12 +80,26 @@ function determineImportNames ( imports, userFn, usedNames ) {
 				}
 
 				prefix += '_';
-			} while ( !name && remaining-- );
+			} while ( !name );
 		}
 
 		usedNames[ name ] = true;
 		nameById[ moduleId ] = name;
 
 		x.name = name;
+	});
+
+	// use inferred names for default imports, wherever they
+	// don't clash with path-based names
+	imports.forEach( x => {
+		if ( x.as && !hasOwnProp.call( usedNames, x.as ) ) {
+			inferredNames[ x.path ] = x.as;
+		}
+	});
+
+	imports.forEach( x => {
+		if ( hasOwnProp.call( inferredNames, x.path ) ) {
+			x.name = inferredNames[ x.path ];
+		}
 	});
 }
