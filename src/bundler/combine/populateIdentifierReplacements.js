@@ -14,18 +14,22 @@ export default function populateIdentifierReplacements ( bundle ) {
 	// then figure out what identifiers need to be created
 	// for default exports
 	bundle.modules.forEach( mod => {
-		var x;
+		var x = mod.defaultExport;
 
-		if ( x = mod.defaultExport ) {
+		if ( x ) {
+			let result;
+
 			if ( x.hasDeclaration && x.name ) {
-				mod.identifierReplacements.default = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, x.name ) ?
-					mod.name + '__' + x.name :
+				result = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, x.name ) ?
+					`${mod.name}__${x.name}` :
 					x.name;
 			} else {
-				mod.identifierReplacements.default = hasOwnProp.call( conflicts, mod.name ) || otherModulesDeclare( mod, mod.name ) ?
-					mod.name + '__default' :
+				result = hasOwnProp.call( conflicts, mod.name ) || ( x.value !== mod.name && ~mod.ast._topLevelNames.indexOf( mod.name )) || otherModulesDeclare( mod, mod.name ) ?
+					`${mod.name}__default` :
 					mod.name;
 			}
+
+			mod.identifierReplacements.default = result;
 		}
 	});
 
