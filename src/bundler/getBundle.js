@@ -32,15 +32,15 @@ export default function getBundle ( options ) {
 			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
 			bundle = {
-				entry: entry,
-				entryModule: entryModule,
-				base: base,
-				modules: modules,
-				moduleLookup: moduleLookup,
-				externalModules: externalModules,
-				externalModuleLookup: externalModuleLookup,
-				skip: skip,
-				names: names,
+				entry,
+				entryModule,
+				base,
+				modules,
+				moduleLookup,
+				externalModules,
+				externalModuleLookup,
+				skip,
+				names,
 				chains: resolveChains( modules, moduleLookup )
 			};
 
