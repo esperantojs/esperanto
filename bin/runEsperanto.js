@@ -85,9 +85,36 @@ function bundle ( options, method ) {
 
 function convert ( options, method ) {
 	if ( options.input ) {
-		return sander.readFile( options.input )
-			.then( String )
-			.then( run );
+		return sander.stat( options.input ).then( function ( stats ) {
+			if ( stats.isDirectory() ) {
+				if ( !options.output ) {
+					handleError({ code: 'MISSING_OUTPUT_OPTION' });
+				}
+
+				// transpile all the things
+				return sander.lsr( options.input ).then( function ( files ) {
+					var promises = files.map( function ( file ) {
+						var input = path.join( options.input, file );
+						var output = path.join( options.output, file );
+
+						var fileOptions = assign( {}, options, {
+							input: input,
+							output: output,
+							sourceMapSource: input,
+							sourceMapFile: output
+						});
+
+						return convert( fileOptions, method );
+					});
+
+					return Promise.all( promises );
+				});
+			}
+
+			return sander.readFile( options.input )
+				.then( String )
+				.then( run );
+		});
 	} else {
 		return readFromStdin().then( run );
 	}
@@ -141,4 +168,20 @@ function readFromStdin () {
 
 		process.stdin.on( 'error', reject );
 	});
+}
+
+function assign ( target ) {
+	var sources = [].slice.call( arguments, 1 );
+
+	sources.forEach( function ( source ) {
+		var prop;
+
+		for ( prop in source ) {
+			if ( source.hasOwnProperty( prop ) ) {
+				target[ prop ] = source[ prop ];
+			}
+		}
+	});
+
+	return target;
 }
