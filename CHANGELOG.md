@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.17
+
+* Sourcemap mappings are set explicitly - rather than mapping every single character, the locations from the acorn AST are used. As well as smaller sourcemaps, this results in modest performance improvements internally, and large performance improvements for external tools that work with the sourcemap
+
 ## 0.6.16
 
 * Prevent import naming collisions ([#116](https://github.com/esperantojs/esperanto/issues/116))

@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.16 - 2015-02-28
+	esperanto.js v0.6.17 - 2015-03-01
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -342,17 +342,15 @@
 	}
 
 	function encode ( value ) {
-		var result;
+		var result, i;
 
 		if ( typeof value === 'number' ) {
 			result = encodeInteger( value );
-		} else if ( Array.isArray( value ) ) {
-			result = '';
-			value.forEach( function ( num ) {
-				result += encodeInteger( num );
-			});
 		} else {
-			throw new Error( 'vlq.encode accepts an integer or an array of integers' );
+			result = '';
+			for ( i = 0; i < value.length; i += 1 ) {
+				result += encodeInteger( value[i] );
+			}
 		}
 
 		return result;
@@ -383,7 +381,7 @@
 
 	var encode__default = encode;
 
-	function encodeMappings ( original, str, mappings, hires, sourceIndex, offsets ) {
+	function encodeMappings ( original, str, mappings, hires, sourcemapLocations, sourceIndex, offsets ) {
 		var lineStart,
 			locations,
 			lines,
@@ -427,7 +425,7 @@
 				}
 
 				else {
-					if ( !hires && ( origin === lastOrigin + 1 ) ) {
+					if ( !hires && ( origin === lastOrigin + 1 ) && !sourcemapLocations[ origin ] ) {
 						// do nothing
 					} else {
 						location = getLocation( locations, origin );
@@ -520,10 +518,16 @@
 		this.original = this.str = string;
 		this.mappings = initMappings( string.length );
 
+		this.sourcemapLocations = {};
+
 		this.indentStr = guessIndent( string );
 	};
 
 	MagicString.prototype = {
+		addSourcemapLocation: function ( char ) {
+			this.sourcemapLocations[ char ] = true;
+		},
+
 		append: function ( content ) {
 			this.str += content;
 			return this;
@@ -560,7 +564,7 @@
 		},
 
 		getMappings: function ( hires, sourceIndex, offsets ) {
-			return encodeMappings( this.original, this.str, this.mappings, hires, sourceIndex, offsets );
+			return encodeMappings( this.original, this.str, this.mappings, hires, this.sourcemapLocations, sourceIndex, offsets );
 		},
 
 		indent: function ( indentStr, options ) {
@@ -1489,7 +1493,7 @@
 
 	var warned = {};
 
-	function packageResult ( body, options, methodName, isBundle ) {
+	function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
 		var code, map;
 
 		// wrap output
@@ -1514,9 +1518,14 @@
 				sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 			}
 
+			if ( isBundle ) {
+				markBundleSourcemapLocations( bundleOrModule );
+			} else {
+				markModuleSourcemapLocations( bundleOrModule );
+			}
+
 			map = body.generateMap({
 				includeContent: true,
-				hires: true,
 				file: sourceMapFile,
 				source: (sourceMapFile && !isBundle) ? packageResult__getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 			});
@@ -1571,6 +1580,24 @@
 			toParts.unshift( '.' );
 			return toParts.join( '/' );
 		}
+	}
+
+	function markBundleSourcemapLocations ( bundle ) {
+		bundle.modules.forEach( function(mod ) {
+			estraverse.traverse( mod.ast, {
+				enter: function(node ) {
+					mod.body.addSourcemapLocation( node.start );
+				}
+			});
+		})
+	}
+
+	function markModuleSourcemapLocations ( mod ) {
+		estraverse.traverse( mod.ast, {
+			enter: function(node ) {
+				mod.body.addSourcemapLocation( node.start );
+			}
+		});
 	}
 
 	/**
@@ -1649,7 +1676,7 @@
 
 	var amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
 
-	function amd__amd ( mod, body, options ) {
+	function amd__amd ( mod, options ) {
 		var seen = {},
 			importNames = [],
 			importPaths = [],
@@ -1676,10 +1703,10 @@
 				seen[ path ] = true;
 			}
 
-			body.remove( x.start, x.next );
+			mod.body.remove( x.start, x.next );
 		});
 
-		transformExportDeclaration( mod.exports[0], body );
+		transformExportDeclaration( mod.exports[0], mod.body );
 
 		intro = amd__introTemplate({
 			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
@@ -1687,27 +1714,27 @@
 			names: importNames.join( ', ' )
 		});
 
-		body.trim()
+		mod.body.trim()
 			.prepend( "'use strict';\n\n" )
 			.trim()
 			.indent()
 			.prepend( intro )
 			.append( '\n\n});' );
 
-		return packageResult( body, options, 'toAmd' );
+		return packageResult( mod, mod.body, options, 'toAmd' );
 	}
 
-	function cjs__cjs ( mod, body, options ) {
+	function cjs__cjs ( mod, options ) {
 		var seen = {}, exportDeclaration;
 
 		mod.imports.forEach( function(x ) {
 			if ( !hasOwnProp.call( seen, x.path ) ) {
 				var replacement = x.isEmpty ? (("" + (req(x.path))) + ";") : (("var " + (x.as)) + (" = " + (req(x.path))) + ";");
-				body.replace( x.start, x.end, replacement );
+				mod.body.replace( x.start, x.end, replacement );
 
 				seen[ x.path ] = true;
 			} else {
-				body.remove( x.start, x.next );
+				mod.body.remove( x.start, x.next );
 			}
 		});
 
@@ -1717,14 +1744,14 @@
 			switch ( exportDeclaration.type ) {
 				case 'namedFunction':
 				case 'namedClass':
-					body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-					body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
+					mod.body.remove( exportDeclaration.start, exportDeclaration.valueStart );
+					mod.body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
 					break;
 
 				case 'anonFunction':
 				case 'anonClass':
 				case 'expression':
-					body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
+					mod.body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
 					break;
 
 				default:
@@ -1732,9 +1759,9 @@
 			}
 		}
 
-		body.prepend( "'use strict';\n\n" ).trimLines();
+		mod.body.prepend( "'use strict';\n\n" ).trimLines();
 
-		return packageResult( body, options, 'toCjs' );
+		return packageResult( mod, mod.body, options, 'toCjs' );
 	}
 
 	function standaloneUmdIntro ( options, indentStr ) {
@@ -1811,7 +1838,7 @@
 		}
 	}
 
-	function umd__umd ( mod, body, options ) {
+	function umd__umd ( mod, options ) {
 		var importNames = [];
 		var importPaths = [];
 		var seen = {};
@@ -1826,7 +1853,7 @@
 		if (!hasImports && !hasExports) {
 			intro = standaloneUmdIntro({
 				amdName: options.amdName,
-			}, body.getIndentString() );
+			}, mod.body.getIndentString() );
 		} else {
 			// gather imports, and remove import declarations
 			mod.imports.forEach( function(x ) {
@@ -1846,10 +1873,10 @@
 					seen[ x.path ] = true;
 				}
 
-				body.remove( x.start, x.next );
+				mod.body.remove( x.start, x.next );
 			});
 
-			transformExportDeclaration( mod.exports[0], body );
+			transformExportDeclaration( mod.exports[0], mod.body );
 
 			intro = defaultUmdIntro({
 				hasExports: hasExports,
@@ -1858,12 +1885,12 @@
 				amdName: options.amdName,
 				absolutePaths: options.absolutePaths,
 				name: options.name
-			}, body.getIndentString() );
+			}, mod.body.getIndentString() );
 		}
 
-		body.indent().prepend( intro ).trimLines().append( '\n\n}));' );
+		mod.body.indent().prepend( intro ).trimLines().append( '\n\n}));' );
 
-		return packageResult( body, options, 'toUmd' );
+		return packageResult( mod, mod.body, options, 'toUmd' );
 	}
 
 	var defaultsMode = {
@@ -2245,7 +2272,7 @@
 
 	strictMode_amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-	function strictMode_amd__amd ( mod, body, options ) {var $D$2;
+	function strictMode_amd__amd ( mod, options ) {var $D$2;
 		var importPaths,
 			importNames,
 			intro;
@@ -2261,18 +2288,18 @@
 			amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
 			paths: importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
-		}).replace( /\t/g, body.getIndentString() );
+		}).replace( /\t/g, mod.body.getIndentString() );
 
-		transformBody( mod, body, {
+		transformBody( mod, mod.body, {
 			intro: intro,
 			outro: '\n\n});',
 			_evilES3SafeReExports: options._evilES3SafeReExports
 		});
 
-		return packageResult( body, options, 'toAmd' );
+		return packageResult( mod, mod.body, options, 'toAmd' );
 	;$D$2 = void 0}
 
-	function strictMode_cjs__cjs ( mod, body, options ) {
+	function strictMode_cjs__cjs ( mod, options ) {
 		var importBlock, seen = {};
 
 		// Create block of require statements
@@ -2292,14 +2319,14 @@
 			return replacement;
 		}).filter( Boolean ).join( '\n' );
 
-		transformBody( mod, body, {
+		transformBody( mod, mod.body, {
 			header: importBlock,
 			_evilES3SafeReExports: options._evilES3SafeReExports
 		});
 
-		body.prepend( "'use strict';\n\n" ).trimLines();
+		mod.body.prepend( "'use strict';\n\n" ).trimLines();
 
-		return packageResult( body, options, 'toCjs' );
+		return packageResult( mod, mod.body, options, 'toCjs' );
 	}
 
 	function strictUmdIntro ( options, indentStr ) {
@@ -2338,7 +2365,7 @@
 		return intro.replace( /\t/g, indentStr );
 	}
 
-	function strictMode_umd__umd ( mod, body, options ) {
+	function strictMode_umd__umd ( mod, options ) {
 		requireName( options );
 
 		var importPaths = (importNames = getImportSummary( mod ))[0], importNames = importNames[1];
@@ -2350,7 +2377,7 @@
 		if (!hasImports && !hasExports) {
 			intro = standaloneUmdIntro({
 				amdName: options.amdName,
-			}, body.getIndentString() );
+			}, mod.body.getIndentString() );
 		} else {
 			intro = strictUmdIntro({
 				hasExports: hasExports,
@@ -2359,16 +2386,16 @@
 				amdName: options.amdName,
 				absolutePaths: options.absolutePaths,
 				name: options.name
-			}, body.getIndentString() );
+			}, mod.body.getIndentString() );
 		}
 
-		transformBody( mod, body, {
+		transformBody( mod, mod.body, {
 			intro: intro,
 			outro: '\n\n}));',
 			_evilES3SafeReExports: options._evilES3SafeReExports
 		});
 
-		return packageResult( body, options, 'toUmd' );
+		return packageResult( mod, mod.body, options, 'toUmd' );
 	}
 
 	var strictMode = {
@@ -2385,46 +2412,46 @@
 
 	var defaultsMode_amd__introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-	function defaultsMode_amd__amd ( bundle, body, options ) {
+	function defaultsMode_amd__amd ( bundle, options ) {
 		var defaultName = bundle.entryModule.identifierReplacements.default;
 		if ( defaultName ) {
-			body.append( (("\n\nreturn " + defaultName) + ";") );
+			bundle.body.append( (("\n\nreturn " + defaultName) + ";") );
 		}
 
 		var intro = defaultsMode_amd__introTemplate({
 			amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
 			amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
 			names: bundle.externalModules.map( getName ).join( ', ' )
-		}).replace( /\t/g, body.getIndentString() );
+		}).replace( /\t/g, bundle.body.getIndentString() );
 
-		body.indent().prepend( intro ).trimLines().append( '\n\n});' );
-		return packageResult( body, options, 'toAmd', true );
+		bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
+		return packageResult( bundle, bundle.body, options, 'toAmd', true );
 	}
 
 	function quoteId ( m ) {
 		return "'" + m.id + "'";
 	}
 
-	function defaultsMode_cjs__cjs ( bundle, body, options ) {
+	function defaultsMode_cjs__cjs ( bundle, options ) {
 		var importBlock = bundle.externalModules.map( function(x ) {
 			return (("var " + (x.name)) + (" = " + (req(x.id))) + ";");
 		}).join( '\n' );
 
 		if ( importBlock ) {
-			body.prepend( importBlock + '\n\n' );
+			bundle.body.prepend( importBlock + '\n\n' );
 		}
 
 		var defaultName = bundle.entryModule.identifierReplacements.default;
 		if ( defaultName ) {
-			body.append( (("\n\nmodule.exports = " + defaultName) + ";") );
+			bundle.body.append( (("\n\nmodule.exports = " + defaultName) + ";") );
 		}
 
-		body.prepend("'use strict';\n\n").trimLines();
+		bundle.body.prepend("'use strict';\n\n").trimLines();
 
-		return packageResult( body, options, 'toCjs', true );
+		return packageResult( bundle, bundle.body, options, 'toCjs', true );
 	}
 
-	function defaultsMode_umd__umd ( bundle, body, options ) {
+	function defaultsMode_umd__umd ( bundle, options ) {
 		requireName( options );
 
 		var entry = bundle.entryModule;
@@ -2436,12 +2463,12 @@
 		if (!hasImports && !hasExports) {
 			intro = standaloneUmdIntro({
 				amdName: options.amdName,
-			}, body.getIndentString() );
+			}, bundle.body.getIndentString() );
 		} else {
 
 			var defaultName = entry.identifierReplacements.default;
 			if ( defaultName ) {
-				body.append( (("\n\nreturn " + defaultName) + ";") );
+				bundle.body.append( (("\n\nreturn " + defaultName) + ";") );
 			}
 
 			var importPaths = bundle.externalModules.map( getId );
@@ -2453,12 +2480,12 @@
 				importNames: importNames,
 				amdName: options.amdName,
 				name: options.name
-			}, body.getIndentString() );
+			}, bundle.body.getIndentString() );
 		}
 
-		body.indent().prepend( intro ).trimLines().append('\n\n}));');
+		bundle.body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
-		return packageResult( body, options, 'toUmd', true );
+		return packageResult( bundle, bundle.body, options, 'toUmd', true );
 	}
 
 	var builders_defaultsMode = {
@@ -2474,7 +2501,7 @@
 
 	var builders_strictMode_amd__introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-	function builders_strictMode_amd__amd ( bundle, body, options ) {
+	function builders_strictMode_amd__amd ( bundle, options ) {
 		var externalDefaults = bundle.externalModules.filter( builders_strictMode_amd__needsDefault );
 		var entry = bundle.entryModule;
 
@@ -2492,7 +2519,7 @@
 				return (("var " + (x.name)) + ("__default = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");");
 			}).join( '\n' );
 
-			body.prepend( defaultsBlock + '\n\n' );
+			bundle.body.prepend( defaultsBlock + '\n\n' );
 		}
 
 		if ( entry.exports.length ) {
@@ -2500,7 +2527,7 @@
 			importNames.unshift( 'exports' );
 
 			if ( entry.defaultExport ) {
-				body.append( '\n\n' + getExportBlock( entry ) );
+				bundle.body.append( '\n\n' + getExportBlock( entry ) );
 			}
 		}
 
@@ -2508,17 +2535,17 @@
 			amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
 			amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 			names: importNames.join( ', ' )
-		}).replace( /\t/g, body.getIndentString() );
+		}).replace( /\t/g, bundle.body.getIndentString() );
 
-		body.indent().prepend( intro ).trimLines().append( '\n\n});' );
-		return packageResult( body, options, 'toAmd', true );
+		bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
+		return packageResult( bundle, bundle.body, options, 'toAmd', true );
 	}
 
 	function builders_strictMode_amd__needsDefault ( externalModule ) {
 		return externalModule.needsDefault;
 	}
 
-	function builders_strictMode_cjs__cjs ( bundle, body, options ) {
+	function builders_strictMode_cjs__cjs ( bundle, options ) {
 		var entry = bundle.entryModule;
 
 		var importBlock = bundle.externalModules.map( function(x ) {
@@ -2534,19 +2561,19 @@
 		}).join( '\n' );
 
 		if ( importBlock ) {
-			body.prepend( importBlock + '\n\n' );
+			bundle.body.prepend( importBlock + '\n\n' );
 		}
 
 		if ( entry.defaultExport ) {
-			body.append( '\n\n' + getExportBlock( entry ) );
+			bundle.body.append( '\n\n' + getExportBlock( entry ) );
 		}
 
-		body.prepend("'use strict';\n\n").trimLines();
+		bundle.body.prepend("'use strict';\n\n").trimLines();
 
-		return packageResult( body, options, 'toCjs', true );
+		return packageResult( bundle, bundle.body, options, 'toCjs', true );
 	}
 
-	function builders_strictMode_umd__umd ( bundle, body, options ) {
+	function builders_strictMode_umd__umd ( bundle, options ) {
 		requireName( options );
 
 		var entry = bundle.entryModule;
@@ -2558,11 +2585,11 @@
 		if (!hasImports && !hasExports) {
 			intro = standaloneUmdIntro({
 				amdName: options.amdName,
-			}, body.getIndentString() );
+			}, bundle.body.getIndentString() );
 		} else {
 
 			if ( hasExports && entry.defaultExport ) {
-				body.append( '\n\n' + getExportBlock( entry ) );
+				bundle.body.append( '\n\n' + getExportBlock( entry ) );
 			}
 
 			var importPaths = bundle.externalModules.map( getId );
@@ -2575,12 +2602,12 @@
 				externalDefaults: bundle.externalModules.filter( builders_strictMode_umd__needsDefault ),
 				amdName: options.amdName,
 				name: options.name,
-			}, body.getIndentString() );
+			}, bundle.body.getIndentString() );
 		}
 
-		body.indent().prepend( intro ).trimLines().append('\n\n}));');
+		bundle.body.indent().prepend( intro ).trimLines().append('\n\n}));');
 
-		return packageResult( body, options, 'toUmd', true );
+		return packageResult( bundle, bundle.body, options, 'toUmd', true );
 	}
 
 	function builders_strictMode_umd__needsDefault ( externalModule ) {
@@ -2600,28 +2627,26 @@
 	};
 
 	function concat ( bundle, options ) {
-		var body, intro, outro, indent;
+		var intro, outro, indent;
 
 		// This bundle must be self-contained - no imports or exports
 		if ( bundle.externalModules.length || bundle.entryModule.exports.length ) {
 			throw new Error( (("bundle.concat() can only be used with bundles that have no imports/exports (imports: [" + (bundle.externalModules.map(function(x){return x.id}).join(', '))) + ("], exports: [" + (bundle.entryModule.exports.join(', '))) + "])") );
 		}
 
-		body = bundle.body.clone();
-
 		// TODO test these options
 		intro = 'intro' in options ? options.intro : ("(function () { 'use strict';\n\n");
 		outro = 'outro' in options ? options.outro : '\n\n})();';
 
 		if ( !( 'indent' in options ) || options.indent === true ) {
-			indent = body.getIndentString();
+			indent = bundle.body.getIndentString();
 		} else {
 			indent = options.indent || '';
 		}
 
-		body.trimLines().indent( indent ).prepend( intro ).append( outro );
+		bundle.body.trimLines().indent( indent ).prepend( intro ).append( outro );
 
-		return packageResult( body, options, 'toString', true );
+		return packageResult( bundle, bundle.body, options, 'toString', true );
 	}
 
 	var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
@@ -2634,7 +2659,6 @@
 				builder;
 
 			mod = getStandaloneModule({ source: source, getModuleName: options.getModuleName, strict: options.strict });
-			body = mod.body.clone();
 
 			if ( 'defaultOnly' in options && !alreadyWarned ) {
 				// TODO link to a wiki page explaining this, or something
@@ -2657,7 +2681,7 @@
 				builder = moduleBuilders.strictMode[ format ];
 			}
 
-			return builder( mod, body, options );
+			return builder( mod, options );
 		};
 	}
 
@@ -2709,7 +2733,7 @@
 						builder = bundleBuilders.strictMode[ format ];
 					}
 
-					return builder( bundle, bundle.body.clone(), options );
+					return builder( bundle, options );
 				}
 			});
 		}
