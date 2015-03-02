@@ -5,7 +5,7 @@ import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
 import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
 import requireName from 'utils/umd/requireName';
 
-export default function umd ( mod, body, options ) {
+export default function umd ( mod, options ) {
 	var importNames = [];
 	var importPaths = [];
 	var seen = {};
@@ -20,7 +20,7 @@ export default function umd ( mod, body, options ) {
 	if (!hasImports && !hasExports) {
 		intro = standaloneUmdIntro({
 			amdName: options.amdName,
-		}, body.getIndentString() );
+		}, mod.body.getIndentString() );
 	} else {
 		// gather imports, and remove import declarations
 		mod.imports.forEach( x => {
@@ -40,10 +40,10 @@ export default function umd ( mod, body, options ) {
 				seen[ x.path ] = true;
 			}
 
-			body.remove( x.start, x.next );
+			mod.body.remove( x.start, x.next );
 		});
 
-		transformExportDeclaration( mod.exports[0], body );
+		transformExportDeclaration( mod.exports[0], mod.body );
 
 		intro = defaultUmdIntro({
 			hasExports,
@@ -52,10 +52,10 @@ export default function umd ( mod, body, options ) {
 			amdName: options.amdName,
 			absolutePaths: options.absolutePaths,
 			name: options.name
-		}, body.getIndentString() );
+		}, mod.body.getIndentString() );
 	}
 
-	body.indent().prepend( intro ).trimLines().append( '\n\n}));' );
+	mod.body.indent().prepend( intro ).trimLines().append( '\n\n}));' );
 
-	return packageResult( body, options, 'toUmd' );
+	return packageResult( mod, mod.body, options, 'toUmd' );
 }

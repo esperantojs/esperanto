@@ -18,7 +18,6 @@ function transpileMethod ( format ) {
 			builder;
 
 		mod = getStandaloneModule({ source: source, getModuleName: options.getModuleName, strict: options.strict });
-		body = mod.body.clone();
 
 		if ( 'defaultOnly' in options && !alreadyWarned ) {
 			// TODO link to a wiki page explaining this, or something
@@ -41,7 +40,7 @@ function transpileMethod ( format ) {
 			builder = moduleBuilders.strictMode[ format ];
 		}
 
-		return builder( mod, body, options );
+		return builder( mod, options );
 	};
 }
 
@@ -93,7 +92,7 @@ export default {
 					builder = bundleBuilders.strictMode[ format ];
 				}
 
-				return builder( bundle, bundle.body.clone(), options );
+				return builder( bundle, options );
 			}
 		});
 	}

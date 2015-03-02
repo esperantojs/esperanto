@@ -1,8 +1,9 @@
+import estraverse from 'estraverse';
 import { splitPath } from 'utils/sanitize';
 
 var warned = {};
 
-export default function packageResult ( body, options, methodName, isBundle ) {
+export default function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
 	var code, map;
 
 	// wrap output
@@ -27,9 +28,14 @@ export default function packageResult ( body, options, methodName, isBundle ) {
 			sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 		}
 
+		if ( isBundle ) {
+			markBundleSourcemapLocations( bundleOrModule );
+		} else {
+			markModuleSourcemapLocations( bundleOrModule );
+		}
+
 		map = body.generateMap({
 			includeContent: true,
-			hires: true,
 			file: sourceMapFile,
 			source: (sourceMapFile && !isBundle) ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 		});
@@ -84,4 +90,22 @@ function getRelativePath ( from, to ) {
 		toParts.unshift( '.' );
 		return toParts.join( '/' );
 	}
+}
+
+function markBundleSourcemapLocations ( bundle ) {
+	bundle.modules.forEach( mod => {
+		estraverse.traverse( mod.ast, {
+			enter: node => {
+				mod.body.addSourcemapLocation( node.start );
+			}
+		});
+	})
+}
+
+function markModuleSourcemapLocations ( mod ) {
+	estraverse.traverse( mod.ast, {
+		enter: node => {
+			mod.body.addSourcemapLocation( node.start );
+		}
+	});
 }

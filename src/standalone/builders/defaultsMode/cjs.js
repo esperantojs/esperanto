@@ -2,17 +2,17 @@ import hasOwnProp from 'utils/hasOwnProp';
 import packageResult from 'utils/packageResult';
 import { req } from 'utils/mappers';
 
-export default function cjs ( mod, body, options ) {
+export default function cjs ( mod, options ) {
 	var seen = {}, exportDeclaration;
 
 	mod.imports.forEach( x => {
 		if ( !hasOwnProp.call( seen, x.path ) ) {
 			var replacement = x.isEmpty ? `${req(x.path)};` : `var ${x.as} = ${req(x.path)};`;
-			body.replace( x.start, x.end, replacement );
+			mod.body.replace( x.start, x.end, replacement );
 
 			seen[ x.path ] = true;
 		} else {
-			body.remove( x.start, x.next );
+			mod.body.remove( x.start, x.next );
 		}
 	});
 
@@ -22,14 +22,14 @@ export default function cjs ( mod, body, options ) {
 		switch ( exportDeclaration.type ) {
 			case 'namedFunction':
 			case 'namedClass':
-				body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-				body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
+				mod.body.remove( exportDeclaration.start, exportDeclaration.valueStart );
+				mod.body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
 				break;
 
 			case 'anonFunction':
 			case 'anonClass':
 			case 'expression':
-				body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
+				mod.body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
 				break;
 
 			default:
@@ -37,7 +37,7 @@ export default function cjs ( mod, body, options ) {
 		}
 	}
 
-	body.prepend( "'use strict';\n\n" ).trimLines();
+	mod.body.prepend( "'use strict';\n\n" ).trimLines();
 
-	return packageResult( body, options, 'toCjs' );
+	return packageResult( mod, mod.body, options, 'toCjs' );
 }

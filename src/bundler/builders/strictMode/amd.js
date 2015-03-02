@@ -5,7 +5,7 @@ import getExportBlock from './utils/getExportBlock';
 
 var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-export default function amd ( bundle, body, options ) {
+export default function amd ( bundle, options ) {
 	var externalDefaults = bundle.externalModules.filter( needsDefault );
 	var entry = bundle.entryModule;
 
@@ -23,7 +23,7 @@ export default function amd ( bundle, body, options ) {
 			return `var ${x.name}__default = ('default' in ${x.name} ? ${x.name}['default'] : ${x.name});`;
 		}).join( '\n' );
 
-		body.prepend( defaultsBlock + '\n\n' );
+		bundle.body.prepend( defaultsBlock + '\n\n' );
 	}
 
 	if ( entry.exports.length ) {
@@ -31,7 +31,7 @@ export default function amd ( bundle, body, options ) {
 		importNames.unshift( 'exports' );
 
 		if ( entry.defaultExport ) {
-			body.append( '\n\n' + getExportBlock( entry ) );
+			bundle.body.append( '\n\n' + getExportBlock( entry ) );
 		}
 	}
 
@@ -39,10 +39,10 @@ export default function amd ( bundle, body, options ) {
 		amdName: options.amdName ? `${quote(options.amdName)}, ` : '',
 		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
-	}).replace( /\t/g, body.getIndentString() );
+	}).replace( /\t/g, bundle.body.getIndentString() );
 
-	body.indent().prepend( intro ).trimLines().append( '\n\n});' );
-	return packageResult( body, options, 'toAmd', true );
+	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
+	return packageResult( bundle, bundle.body, options, 'toAmd', true );
 }
 
 function needsDefault ( externalModule ) {

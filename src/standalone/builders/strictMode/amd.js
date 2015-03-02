@@ -9,7 +9,7 @@ var introTemplate;
 
 introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-export default function amd ( mod, body, options ) {
+export default function amd ( mod, options ) {
 	var importPaths,
 		importNames,
 		intro;
@@ -25,13 +25,13 @@ export default function amd ( mod, body, options ) {
 		amdName: options.amdName ? `'${options.amdName}', ` : '',
 		paths: importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '',
 		names: importNames.join( ', ' )
-	}).replace( /\t/g, body.getIndentString() );
+	}).replace( /\t/g, mod.body.getIndentString() );
 
-	transformBody( mod, body, {
+	transformBody( mod, mod.body, {
 		intro: intro,
 		outro: '\n\n});',
 		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
-	return packageResult( body, options, 'toAmd' );
+	return packageResult( mod, mod.body, options, 'toAmd' );
 }

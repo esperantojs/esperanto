@@ -3,7 +3,7 @@ import hasOwnProp from 'utils/hasOwnProp';
 import transformBody from './utils/transformBody';
 import { req } from 'utils/mappers';
 
-export default function cjs ( mod, body, options ) {
+export default function cjs ( mod, options ) {
 	var importBlock, seen = {};
 
 	// Create block of require statements
@@ -23,12 +23,12 @@ export default function cjs ( mod, body, options ) {
 		return replacement;
 	}).filter( Boolean ).join( '\n' );
 
-	transformBody( mod, body, {
+	transformBody( mod, mod.body, {
 		header: importBlock,
 		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
-	body.prepend( "'use strict';\n\n" ).trimLines();
+	mod.body.prepend( "'use strict';\n\n" ).trimLines();
 
-	return packageResult( body, options, 'toCjs' );
+	return packageResult( mod, mod.body, options, 'toCjs' );
 }
