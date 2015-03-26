@@ -42,35 +42,32 @@ export default function transformBody ( mod, body, options ) {
 
 	// Remove export statements (but keep declarations)
 	mod.exports.forEach( x => {
-		switch ( x.type ) {
-			case 'varDeclaration': // export var answer = 42;
+		if ( x.isDefault ) {
+			if ( /^named/.test( x.type ) ) {
+				// export default function answer () { return 42; }
 				body.remove( x.start, x.valueStart );
-				return;
-
-			case 'namedFunction':
-			case 'namedClass':
-				if ( x.isDefault ) {
-					// export default function answer () { return 42; }
-					body.remove( x.start, x.valueStart );
-					body.insert( x.end, `\nexports['default'] = ${x.name};` );
-				} else {
-					// export function answer () { return 42; }
-					body.remove( x.start, x.valueStart );
-				}
-				return;
-
-			case 'anonFunction':   // export default function () {}
-			case 'anonClass':      // export default class () {}
-			case 'expression':     // export default 40 + 2;
+				body.insert( x.end, `\nexports['default'] = ${x.name};` );
+			} else {
+				// everything else
 				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
-				return;
+			}
+		}
 
-			case 'named':          // export { foo, bar };
-				body.remove( x.start, x.next );
-				break;
+		else {
+			switch ( x.type ) {
+				case 'varDeclaration': // export var answer = 42; (or let)
+				case 'namedFunction':  // export function answer () {...}
+				case 'namedClass':     // export class answer {...}
+					body.remove( x.start, x.valueStart );
+					break;
 
-			default:
-				throw new Error( 'Unknown export type: ' + x.type );
+				case 'named':          // export { foo, bar };
+					body.remove( x.start, x.next );
+					break;
+
+				default:
+					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
+			}
 		}
 	});
 

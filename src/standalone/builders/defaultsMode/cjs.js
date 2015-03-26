@@ -26,14 +26,9 @@ export default function cjs ( mod, options ) {
 				mod.body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
 				break;
 
-			case 'anonFunction':
-			case 'anonClass':
-			case 'expression':
+			default:
 				mod.body.replace( exportDeclaration.start, exportDeclaration.node.declaration.start, 'module.exports = ' );
 				break;
-
-			default:
-				throw new Error( 'Unexpected export type' );
 		}
 	}
 

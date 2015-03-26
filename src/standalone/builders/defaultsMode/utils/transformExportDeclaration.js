@@ -32,7 +32,7 @@ export default function transformExportDeclaration ( declaration, body ) {
 
 		case 'expression':
 			body.remove( declaration.start, declaration.next );
-			exportedValue = body.original.slice( declaration.valueStart, declaration.node.declaration.end );
+			exportedValue = declaration.value;
 			break;
 
 		default:
