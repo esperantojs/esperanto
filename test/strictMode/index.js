@@ -96,7 +96,7 @@ module.exports = function () {
 			sander.readdirSync( __dirname, '../es6-module-transpiler-tests/input' ).forEach( function ( dir ) {
 				var config = require( '../es6-module-transpiler-tests/input/' + dir + '/_config' );
 
-				it( dir, function () {
+				( config.solo ? it.only : it )( dir, function () {
 					// Create CommonJS modules, then require the entry module
 					return sander.readdir( 'es6-module-transpiler-tests/input', dir ).then( function ( files ) {
 						var promises = files.map( function ( file ) {
