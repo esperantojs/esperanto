@@ -40,7 +40,7 @@ export default function combine ( bundle ) {
 
 			x.specifiers.forEach( s => {
 				if ( !importedModule.doesExport[ s.name ] ) {
-					throw new Error( 'Module ' + importedModule.id + ' does not export ' + s.name + ' (imported by ' + mod.id + ')' );
+					throw new Error( `Module ${importedModule.id} does not export ${s.name} (imported by ${mod.id})` );
 				}
 			});
 		});
