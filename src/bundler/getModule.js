@@ -9,12 +9,21 @@ export default function getModule ( mod ) {
 
 	mod.body = new MagicString( mod.source );
 
+	let toRemove = [];
+
 	try {
 		mod.ast = acorn.parse( mod.source, {
 			ecmaVersion: 6,
-			sourceType: 'module'
+			sourceType: 'module',
+			onComment ( block, text, start, end ) {
+				// sourceMappingURL comments should be removed
+				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+					toRemove.push({ start, end });
+				}
+			}
 		});
 
+		toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 		annotateAst( mod.ast );
 	} catch ( err ) {
 		// If there's a parse error, attach file info
