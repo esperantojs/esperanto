@@ -7,23 +7,35 @@ import disallowConflictingImports from '../utils/disallowConflictingImports';
 import hasOwnProp from 'utils/hasOwnProp';
 import { default as sanitize, splitPath } from 'utils/sanitize';
 
-export default function getStandaloneModule ( options ) {
-	var mod, imports, exports, conflicts = {};
+const SOURCEMAPPINGURL_REGEX = /^# sourceMappingURL=/;
 
-	mod = {
+export default function getStandaloneModule ( options ) {
+	let toRemove = [];
+
+	let mod = {
 		body: new MagicString( options.source ),
 		ast: acorn.parse( options.source, {
 			ecmaVersion: 6,
-			locations: true
+			locations: true,
+			onComment ( block, text, start, end ) {
+				// sourceMappingURL comments should be removed
+				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+					toRemove.push({ start, end });
+				}
+			}
 		})
 	};
 
-	[ imports, exports ] = findImportsAndExports( mod, options.source, mod.ast );
+	toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
+
+	let [ imports, exports ] = findImportsAndExports( mod, options.source, mod.ast );
 
 	disallowConflictingImports( imports );
 
 	mod.imports = imports;
 	mod.exports = exports;
+
+	let conflicts = {};
 
 	if ( options.strict ) {
 		annotateAst( mod.ast );
