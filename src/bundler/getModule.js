@@ -12,7 +12,7 @@ export default function getModule ( mod ) {
 	try {
 		mod.ast = acorn.parse( mod.source, {
 			ecmaVersion: 6,
-			locations: true
+			sourceType: 'module'
 		});
 
 		annotateAst( mod.ast );

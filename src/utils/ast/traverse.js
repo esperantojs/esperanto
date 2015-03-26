@@ -10,7 +10,7 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 		previousCapturedUpdates = null;
 
 	estraverse.traverse( ast, {
-		enter: function ( node ) {
+		enter ( node, parent ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();
 
@@ -39,8 +39,9 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 			// and `capturedUpdates`, which are used elsewhere
 			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, scope === ast._scope, capturedUpdates );
 
-			// Replace identifiers
-			replaceIdentifiers( body, node, identifierReplacements, scope );
+			if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
+				replaceIdentifiers( body, node, identifierReplacements, scope );
+			}
 
 			// Replace top-level this with undefined ES6 8.1.1.5.4
 			if ( node.type === 'ThisExpression' && node._topLevel ) {
@@ -48,7 +49,7 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 			}
 		},
 
-		leave: function ( node ) {
+		leave ( node ) {
 			// Special case - see above
 			if ( node.type === 'VariableDeclaration' ) {
 				if ( capturedUpdates.length ) {

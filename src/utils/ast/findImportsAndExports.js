@@ -24,16 +24,19 @@ export default function findImportsAndExports ( mod, source, ast ) {
 			imports.push( declaration );
 		}
 
-		else if ( node.type === 'ExportDeclaration' ) {
-			declaration = processExport( node, source );
+		else if ( node.type === 'ExportDefaultDeclaration' ) {
+			declaration = processDefaultExport( node, source );
 			exports.push( declaration );
 
-			if ( declaration.isDefault ) {
-				if ( mod.defaultExport ) {
-					throw new Error( 'Duplicate default exports' );
-				}
-				mod.defaultExport = declaration;
+			if ( mod.defaultExport ) {
+				throw new Error( 'Duplicate default exports' );
 			}
+			mod.defaultExport = declaration;
+		}
+
+		else if ( node.type === 'ExportNamedDeclaration' ) {
+			declaration = processExport( node, source );
+			exports.push( declaration );
 
 			if ( node.source ) {
 				// it's both an import and an export, e.g.
@@ -77,20 +80,25 @@ function processImport ( node, passthrough ) {
 		specifiers: node.specifiers.map( s => {
 			var id;
 
-			if ( s.type === 'ImportBatchSpecifier' ) {
+			if ( s.type === 'ImportNamespaceSpecifier' ) {
 				return {
 					isBatch: true,
-					name: s.name.name,
-					as: s.name.name
+					name: s.local.name, // TODO is this line necessary?
+					as: s.local.name
 				};
 			}
 
-			id = s.id.name;
+			if ( s.type === 'ImportDefaultSpecifier' ) {
+				return {
+					isDefault: true,
+					name: 'default',
+					as: s.local.name
+				}
+			}
 
 			return {
-				isDefault: !!s.default,
-				name: s.default ? 'default' : id,
-				as: s.name ? s.name.name : id
+				name: ( !!passthrough ? s.exported : s.imported ).name,
+				as: s.local.name
 			};
 		})
 	};
@@ -110,6 +118,53 @@ function processImport ( node, passthrough ) {
 	}
 
 	return x;
+}
+
+function processDefaultExport ( node, source ) {
+	let result = {
+		isDefault: true,
+		node: node,
+		start: node.start,
+		end: node.end
+	};
+
+	let d = node.declaration;
+
+	if ( d.type === 'FunctionExpression' ) {
+		// Case 1: `export default function () {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'anonFunction';
+	}
+
+	else if ( d.type === 'FunctionDeclaration' ) {
+		// Case 2: `export default function foo () {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'namedFunction';
+		result.name = d.id.name;
+	}
+
+	else if ( d.type === 'ClassExpression' ) {
+		// Case 3: `export default class {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'anonClass';
+	}
+
+	else if ( d.type === 'ClassDeclaration' ) {
+		// Case 4: `export default class Foo {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'namedClass';
+		result.name = d.id.name;
+	}
+
+	else {
+		result.type = 'expression';
+		result.name = 'default';
+	}
+
+	result.value = source.slice( d.start, d.end );
+	result.valueStart = d.start;
+
+	return result;
 }
 
 /**
@@ -142,62 +197,23 @@ function processExport ( node, source ) {
 		else if ( d.type === 'FunctionDeclaration' ) {
 			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedFunction';
-			result.isDefault = !!node.default;
 			result.name = d.id.name;
 		}
 
-		else if ( d.type === 'FunctionExpression' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
-			result.isDefault = true;
-
-			// Case 3: `export default function foo () {...}`
-			if ( d.id ) {
-				result.type = 'namedFunction';
-				result.name = d.id.name;
-			}
-
-			// Case 4: `export default function () {...}`
-			else {
-				result.type = 'anonFunction';
-			}
-		}
-
-		// Case 5: `export class Foo {...}`
+		// Case 3: `export class Foo {...}`
 		else if ( d.type === 'ClassDeclaration' ) {
 			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedClass';
-			result.isDefault = !!node.default;
 			result.name = d.id.name;
-		}
-
-		else if ( d.type === 'ClassExpression' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
-			result.isDefault = true;
-
-			// Case 6: `export default class Foo {...}`
-			if ( d.id ) {
-				result.type = 'namedClass';
-				result.name = d.id.name;
-			}
-
-			// Case 7: `export default class {...}`
-			else {
-				result.type = 'anonClass';
-			}
-		}
-
-		// Case 8: `export default 1 + 2`
-		else {
-			result.type = 'expression';
-			result.isDefault = true;
-			result.name = 'default';
 		}
 	}
 
 	// Case 9: `export { foo, bar };`
 	else {
 		result.type = 'named';
-		result.specifiers = node.specifiers.map( s => ({ name: s.id.name }) ); // TODO as?
+		result.specifiers = node.specifiers.map( s => {
+			return { name: s.local.name };
+		}); // TODO as?
 	}
 
 	return result;

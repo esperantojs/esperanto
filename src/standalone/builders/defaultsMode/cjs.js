@@ -22,14 +22,14 @@ export default function cjs ( mod, options ) {
 		switch ( exportDeclaration.type ) {
 			case 'namedFunction':
 			case 'namedClass':
-				mod.body.remove( exportDeclaration.start, exportDeclaration.valueStart );
+				mod.body.remove( exportDeclaration.start, exportDeclaration.node.declaration.start );
 				mod.body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
 				break;
 
 			case 'anonFunction':
 			case 'anonClass':
 			case 'expression':
-				mod.body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
+				mod.body.replace( exportDeclaration.start, exportDeclaration.node.declaration.start, 'module.exports = ' );
 				break;
 
 			default:

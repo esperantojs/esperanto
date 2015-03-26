@@ -1,41 +1,45 @@
 export default function transformExportDeclaration ( declaration, body ) {
-	var exportedValue;
+	if ( !declaration ) {
+		return;
+	}
 
-	if ( declaration ) {
-		switch ( declaration.type ) {
-			case 'namedFunction':
-			case 'namedClass':
-				body.remove( declaration.start, declaration.valueStart );
-				exportedValue = declaration.name;
-				break;
+	let exportedValue;
 
-			case 'anonFunction':
-			case 'anonClass':
-				if ( declaration.isFinal ) {
-					body.replace( declaration.start, declaration.valueStart, 'return ' );
-				} else {
-					body.replace( declaration.start, declaration.valueStart, 'var __export = ' );
-					exportedValue = '__export';
-				}
+	switch ( declaration.type ) {
+		case 'namedFunction':
+		case 'namedClass':
+			body.remove( declaration.start, declaration.valueStart );
+			exportedValue = declaration.name;
+			break;
 
-				// add semi-colon, if necessary
-				if ( declaration.value.slice( -1 ) !== ';' ) {
-					body.insert( declaration.end, ';' );
-				}
+		case 'anonFunction':
+		case 'anonClass':
+			if ( declaration.isFinal ) {
+				body.replace( declaration.start, declaration.valueStart, 'return ' );
+			} else {
+				body.replace( declaration.start, declaration.valueStart, 'var __export = ' );
+				exportedValue = '__export';
+			}
 
-				break;
+			// add semi-colon, if necessary
+			// TODO body.original is an implementation detail of magic-string - there
+			// should probably be an API for this sort of thing
+			if ( body.original[ declaration.end - 1 ] !== ';' ) {
+				body.insert( declaration.end, ';' );
+			}
 
-			case 'expression':
-				body.remove( declaration.start, declaration.next );
-				exportedValue = declaration.value;
-				break;
+			break;
 
-			default:
-				throw new Error( 'Unexpected export type' );
-		}
+		case 'expression':
+			body.remove( declaration.start, declaration.next );
+			exportedValue = body.original.slice( declaration.valueStart, declaration.node.declaration.end );
+			break;
 
-		if ( exportedValue ) {
-			body.append( '\nreturn ' + exportedValue + ';' );
-		}
+		default:
+			throw new Error( `Unexpected export type '${declaration.type}'` );
+	}
+
+	if ( exportedValue ) {
+		body.append( '\nreturn ' + exportedValue + ';' );
 	}
 }

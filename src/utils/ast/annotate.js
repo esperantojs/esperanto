@@ -41,8 +41,8 @@ export default function annotateAst ( ast ) {
 	var envDepth = 0;
 
 	estraverse.traverse( ast, {
-		enter: function ( node ) {
-			if ( node.type === 'ImportDeclaration' ) {
+		enter ( node ) {
+			if ( node.type === 'ImportDeclaration' || node.type === 'ExportSpecifier' ) {
 				node._skip = true;
 			}
 
@@ -114,7 +114,7 @@ export default function annotateAst ( ast ) {
 					break;
 			}
 		},
-		leave: function ( node ) {
+		leave ( node ) {
 			switch ( node.type ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':

@@ -6,9 +6,9 @@
   "repository": "https://github.com/esperantojs/esperanto",
   "license": "MIT",
   "dependencies": {
-    "acorn": "^0.11.0",
+    "acorn": "^1.0.1",
     "chalk": "^1.0.0",
-    "estraverse": "^1.9.0",
+    "estraverse": "^3.1.0",
     "magic-string": "^0.4.5",
     "minimist": "^1.1.0",
     "sander": "^0.2.1"

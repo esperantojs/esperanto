@@ -16,7 +16,7 @@ export default function getStandaloneModule ( options ) {
 		body: new MagicString( options.source ),
 		ast: acorn.parse( options.source, {
 			ecmaVersion: 6,
-			locations: true,
+			sourceType: 'module',
 			onComment ( block, text, start, end ) {
 				// sourceMappingURL comments should be removed
 				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
