@@ -1,5 +1,11 @@
 # changelog
 
+## 0.6.18
+
+* Upgrade to acorn v1.x ([#125](https://github.com/esperantojs/esperanto/issues/125))
+* Sourcemap comments from prior transformations are removed ([#120](https://github.com/esperantojs/esperanto/issues/120))
+* Named function expressions are not erroneously renamed ([#122](https://github.com/esperantojs/esperanto/issues/122))
+
 ## 0.6.17
 
 * Sourcemap mappings are set explicitly - rather than mapping every single character, the locations from the acorn AST are used. As well as smaller sourcemaps, this results in modest performance improvements internally, and large performance improvements for external tools that work with the sourcemap
