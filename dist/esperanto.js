@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.17 - 2015-03-01
+	esperanto.js v0.6.18 - 2015-03-26
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -7,10 +7,10 @@
 
 'use strict';
 
-var acorn = require('acorn');
-var MagicString = require('magic-string');
 var path = require('path');
 var sander = require('sander');
+var acorn = require('acorn');
+var MagicString = require('magic-string');
 var estraverse = require('estraverse');
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
@@ -77,7 +77,7 @@ function annotateAst ( ast ) {
 
 	estraverse.traverse( ast, {
 		enter: function ( node ) {
-			if ( node.type === 'ImportDeclaration' ) {
+			if ( node.type === 'ImportDeclaration' || node.type === 'ExportSpecifier' ) {
 				node._skip = true;
 			}
 
@@ -219,16 +219,19 @@ function findImportsAndExports ( mod, source, ast ) {
 			imports.push( declaration );
 		}
 
-		else if ( node.type === 'ExportDeclaration' ) {
-			declaration = processExport( node, source );
+		else if ( node.type === 'ExportDefaultDeclaration' ) {
+			declaration = processDefaultExport( node, source );
 			exports.push( declaration );
 
-			if ( declaration.isDefault ) {
-				if ( mod.defaultExport ) {
-					throw new Error( 'Duplicate default exports' );
-				}
-				mod.defaultExport = declaration;
+			if ( mod.defaultExport ) {
+				throw new Error( 'Duplicate default exports' );
 			}
+			mod.defaultExport = declaration;
+		}
+
+		else if ( node.type === 'ExportNamedDeclaration' ) {
+			declaration = processExport( node, source );
+			exports.push( declaration );
 
 			if ( node.source ) {
 				// it's both an import and an export, e.g.
@@ -272,20 +275,25 @@ function processImport ( node, passthrough ) {
 		specifiers: node.specifiers.map( function(s ) {
 			var id;
 
-			if ( s.type === 'ImportBatchSpecifier' ) {
+			if ( s.type === 'ImportNamespaceSpecifier' ) {
 				return {
 					isBatch: true,
-					name: s.name.name,
-					as: s.name.name
+					name: s.local.name, // TODO is this line necessary?
+					as: s.local.name
 				};
 			}
 
-			id = s.id.name;
+			if ( s.type === 'ImportDefaultSpecifier' ) {
+				return {
+					isDefault: true,
+					name: 'default',
+					as: s.local.name
+				}
+			}
 
 			return {
-				isDefault: !!s.default,
-				name: s.default ? 'default' : id,
-				as: s.name ? s.name.name : id
+				name: ( !!passthrough ? s.exported : s.imported ).name,
+				as: s.local.name
 			};
 		})
 	};
@@ -305,6 +313,53 @@ function processImport ( node, passthrough ) {
 	}
 
 	return x;
+}
+
+function processDefaultExport ( node, source ) {
+	var result = {
+		isDefault: true,
+		node: node,
+		start: node.start,
+		end: node.end
+	};
+
+	var d = node.declaration;
+
+	if ( d.type === 'FunctionExpression' ) {
+		// Case 1: `export default function () {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'anonFunction';
+	}
+
+	else if ( d.type === 'FunctionDeclaration' ) {
+		// Case 2: `export default function foo () {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'namedFunction';
+		result.name = d.id.name;
+	}
+
+	else if ( d.type === 'ClassExpression' ) {
+		// Case 3: `export default class {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'anonClass';
+	}
+
+	else if ( d.type === 'ClassDeclaration' ) {
+		// Case 4: `export default class Foo {...}`
+		result.hasDeclaration = true; // TODO remove in favour of result.type
+		result.type = 'namedClass';
+		result.name = d.id.name;
+	}
+
+	else {
+		result.type = 'expression';
+		result.name = 'default';
+	}
+
+	result.value = source.slice( d.start, d.end );
+	result.valueStart = d.start;
+
+	return result;
 }
 
 /**
@@ -337,62 +392,23 @@ function processExport ( node, source ) {
 		else if ( d.type === 'FunctionDeclaration' ) {
 			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedFunction';
-			result.isDefault = !!node.default;
 			result.name = d.id.name;
 		}
 
-		else if ( d.type === 'FunctionExpression' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
-			result.isDefault = true;
-
-			// Case 3: `export default function foo () {...}`
-			if ( d.id ) {
-				result.type = 'namedFunction';
-				result.name = d.id.name;
-			}
-
-			// Case 4: `export default function () {...}`
-			else {
-				result.type = 'anonFunction';
-			}
-		}
-
-		// Case 5: `export class Foo {...}`
+		// Case 3: `export class Foo {...}`
 		else if ( d.type === 'ClassDeclaration' ) {
 			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedClass';
-			result.isDefault = !!node.default;
 			result.name = d.id.name;
-		}
-
-		else if ( d.type === 'ClassExpression' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
-			result.isDefault = true;
-
-			// Case 6: `export default class Foo {...}`
-			if ( d.id ) {
-				result.type = 'namedClass';
-				result.name = d.id.name;
-			}
-
-			// Case 7: `export default class {...}`
-			else {
-				result.type = 'anonClass';
-			}
-		}
-
-		// Case 8: `export default 1 + 2`
-		else {
-			result.type = 'expression';
-			result.isDefault = true;
-			result.name = 'default';
 		}
 	}
 
 	// Case 9: `export { foo, bar };`
 	else {
 		result.type = 'named';
-		result.specifiers = node.specifiers.map( function(s ) {return { name: s.id.name }}  ); // TODO as?
+		result.specifiers = node.specifiers.map( function(s ) {
+			return { name: s.local.name };
+		}); // TODO as?
 	}
 
 	return result;
@@ -495,23 +511,35 @@ function splitPath ( path ) {
 	return path.split( pathSplitRE );
 }
 
-function getStandaloneModule ( options ) {var $D$0;
-	var mod, imports, exports, conflicts = {};
+var SOURCEMAPPINGURL_REGEX = /^# sourceMappingURL=/;
 
-	mod = {
+function getStandaloneModule ( options ) {
+	var toRemove = [];
+
+	var mod = {
 		body: new MagicString( options.source ),
 		ast: acorn.parse( options.source, {
 			ecmaVersion: 6,
-			locations: true
+			sourceType: 'module',
+			onComment: function ( block, text, start, end ) {
+				// sourceMappingURL comments should be removed
+				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+					toRemove.push({ start: start, end: end });
+				}
+			}
 		})
 	};
 
-	imports = ($D$0 = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = $D$0[1], $D$0;
+	toRemove.forEach( function(end)  {var start = end.start, end = end.end;return mod.body.remove( start, end )} );
+
+	var imports = (exports = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = exports[1];
 
 	disallowConflictingImports( imports );
 
 	mod.imports = imports;
 	mod.exports = exports;
+
+	var conflicts = {};
 
 	if ( options.strict ) {
 		annotateAst( mod.ast );
@@ -525,7 +553,7 @@ function getStandaloneModule ( options ) {var $D$0;
 	determineImportNames( imports, options.getModuleName, conflicts );
 
 	return mod;
-;$D$0 = void 0}
+}
 
 function determineImportNames ( imports, userFn, usedNames ) {
 	var nameById = {}, inferredNames = {};
@@ -1069,19 +1097,15 @@ function disallowIllegalReassignment ( node, importedBindings, importedNamespace
 	}
 }
 
-function rewriteIdentifiers ( body, node, identifierReplacements, scope ) {
-	var name, replacement;
+function replaceIdentifiers ( body, node, identifierReplacements, scope ) {
+	var name = node.name;
+	var replacement = hasOwnProp.call( identifierReplacements, name ) && identifierReplacements[ name ];
 
-	if ( node.type === 'Identifier' ) {
-		name = node.name;
-		replacement = hasOwnProp.call( identifierReplacements, name ) && identifierReplacements[ name ];
-
-		// TODO unchanged identifiers shouldn't have got this far -
-		// remove the `replacement !== name` safeguard once that's the case
-		if ( replacement && replacement !== name && !scope.contains( name, true ) ) {
-			// rewrite
-			body.replace( node.start, node.end, replacement );
-		}
+	// TODO unchanged identifiers shouldn't have got this far -
+	// remove the `replacement !== name` safeguard once that's the case
+	if ( replacement && replacement !== name && !scope.contains( name, true ) ) {
+		// rewrite
+		body.replace( node.start, node.end, replacement );
 	}
 }
 
@@ -1137,7 +1161,7 @@ function traverseAst ( ast, body, identifierReplacements, importedBindings, impo
 		previousCapturedUpdates = null;
 
 	estraverse.traverse( ast, {
-		enter: function ( node ) {
+		enter: function ( node, parent ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();
 
@@ -1166,8 +1190,9 @@ function traverseAst ( ast, body, identifierReplacements, importedBindings, impo
 			// and `capturedUpdates`, which are used elsewhere
 			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, scope === ast._scope, capturedUpdates );
 
-			// Replace identifiers
-			rewriteIdentifiers( body, node, identifierReplacements, scope );
+			if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
+				replaceIdentifiers( body, node, identifierReplacements, scope );
+			}
 
 			// Replace top-level this with undefined ES6 8.1.1.5.4
 			if ( node.type === 'ThisExpression' && node._topLevel ) {
@@ -1198,7 +1223,7 @@ function exportCapturedUpdate ( c ) {
 	return ((" exports." + (c.name)) + (" = " + (c.exportAs)) + ";");
 }
 
-function transformBody__transformBody ( bundle, mod, body ) {var $D$1;
+function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 	var identifierReplacements,
 		importedBindings,
 		importedNamespaces,
@@ -1208,7 +1233,7 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$1;
 		exportBlock;
 
 	identifierReplacements = mod.identifierReplacements;
-	importedBindings = ($D$1 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$1[1], $D$1;
+	importedBindings = ($D$0 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$0[1], $D$0;
 
 	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
@@ -1319,7 +1344,7 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$1;
 	}
 
 	return body.trim();
-;$D$1 = void 0}
+;$D$0 = void 0}
 
 function combine ( bundle ) {
 	var body;
@@ -1370,7 +1395,7 @@ function combine ( bundle ) {
 	bundle.body = body;
 }
 
-function getModule ( mod ) {var $D$2;
+function getModule ( mod ) {var $D$1;
 	var imports, exports;
 
 	mod.body = new MagicString( mod.source );
@@ -1378,7 +1403,7 @@ function getModule ( mod ) {var $D$2;
 	try {
 		mod.ast = acorn.parse( mod.source, {
 			ecmaVersion: 6,
-			locations: true
+			sourceType: 'module'
 		});
 
 		annotateAst( mod.ast );
@@ -1392,7 +1417,7 @@ function getModule ( mod ) {var $D$2;
 		throw err;
 	}
 
-	imports = ($D$2 = findImportsAndExports( mod, mod.source, mod.ast ))[0], exports = $D$2[1], $D$2;
+	imports = ($D$1 = findImportsAndExports( mod, mod.source, mod.ast ))[0], exports = $D$1[1], $D$1;
 
 	disallowConflictingImports( imports );
 
@@ -1428,7 +1453,7 @@ function getModule ( mod ) {var $D$2;
 	});
 
 	return mod;
-;$D$2 = void 0}
+;$D$1 = void 0}
 
 var getBundle__Promise = sander.Promise;
 
@@ -1571,44 +1596,48 @@ function isThenable ( obj ) {
 }
 
 function transformExportDeclaration ( declaration, body ) {
+	if ( !declaration ) {
+		return;
+	}
+
 	var exportedValue;
 
-	if ( declaration ) {
-		switch ( declaration.type ) {
-			case 'namedFunction':
-			case 'namedClass':
-				body.remove( declaration.start, declaration.valueStart );
-				exportedValue = declaration.name;
-				break;
+	switch ( declaration.type ) {
+		case 'namedFunction':
+		case 'namedClass':
+			body.remove( declaration.start, declaration.valueStart );
+			exportedValue = declaration.name;
+			break;
 
-			case 'anonFunction':
-			case 'anonClass':
-				if ( declaration.isFinal ) {
-					body.replace( declaration.start, declaration.valueStart, 'return ' );
-				} else {
-					body.replace( declaration.start, declaration.valueStart, 'var __export = ' );
-					exportedValue = '__export';
-				}
+		case 'anonFunction':
+		case 'anonClass':
+			if ( declaration.isFinal ) {
+				body.replace( declaration.start, declaration.valueStart, 'return ' );
+			} else {
+				body.replace( declaration.start, declaration.valueStart, 'var __export = ' );
+				exportedValue = '__export';
+			}
 
-				// add semi-colon, if necessary
-				if ( declaration.value.slice( -1 ) !== ';' ) {
-					body.insert( declaration.end, ';' );
-				}
+			// add semi-colon, if necessary
+			// TODO body.original is an implementation detail of magic-string - there
+			// should probably be an API for this sort of thing
+			if ( body.original[ declaration.end - 1 ] !== ';' ) {
+				body.insert( declaration.end, ';' );
+			}
 
-				break;
+			break;
 
-			case 'expression':
-				body.remove( declaration.start, declaration.next );
-				exportedValue = declaration.value;
-				break;
+		case 'expression':
+			body.remove( declaration.start, declaration.next );
+			exportedValue = declaration.value;
+			break;
 
-			default:
-				throw new Error( 'Unexpected export type' );
-		}
+		default:
+			throw new Error( (("Unexpected export type '" + (declaration.type)) + "'") );
+	}
 
-		if ( exportedValue ) {
-			body.append( '\nreturn ' + exportedValue + ';' );
-		}
+	if ( exportedValue ) {
+		body.append( '\nreturn ' + exportedValue + ';' );
 	}
 }
 
@@ -1806,18 +1835,13 @@ function cjs__cjs ( mod, options ) {
 		switch ( exportDeclaration.type ) {
 			case 'namedFunction':
 			case 'namedClass':
-				mod.body.remove( exportDeclaration.start, exportDeclaration.valueStart );
+				mod.body.remove( exportDeclaration.start, exportDeclaration.node.declaration.start );
 				mod.body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
 				break;
 
-			case 'anonFunction':
-			case 'anonClass':
-			case 'expression':
-				mod.body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
-				break;
-
 			default:
-				throw new Error( 'Unexpected export type' );
+				mod.body.replace( exportDeclaration.start, exportDeclaration.node.declaration.start, 'module.exports = ' );
+				break;
 		}
 	}
 
@@ -2005,7 +2029,7 @@ function getExportNames ( exports ) {
 	return result;
 }
 
-function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
+function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 	var chains,
 		identifierReplacements,
 		importedBindings = {},
@@ -2015,10 +2039,10 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 		earlyExports,
 		lateExports;
 
-	chains = ($D$3 = gatherImports( mod.imports ))[0], identifierReplacements = $D$3[1], $D$3;
+	chains = ($D$2 = gatherImports( mod.imports ))[0], identifierReplacements = $D$2[1], $D$2;
 	exportNames = getExportNames( mod.exports );
 
-	importedBindings = ($D$3 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$3[1], $D$3;
+	importedBindings = ($D$2 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$2[1], $D$2;
 
 	// ensure no conflict with `exports`
 	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
@@ -2043,35 +2067,32 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 
 	// Remove export statements (but keep declarations)
 	mod.exports.forEach( function(x ) {
-		switch ( x.type ) {
-			case 'varDeclaration': // export var answer = 42;
+		if ( x.isDefault ) {
+			if ( /^named/.test( x.type ) ) {
+				// export default function answer () { return 42; }
 				body.remove( x.start, x.valueStart );
-				return;
-
-			case 'namedFunction':
-			case 'namedClass':
-				if ( x.isDefault ) {
-					// export default function answer () { return 42; }
-					body.remove( x.start, x.valueStart );
-					body.insert( x.end, (("\nexports['default'] = " + (x.name)) + ";") );
-				} else {
-					// export function answer () { return 42; }
-					body.remove( x.start, x.valueStart );
-				}
-				return;
-
-			case 'anonFunction':   // export default function () {}
-			case 'anonClass':      // export default class () {}
-			case 'expression':     // export default 40 + 2;
+				body.insert( x.end, (("\nexports['default'] = " + (x.name)) + ";") );
+			} else {
+				// everything else
 				body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
-				return;
+			}
+		}
 
-			case 'named':          // export { foo, bar };
-				body.remove( x.start, x.next );
-				break;
+		else {
+			switch ( x.type ) {
+				case 'varDeclaration': // export var answer = 42; (or let)
+				case 'namedFunction':  // export function answer () {...}
+				case 'namedClass':     // export class answer {...}
+					body.remove( x.start, x.valueStart );
+					break;
 
-			default:
-				throw new Error( 'Unknown export type: ' + x.type );
+				case 'named':          // export { foo, bar };
+					body.remove( x.start, x.next );
+					break;
+
+				default:
+					body.replace( x.start, x.valueStart, 'exports[\'default\'] = ' );
+			}
 		}
 	});
 
@@ -2111,7 +2132,7 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$3;
 	if ( options.intro && options.outro ) {
 		body.indent().prepend( options.intro ).trimLines().append( options.outro );
 	}
-;$D$3 = void 0}
+;$D$2 = void 0}
 
 function deconflict ( name, declared ) {
 	while ( hasOwnProp.call( declared, name ) ) {
@@ -2149,12 +2170,12 @@ var strictMode_amd__introTemplate;
 
 strictMode_amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
-function strictMode_amd__amd ( mod, options ) {var $D$4;
+function strictMode_amd__amd ( mod, options ) {var $D$3;
 	var importPaths,
 		importNames,
 		intro;
 
-	importPaths = ($D$4 = getImportSummary( mod ))[0], importNames = $D$4[1], $D$4;
+	importPaths = ($D$3 = getImportSummary( mod ))[0], importNames = $D$3[1], $D$3;
 
 	if ( mod.exports.length ) {
 		importPaths.unshift( 'exports' );
@@ -2174,7 +2195,7 @@ function strictMode_amd__amd ( mod, options ) {var $D$4;
 	});
 
 	return packageResult( mod, mod.body, options, 'toAmd' );
-;$D$4 = void 0}
+;$D$3 = void 0}
 
 function strictMode_cjs__cjs ( mod, options ) {
 	var importBlock, seen = {};

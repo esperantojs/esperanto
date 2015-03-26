@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.19
+
+* Sourcemap comments are removed from bundles as well as one-to-one transformations ([#120](https://github.com/esperantojs/esperanto/issues/120))
+
 ## 0.6.18
 
 * Upgrade to acorn v1.x ([#125](https://github.com/esperantojs/esperanto/issues/125))
