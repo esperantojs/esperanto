@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.18 - 2015-03-26
+	esperanto.js v0.6.20 - 2015-03-27
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -7,11 +7,10 @@
 
 'use strict';
 
-var path = require('path');
-var sander = require('sander');
 var acorn = require('acorn');
 var MagicString = require('magic-string');
-var estraverse = require('estraverse');
+var path = require('path');
+var sander = require('sander');
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
@@ -32,6 +31,57 @@ function hasNamedExports ( mod ) {
 		if ( !mod.exports[i].isDefault ) {
 			return true;
 		}
+	}
+}
+
+function walk ( ast, leave) {var enter = leave.enter, leave = leave.leave;
+	visit( ast, null, enter, leave );
+}
+
+var walk__context = {
+	skip: function()  {return walk__context.shouldSkip = true}
+};
+
+var walk__childKeys = {};
+
+var walk__toString = Object.prototype.toString;
+
+function isArray ( thing ) {
+	return walk__toString.call( thing ) === '[object Array]';
+}
+
+function visit ( node, parent, enter, leave ) {
+	if ( enter ) {
+		walk__context.shouldSkip = false;
+		enter.call( walk__context, node, parent );
+		if ( walk__context.shouldSkip ) return;
+	}
+
+	var keys = walk__childKeys[ node.type ] || (
+		walk__childKeys[ node.type ] = Object.keys( node ).filter( function(key ) {return typeof node[ key ] === 'object'} )
+	);
+
+	var key, value, i, j;
+
+	i = keys.length;
+	while ( i-- ) {
+		key = keys[i];
+		value = node[ key ];
+
+		if ( isArray( value ) ) {
+			j = value.length;
+			while ( j-- ) {
+				visit( value[j], node, enter, leave );
+			}
+		}
+
+		else if ( value && value.type ) {
+			visit( value, node, enter, leave );
+		}
+	}
+
+	if ( leave ) {
+		leave( node, parent );
 	}
 }
 
@@ -75,7 +125,7 @@ function annotateAst ( ast ) {
 
 	var envDepth = 0;
 
-	estraverse.traverse( ast, {
+	walk( ast, {
 		enter: function ( node ) {
 			if ( node.type === 'ImportDeclaration' || node.type === 'ExportSpecifier' ) {
 				node._skip = true;
@@ -429,7 +479,7 @@ function getUnscopedNames ( mod ) {
 		return hasOwnProp.call( importedNames, name );
 	}
 
-	estraverse.traverse( mod.ast, {
+	walk( mod.ast, {
 		enter: function ( node ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();
@@ -1160,7 +1210,7 @@ function traverseAst ( ast, body, identifierReplacements, importedBindings, impo
 		capturedUpdates = null,
 		previousCapturedUpdates = null;
 
-	estraverse.traverse( ast, {
+	walk( ast, {
 		enter: function ( node, parent ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();
@@ -1400,12 +1450,21 @@ function getModule ( mod ) {var $D$1;
 
 	mod.body = new MagicString( mod.source );
 
+	var toRemove = [];
+
 	try {
 		mod.ast = acorn.parse( mod.source, {
 			ecmaVersion: 6,
-			sourceType: 'module'
+			sourceType: 'module',
+			onComment: function ( block, text, start, end ) {
+				// sourceMappingURL comments should be removed
+				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+					toRemove.push({ start: start, end: end });
+				}
+			}
 		});
 
+		toRemove.forEach( function(end)  {var start = end.start, end = end.end;return mod.body.remove( start, end )} );
 		annotateAst( mod.ast );
 	} catch ( err ) {
 		// If there's a parse error, attach file info
@@ -1734,16 +1793,16 @@ function getRelativePath ( from, to ) {
 
 function markBundleSourcemapLocations ( bundle ) {
 	bundle.modules.forEach( function(mod ) {
-		estraverse.traverse( mod.ast, {
+		walk( mod.ast, {
 			enter: function(node ) {
 				mod.body.addSourcemapLocation( node.start );
 			}
 		});
-	})
+	});
 }
 
 function markModuleSourcemapLocations ( mod ) {
-	estraverse.traverse( mod.ast, {
+	walk( mod.ast, {
 		enter: function(node ) {
 			mod.body.addSourcemapLocation( node.start );
 		}

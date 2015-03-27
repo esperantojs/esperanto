@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.20
+
+* Replaced estraverse with internal utility that doesn't depend on hardcoded node types to traverse AST ([#129](https://github.com/esperantojs/esperanto/issues/129))
+
 ## 0.6.19
 
 * Sourcemap comments are removed from bundles as well as one-to-one transformations ([#120](https://github.com/esperantojs/esperanto/issues/120))

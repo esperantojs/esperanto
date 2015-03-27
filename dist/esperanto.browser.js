@@ -1,15 +1,15 @@
 /*
-	esperanto.js v0.6.18 - 2015-03-26
+	esperanto.js v0.6.20 - 2015-03-27
 	http://esperantojs.org
 
 	Released under the MIT License.
 */
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('acorn'), require('estraverse')) :
-	typeof define === 'function' && define.amd ? define(['acorn', 'estraverse'], factory) :
-	global.esperanto = factory(global.acorn, global.estraverse)
-}(this, function (acorn, estraverse) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('acorn')) :
+	typeof define === 'function' && define.amd ? define(['acorn'], factory) :
+	global.esperanto = factory(global.acorn)
+}(this, function (acorn) { 'use strict';
 
 	var hasOwnProp = Object.prototype.hasOwnProperty;
 
@@ -42,7 +42,7 @@
 			return new Buffer( str ).toString( 'base64' );
 		};
 	} else {
-		throw new Error( 'Unsupported environment' );
+		throw new Error( 'Unsupported environment: `window.btoa` or `Buffer` should be supported.' );
 	}
 
 	var btoa = _btoa;
@@ -342,15 +342,17 @@
 	}
 
 	function encode ( value ) {
-		var result, i;
+		var result;
 
 		if ( typeof value === 'number' ) {
 			result = encodeInteger( value );
-		} else {
+		} else if ( Array.isArray( value ) ) {
 			result = '';
-			for ( i = 0; i < value.length; i += 1 ) {
-				result += encodeInteger( value[i] );
-			}
+			value.forEach( function ( num ) {
+				result += encodeInteger( num );
+			});
+		} else {
+			throw new Error( 'vlq.encode accepts an integer or an array of integers' );
 		}
 
 		return result;
@@ -529,6 +531,10 @@
 		},
 
 		append: function ( content ) {
+			if ( typeof content !== 'string' ) {
+				throw new TypeError( 'appended content must be a string' );
+			}
+
 			this.str += content;
 			return this;
 		},
@@ -675,6 +681,10 @@
 		},
 
 		insert: function ( index, content ) {
+			if ( typeof content !== 'string' ) {
+				throw new TypeError( 'inserted content must be a string' );
+			}
+
 			if ( index === 0 ) {
 				this.prepend( content );
 			} else if ( index === this.original.length ) {
@@ -729,11 +739,41 @@
 		},
 
 		remove: function ( start, end ) {
-			this.replace( start, end, '' );
+			var loc, d, i, currentStart, currentEnd;
+
+			if ( start < 0 || end > this.mappings.length ) {
+				throw new Error( 'Character is out of bounds' );
+			}
+
+			d = 0;
+			currentStart = -1;
+			currentEnd = -1;
+			for ( i = start; i < end; i += 1 ) {
+				loc = this.mappings[i];
+
+				if ( loc !== -1 ) {
+					if ( !~currentStart ) {
+						currentStart = loc;
+					}
+
+					currentEnd = loc + 1;
+
+					this.mappings[i] = -1;
+					d += 1;
+				}
+			}
+
+			this.str = this.str.slice( 0, currentStart ) + this.str.slice( currentEnd );
+
+			adjust( this.mappings, end, this.mappings.length, -d );
 			return this;
 		},
 
 		replace: function ( start, end, content ) {
+			if ( typeof content !== 'string' ) {
+				throw new TypeError( 'replacement content must be a string' );
+			}
+
 			var firstChar, lastChar, d;
 
 			firstChar = this.locate( start );
@@ -892,6 +932,57 @@
 		return result;
 	}
 
+	function walk ( ast, leave) {var enter = leave.enter, leave = leave.leave;
+		visit( ast, null, enter, leave );
+	}
+
+	var walk__context = {
+		skip: function()  {return walk__context.shouldSkip = true}
+	};
+
+	var walk__childKeys = {};
+
+	var walk__toString = Object.prototype.toString;
+
+	function isArray ( thing ) {
+		return walk__toString.call( thing ) === '[object Array]';
+	}
+
+	function visit ( node, parent, enter, leave ) {
+		if ( enter ) {
+			walk__context.shouldSkip = false;
+			enter.call( walk__context, node, parent );
+			if ( walk__context.shouldSkip ) return;
+		}
+
+		var keys = walk__childKeys[ node.type ] || (
+			walk__childKeys[ node.type ] = Object.keys( node ).filter( function(key ) {return typeof node[ key ] === 'object'} )
+		);
+
+		var key, value, i, j;
+
+		i = keys.length;
+		while ( i-- ) {
+			key = keys[i];
+			value = node[ key ];
+
+			if ( isArray( value ) ) {
+				j = value.length;
+				while ( j-- ) {
+					visit( value[j], node, enter, leave );
+				}
+			}
+
+			else if ( value && value.type ) {
+				visit( value, node, enter, leave );
+			}
+		}
+
+		if ( leave ) {
+			leave( node, parent );
+		}
+	}
+
 	/*
 		This module traverse a module's AST, attaching scope information
 		to nodes as it goes, which is later used to determine which
@@ -932,7 +1023,7 @@
 
 		var envDepth = 0;
 
-		estraverse.traverse( ast, {
+		walk( ast, {
 			enter: function ( node ) {
 				if ( node.type === 'ImportDeclaration' || node.type === 'ExportSpecifier' ) {
 					node._skip = true;
@@ -1286,7 +1377,7 @@
 			return hasOwnProp.call( importedNames, name );
 		}
 
-		estraverse.traverse( mod.ast, {
+		walk( mod.ast, {
 			enter: function ( node ) {
 				// we're only interested in references, not property names etc
 				if ( node._skip ) return this.skip();
@@ -1616,16 +1707,16 @@
 
 	function markBundleSourcemapLocations ( bundle ) {
 		bundle.modules.forEach( function(mod ) {
-			estraverse.traverse( mod.ast, {
+			walk( mod.ast, {
 				enter: function(node ) {
 					mod.body.addSourcemapLocation( node.start );
 				}
 			});
-		})
+		});
 	}
 
 	function markModuleSourcemapLocations ( mod ) {
-		estraverse.traverse( mod.ast, {
+		walk( mod.ast, {
 			enter: function(node ) {
 				mod.body.addSourcemapLocation( node.start );
 			}
@@ -2089,7 +2180,7 @@
 			capturedUpdates = null,
 			previousCapturedUpdates = null;
 
-		estraverse.traverse( ast, {
+		walk( ast, {
 			enter: function ( node, parent ) {
 				// we're only interested in references, not property names etc
 				if ( node._skip ) return this.skip();
