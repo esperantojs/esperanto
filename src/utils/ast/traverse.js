@@ -1,4 +1,4 @@
-import estraverse from 'estraverse';
+import walk from './walk';
 import disallowIllegalReassignment from './disallowIllegalReassignment';
 import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
@@ -9,7 +9,7 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 		capturedUpdates = null,
 		previousCapturedUpdates = null;
 
-	estraverse.traverse( ast, {
+	walk( ast, {
 		enter ( node, parent ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();

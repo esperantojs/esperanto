@@ -1,4 +1,4 @@
-import estraverse from 'estraverse';
+import walk from './ast/walk';
 import { splitPath } from 'utils/sanitize';
 
 var warned = {};
@@ -94,16 +94,16 @@ function getRelativePath ( from, to ) {
 
 function markBundleSourcemapLocations ( bundle ) {
 	bundle.modules.forEach( mod => {
-		estraverse.traverse( mod.ast, {
+		walk( mod.ast, {
 			enter: node => {
 				mod.body.addSourcemapLocation( node.start );
 			}
 		});
-	})
+	});
 }
 
 function markModuleSourcemapLocations ( mod ) {
-	estraverse.traverse( mod.ast, {
+	walk( mod.ast, {
 		enter: node => {
 			mod.body.addSourcemapLocation( node.start );
 		}

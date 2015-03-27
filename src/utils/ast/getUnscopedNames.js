@@ -1,4 +1,4 @@
-import estraverse from 'estraverse';
+import walk from './walk';
 import hasOwnProp from 'utils/hasOwnProp';
 
 export default function getUnscopedNames ( mod ) {
@@ -16,7 +16,7 @@ export default function getUnscopedNames ( mod ) {
 		return hasOwnProp.call( importedNames, name );
 	}
 
-	estraverse.traverse( mod.ast, {
+	walk( mod.ast, {
 		enter: function ( node ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();

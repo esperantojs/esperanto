@@ -4,7 +4,7 @@
 	identifiers need to be rewritten to avoid collisions
 */
 
-import estraverse from 'estraverse';
+import walk from './walk';
 
 var Scope = function ( options ) {
 	options = options || {};
@@ -40,7 +40,7 @@ export default function annotateAst ( ast ) {
 
 	var envDepth = 0;
 
-	estraverse.traverse( ast, {
+	walk( ast, {
 		enter ( node ) {
 			if ( node.type === 'ImportDeclaration' || node.type === 'ExportSpecifier' ) {
 				node._skip = true;
