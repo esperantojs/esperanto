@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.20
+
+* Fix `export { foo as bar }` bug ([#127](https://github.com/esperantojs/esperanto/issues/127))
+
 ## 0.6.19
 
 * Sourcemap comments are removed from bundles as well as one-to-one transformations ([#120](https://github.com/esperantojs/esperanto/issues/120))

@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.18 - 2015-03-26
+	esperanto.js v0.6.20 - 2015-03-26
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -7,10 +7,10 @@
 
 'use strict';
 
-var path = require('path');
-var sander = require('sander');
 var acorn = require('acorn');
 var MagicString = require('magic-string');
+var path = require('path');
+var sander = require('sander');
 var estraverse = require('estraverse');
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
@@ -407,8 +407,11 @@ function processExport ( node, source ) {
 	else {
 		result.type = 'named';
 		result.specifiers = node.specifiers.map( function(s ) {
-			return { name: s.local.name };
-		}); // TODO as?
+			return {
+				name: s.local.name,
+				as: s.exported.name
+			};
+		});
 	}
 
 	return result;
@@ -699,7 +702,7 @@ function resolveChains ( modules, moduleLookup ) {
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = x.id + '@' + s.name;
+				origin[ s.as ] = (("" + (x.id)) + ("@" + (s.name)) + "");
 			});
 		});
 
@@ -707,8 +710,12 @@ function resolveChains ( modules, moduleLookup ) {
 			if ( !x.specifiers ) return;
 
 			x.specifiers.forEach( function(s ) {
+				if ( s.as !== s.name ) {
+					chains[ (("" + (mod.id)) + ("@" + (s.as)) + "") ] = (("" + (mod.id)) + ("@" + (s.name)) + "");
+				}
+
 				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ mod.id + '@' + s.name ] = origin[ s.name ];
+					chains[ (("" + (mod.id)) + ("@" + (s.name)) + "") ] = origin[ s.name ];
 				}
 			});
 		});
@@ -1016,12 +1023,6 @@ function resolveExports ( bundle ) {
 				name = split[1];
 
 				addExport( moduleId, name, s.name );
-
-				// if ( !bundleExports[ moduleId ] ) {
-				// 	bundleExports[ moduleId ] = {};
-				// }
-
-				// bundleExports[ moduleId ][ name ] = s.name;
 			});
 		}
 
@@ -1380,7 +1381,7 @@ function combine ( bundle ) {
 
 			x.specifiers.forEach( function(s ) {
 				if ( !importedModule.doesExport[ s.name ] ) {
-					throw new Error( 'Module ' + importedModule.id + ' does not export ' + s.name + ' (imported by ' + mod.id + ')' );
+					throw new Error( (("Module " + (importedModule.id)) + (" does not export " + (s.name)) + (" (imported by " + (mod.id)) + ")") );
 				}
 			});
 		});
@@ -1400,12 +1401,21 @@ function getModule ( mod ) {var $D$1;
 
 	mod.body = new MagicString( mod.source );
 
+	var toRemove = [];
+
 	try {
 		mod.ast = acorn.parse( mod.source, {
 			ecmaVersion: 6,
-			sourceType: 'module'
+			sourceType: 'module',
+			onComment: function ( block, text, start, end ) {
+				// sourceMappingURL comments should be removed
+				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+					toRemove.push({ start: start, end: end });
+				}
+			}
 		});
 
+		toRemove.forEach( function(end)  {var start = end.start, end = end.end;return mod.body.remove( start, end )} );
 		annotateAst( mod.ast );
 	} catch ( err ) {
 		// If there's a parse error, attach file info
@@ -1443,7 +1453,7 @@ function getModule ( mod ) {var $D$1;
 
 		else if ( x.specifiers ) {
 			x.specifiers.forEach( function(s ) {
-				mod.doesExport[ s.name ] = true;
+				mod.doesExport[ s.as ] = true;
 			});
 		}
 
@@ -2022,7 +2032,7 @@ function getExportNames ( exports ) {
 		}
 
 		x.specifiers.forEach( function(s ) {
-			result[ s.name ] = s.name;
+			result[ s.name ] = s.as;
 		});
 	});
 
