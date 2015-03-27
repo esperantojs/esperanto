@@ -19,7 +19,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = x.id + '@' + s.name;
+				origin[ s.as ] = `${x.id}@${s.name}`;
 			});
 		});
 
@@ -27,8 +27,12 @@ export default function resolveChains ( modules, moduleLookup ) {
 			if ( !x.specifiers ) return;
 
 			x.specifiers.forEach( s => {
+				if ( s.as !== s.name ) {
+					chains[ `${mod.id}@${s.as}` ] = `${mod.id}@${s.name}`;
+				}
+
 				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ mod.id + '@' + s.name ] = origin[ s.name ];
+					chains[ `${mod.id}@${s.name}` ] = origin[ s.name ];
 				}
 			});
 		});
