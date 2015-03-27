@@ -37,8 +37,6 @@ require( './build' )().then( function ( esperanto ) {
 
 				if ( config.strict ) return;
 
-				console.log( 'sample', sample );
-
 				promises = profiles.map( function ( profile ) {
 					var transpiled = esperanto[ profile.method ]( source, {
 						name: profile.options && profile.options.name,
@@ -132,15 +130,15 @@ require( './build' )().then( function ( esperanto ) {
 
 			config = require( '../bundle/input/' + sourceBundle + '/_config' );
 
-			return esperanto.bundle({
-				base: path.join( '../bundle/input', sourceBundle ),
-				entry: 'main',
-				skip: config.skip,
-				names: config.names,
-				transform: config.transform,
-				resolvePath: config.resolvePath
-			}).then( function ( bundle ) {
-				var promises = profiles.map( function ( profile ) {
+			var promises = profiles.map( function ( profile ) {
+				return esperanto.bundle({
+					base: path.join( '../bundle/input', sourceBundle ),
+					entry: 'main',
+					skip: config.skip,
+					names: config.names,
+					transform: config.transform,
+					resolvePath: config.resolvePath
+				}).then( function ( bundle ) {
 					try {
 						var transpiled = bundle[ profile.method ]({
 							strict: profile.options && profile.options.strict,
@@ -157,9 +155,9 @@ require( './build' )().then( function ( esperanto ) {
 						}
 					}
 				});
-
-				return Promise.all( promises );
 			});
+
+			return Promise.all( promises );
 		}
 	}
 }).catch( function ( err ) {

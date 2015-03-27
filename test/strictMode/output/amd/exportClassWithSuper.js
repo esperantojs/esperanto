@@ -2,9 +2,7 @@ define(['bar'], function (Bar) {
 
 	'use strict';
 
-	Bar = ('default' in Bar ? Bar['default'] : Bar);
-
-	class Foo extends Bar {
+	class Foo extends Bar['default'] {
 		constructor() {
 			super();
 			console.log('Foo constructed');

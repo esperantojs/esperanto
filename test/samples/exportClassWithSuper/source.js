@@ -1,6 +1,4 @@
-'use strict';
-
-var Bar = require('bar');
+import Bar from 'bar';
 
 class Foo extends Bar {
 	constructor() {
