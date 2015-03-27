@@ -1,6 +1,18 @@
 process.chdir( __dirname );
 
-require( './fastMode' )();
-require( './strictMode' )();
-require( './bundle' )();
-require( './sourcemaps' )();
+var testModules = [
+	'fastMode',
+	'strictMode',
+	'bundle',
+	'sourcemaps'
+];
+
+var results = testModules.map( function ( mod ) {
+	return require( './' + mod )();
+});
+
+require( 'sander' ).Promise.all( results ).then( function ( completionTimes ) {
+	testModules.forEach( function ( mod, i ) {
+		console.log( 'completed %s in %sms', mod, completionTimes[i] );
+	});
+});
