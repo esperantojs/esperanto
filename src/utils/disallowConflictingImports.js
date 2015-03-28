@@ -4,11 +4,11 @@ export default function disallowConflictingImports ( imports ) {
 	let usedNames = {};
 
 	imports.forEach( x => {
+		if ( x.passthrough ) return;
+
 		if ( x.as ) {
 			checkName( x.as );
-		}
-
-		else {
+		} else {
 			x.specifiers.forEach( checkSpecifier );
 		}
 	});
