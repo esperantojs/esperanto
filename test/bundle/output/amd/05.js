@@ -10,8 +10,9 @@ define(['exports'], function (exports) {
 	var five = two + 3;
 	var six = three + 3;
 
-	exports.four = four = 99;
+	four = 99;
 
+	exports.four = four;
 	exports.five = five;
 	exports.six = six;
 

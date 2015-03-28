@@ -3,8 +3,9 @@
 var foo = 1;
 var bar = 2;
 
-exports.foo = foo = 3;
+foo = 3;
 
+exports.foo = foo;
 exports.bar = bar;
 
 var baz = 4;
@@ -12,4 +13,6 @@ var baz = 4;
 exports.baz = baz;
 
 var qux = 5;
-exports.qux = qux = 6;
+qux = 6;
+
+exports.qux = qux;

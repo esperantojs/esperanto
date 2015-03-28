@@ -10,7 +10,6 @@ export default function transformBody ( mod, body, options ) {
 		importedBindings = {},
 		importedNamespaces = {},
 		exportNames,
-		alreadyExported = {},
 		earlyExports,
 		lateExports;
 
@@ -22,7 +21,7 @@ export default function transformBody ( mod, body, options ) {
 	// ensure no conflict with `exports`
 	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
 
-	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
+	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
 	// Remove import statements from the body of the module
 	mod.imports.forEach( x => {
@@ -89,7 +88,7 @@ export default function transformBody ( mod, body, options ) {
 			// functions should be exported early, in
 			// case of cyclic dependencies
 			earlyExports.push( `exports.${exportAs} = ${name};` );
-		} else if ( !alreadyExported.hasOwnProperty( name ) ) {
+		} else {
 			lateExports.push( `exports.${exportAs} = ${name};` );
 		}
 	});

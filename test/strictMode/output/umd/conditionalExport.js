@@ -4,9 +4,16 @@
 	factory((global.myModule = {}))
 }(this, function (exports) { 'use strict';
 
-	var foo = 'bar';
-	foo = 'baz';
+	var foo = function () {};
+	var bar = 'a';
+
+	if ( false ) {
+		foo = function () {
+			exports.bar = bar = 'b';
+		};
+	}
 
 	exports.foo = foo;
+	exports.bar = bar;
 
 }));

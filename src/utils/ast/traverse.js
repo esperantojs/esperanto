@@ -3,7 +3,7 @@ import disallowIllegalReassignment from './disallowIllegalReassignment';
 import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
 
-export default function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported ) {
+export default function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames ) {
 	var scope = ast._scope,
 		blockScope = ast._blockScope,
 		capturedUpdates = null,
@@ -35,9 +35,11 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 			// Catch illegal reassignments
 			disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
-			// Rewrite assignments to exports. This call may mutate `alreadyExported`
-			// and `capturedUpdates`, which are used elsewhere
-			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, scope === ast._scope, capturedUpdates );
+			// Rewrite assignments to exports inside functions, to keep bindings live.
+			// This call may mutate `capturedUpdates`, which is used elsewhere
+			if ( scope !== ast._scope ) {
+				rewriteExportAssignments( body, node, exportNames, scope, capturedUpdates );
+			}
 
 			if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
 				replaceIdentifiers( body, node, identifierReplacements, scope );
