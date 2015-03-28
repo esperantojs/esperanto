@@ -1,8 +1,12 @@
 # changelog
 
+## 0.6.22
+
+* Allow imports to be re-exported ([#124](https://github.com/esperantojs/esperanto/issues/124))
+
 ## 0.6.21
 
-* FIx npm versioning snafu
+* Fix npm versioning snafu
 
 ## 0.6.20
 
