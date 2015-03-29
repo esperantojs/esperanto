@@ -6,13 +6,13 @@ define(function () {
 		console.log( 'a' );
 	}
 
-	function a__a () {
+	function c__a () {
 		console.log( 'a but actually c' );
 	}
 
 	var b = function () {
 		// a but actually c
-		a__a();
+		c__a();
 	}
 
 	function foo () {

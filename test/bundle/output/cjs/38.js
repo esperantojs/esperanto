@@ -1,6 +1,6 @@
 'use strict';
 
-var foo__default = notActuallyFoo;
+var _foo = notActuallyFoo;
 
 function notActuallyFoo () {
 	foo();
@@ -10,4 +10,4 @@ function foo () {
 	console.log( 'actually foo' );
 }
 
-foo__default();
+_foo();

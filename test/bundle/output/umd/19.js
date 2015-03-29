@@ -5,7 +5,8 @@
 }(function () { 'use strict';
 
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var _hasOwnProperty = hasOwnProperty;
 
-	console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
+	console.log( _hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
 
 }));
