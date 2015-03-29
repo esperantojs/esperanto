@@ -109,11 +109,11 @@ module.exports = function () {
 								options = profile.options || {};
 
 								if ( config.imports || bundle.imports.length ) {
-									assert.deepEqual( bundle.imports, config.imports );
+									assert.deepEqual( bundle.imports.sort(), config.imports.sort() );
 								}
 
 								if ( config.exports || bundle.exports.length ) {
-									assert.deepEqual( bundle.exports, config.exports );
+									assert.deepEqual( bundle.exports.sort(), config.exports.sort() );
 								}
 
 								transpiled = bundle[ profile.method ]({
