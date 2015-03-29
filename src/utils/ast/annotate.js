@@ -5,6 +5,7 @@
 */
 
 import walk from './walk';
+import { getName } from '../mappers';
 
 var Scope = function ( options ) {
 	options = options || {};
@@ -69,9 +70,13 @@ export default function annotateAst ( ast ) {
 						}
 					}
 
+					let names = node.params.map( getName );
+
+					names.forEach( name => declared[ name ] = true );
+
 					scope = node._scope = new Scope({
 						parent: scope,
-						params: node.params.map( x => x.name ) // TODO rest params?
+						params: names // TODO rest params?
 					});
 
 					break;

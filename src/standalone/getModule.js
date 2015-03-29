@@ -19,7 +19,7 @@ export default function getStandaloneModule ( options ) {
 			sourceType: 'module',
 			onComment ( block, text, start, end ) {
 				// sourceMappingURL comments should be removed
-				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+				if ( !block && SOURCEMAPPINGURL_REGEX.test( text ) ) {
 					toRemove.push({ start, end });
 				}
 			}
@@ -73,7 +73,7 @@ function determineImportNames ( imports, userFn, usedNames ) {
 
 			if ( hasOwnProp.call( usedNames, name ) ) {
 				// TODO write a test for this
-				throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
+				throw new Error( `Naming collision: module ${moduleId} cannot be called ${name}` );
 			}
 		}
 
