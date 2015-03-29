@@ -1,29 +1,25 @@
 import transformExportDeclaration from './utils/transformExportDeclaration';
 import packageResult from 'utils/packageResult';
 import hasOwnProp from 'utils/hasOwnProp';
-import template from 'utils/template';
 import resolveId from 'utils/resolveId';
 import { quote } from 'utils/mappers';
 
-var introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
-
 export default function amd ( mod, options ) {
-	var seen = {},
-		importNames = [],
-		importPaths = [],
-		intro,
-		placeholders = 0;
+	let seen = {};
+	let importNames = [];
+	let importPaths = [];
+	let placeholders = 0;
 
 	// gather imports, and remove import declarations
 	mod.imports.forEach( x => {
-		var path = options.absolutePaths ? resolveId( x.path, options.amdName ) : x.path;
+		let path = options.absolutePaths ? resolveId( x.path, options.amdName ) : x.path;
 
 		if ( !hasOwnProp.call( seen, path ) ) {
 			importPaths.push( path );
 
 			if ( x.as ) {
 				while ( placeholders ) {
-					importNames.push( '__dep' + importNames.length + '__' );
+					importNames.push( `__dep${importNames.length}__` );
 					placeholders--;
 				}
 				importNames.push( x.as );
@@ -39,11 +35,13 @@ export default function amd ( mod, options ) {
 
 	transformExportDeclaration( mod.exports[0], mod.body );
 
-	intro = introTemplate({
-		amdName: options.amdName ? `'${options.amdName}', ` : '',
-		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
-	});
+	let amdName = options.amdName ? `'${options.amdName}', ` : '';
+	let paths = importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '';
+	let names = importNames.join( ', ' );
+
+	let intro = `define(${amdName}${paths}function (${names}) {
+
+`;
 
 	mod.body.trim()
 		.prepend( "'use strict';\n\n" )

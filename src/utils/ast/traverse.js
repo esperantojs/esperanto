@@ -4,10 +4,10 @@ import replaceIdentifiers from './replaceIdentifiers';
 import rewriteExportAssignments from './rewriteExportAssignments';
 
 export default function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames ) {
-	var scope = ast._scope,
-		blockScope = ast._blockScope,
-		capturedUpdates = null,
-		previousCapturedUpdates = null;
+	let scope = ast._scope;
+	let blockScope = ast._blockScope;
+	let capturedUpdates = null;
+	let previousCapturedUpdates = null;
 
 	walk( ast, {
 		enter ( node, parent ) {
@@ -32,7 +32,6 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 				return;
 			}
 
-			// Catch illegal reassignments
 			disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
 			// Rewrite assignments to exports inside functions, to keep bindings live.

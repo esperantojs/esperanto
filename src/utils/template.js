@@ -5,10 +5,11 @@
  * @param {string} str - the template string
  * @returns {function}
  */
+const PLACEHOLDER = /<%=\s*([^\s]+)\s*%>/g;
+
 export default function template ( str ) {
-	return function ( data ) {
-		return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
-			return $1 in data ? data[ $1 ] : match;
-		});
-	};
+	return data =>
+		str.replace( PLACEHOLDER, ( match, $1 ) =>
+			( $1 in data ? data[ $1 ] : match )
+		);
 }

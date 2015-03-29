@@ -10,25 +10,25 @@ var introTemplate;
 introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
 
 export default function amd ( mod, options ) {
-	var importPaths,
-		importNames,
-		intro;
-
-	[ importPaths, importNames ] = getImportSummary( mod );
+	let [ importPaths, importNames ] = getImportSummary( mod );
 
 	if ( mod.exports.length ) {
 		importPaths.unshift( 'exports' );
 		importNames.unshift( 'exports' );
 	}
 
-	intro = introTemplate({
-		amdName: options.amdName ? `'${options.amdName}', ` : '',
-		paths: importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
-	}).replace( /\t/g, mod.body.getIndentString() );
+	let amdName = options.amdName ? `'${options.amdName}', ` : '';
+	let paths = importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '';
+	let names = importNames.join( ', ' );
+
+	let intro = `define(${amdName}${paths}function (${names}) {
+
+	'use strict';
+
+`.replace( /\t/g, mod.body.getIndentString() );
 
 	transformBody( mod, mod.body, {
-		intro: intro,
+		intro,
 		outro: '\n\n});',
 		_evilES3SafeReExports: options._evilES3SafeReExports
 	});

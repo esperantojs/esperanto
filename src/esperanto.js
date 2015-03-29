@@ -8,16 +8,16 @@ import bundleBuilders from 'bundler/builders';
 import concat from 'bundler/builders/concat';
 import { getName } from 'utils/mappers';
 
-var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
-	alreadyWarned = false;
+let deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
+let alreadyWarned = false;
 
 function transpileMethod ( format ) {
 	return function ( source, options = {} ) {
-		var mod,
-			body,
-			builder;
-
-		mod = getStandaloneModule({ source: source, getModuleName: options.getModuleName, strict: options.strict });
+		let mod = getStandaloneModule({
+			source,
+			getModuleName: options.getModuleName,
+			strict: options.strict
+		});
 
 		if ( 'defaultOnly' in options && !alreadyWarned ) {
 			// TODO link to a wiki page explaining this, or something
@@ -28,6 +28,8 @@ function transpileMethod ( format ) {
 		if ( options.absolutePaths && !options.amdName ) {
 			throw new Error( 'You must specify an `amdName` in order to use the `absolutePaths` option' );
 		}
+
+		let builder;
 
 		if ( !options.strict ) {
 			// ensure there are no named imports/exports. TODO link to a wiki page...
@@ -62,16 +64,14 @@ export default {
 				concat: options => concat( bundle, options || {} )
 			};
 
-			function transpile ( format, options ) {
-				var builder;
-
-				options = options || {};
-
+			function transpile ( format, options = {} ) {
 				if ( 'defaultOnly' in options && !alreadyWarned ) {
 					// TODO link to a wiki page explaining this, or something
 					console.log( deprecateMessage );
 					alreadyWarned = true;
 				}
+
+				let builder;
 
 				if ( !options.strict ) {
 					// ensure there are no named imports/exports
@@ -99,7 +99,7 @@ export default {
 };
 
 function flattenExports ( exports ) {
-	var flattened = [];
+	let flattened = [];
 
 	exports.forEach( x => {
 		if ( x.isDefault ) {

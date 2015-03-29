@@ -1,11 +1,9 @@
 import { quote } from 'utils/mappers';
 
 export default function standaloneUmdIntro ( options, indentStr ) {
-	var amdName = options.amdName ?
-		quote(options.amdName) + ", " :
-		'';
+	let amdName = options.amdName ? quote(options.amdName) + ', ' : '';
 
-	var intro =
+	let intro =
 `(function (factory) {
 	!(typeof exports === 'object' && typeof module !== 'undefined') &&
 	typeof define === 'function' && define.amd ? define(${amdName}factory) :

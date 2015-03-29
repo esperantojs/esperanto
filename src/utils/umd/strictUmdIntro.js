@@ -2,22 +2,20 @@ import { globalify, quote, req } from 'utils/mappers';
 import { resolveAgainst } from 'utils/resolveId';
 
 export default function strictUmdIntro ( options, indentStr ) {
-	var hasExports = options.hasExports;
+	let hasExports = options.hasExports;
 
-	var amdName = options.amdName ?
-		"'" + options.amdName + "', " :
-		'';
-	var amdDeps = hasExports || options.importPaths.length > 0 ?
+	let amdName = options.amdName ? `'${options.amdName}', ` : '';
+	let amdDeps = hasExports || options.importPaths.length > 0 ?
 		'[' +
 			( hasExports ? [ 'exports' ] : [] ).concat( options.absolutePaths ? options.importPaths.map( resolveAgainst( options.amdName ) ) : options.importPaths ).map( quote ).join( ', ' ) +
 		'], ' :
 		'';
-	var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
-	var globalDeps = ( hasExports ? [ `(global.${options.name} = {})` ] : [] )
+	let cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
+	let globalDeps = ( hasExports ? [ `(global.${options.name} = {})` ] : [] )
 		.concat( options.importNames.map( globalify ) ).join( ', ' );
-	var args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
+	let args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
 
-	var defaultsBlock = '';
+	let defaultsBlock = '';
 	if ( options.externalDefaults && options.externalDefaults.length > 0 ) {
 		defaultsBlock = options.externalDefaults.map( x =>
 			'\t' + ( x.needsNamed ? `var ${x.name}__default` : x.name ) +
@@ -25,7 +23,7 @@ export default function strictUmdIntro ( options, indentStr ) {
 		).join('\n') + '\n\n';
 	}
 
-	var intro =
+	let intro =
 `(function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(${cjsDeps}) :
 	typeof define === 'function' && define.amd ? define(${amdName}${amdDeps}factory) :

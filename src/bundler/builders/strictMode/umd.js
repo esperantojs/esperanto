@@ -8,13 +8,13 @@ import getExportBlock from './utils/getExportBlock';
 export default function umd ( bundle, options ) {
 	requireName( options );
 
-	var entry = bundle.entryModule;
+	let entry = bundle.entryModule;
 
-	var hasImports = bundle.externalModules.length > 0;
-	var hasExports = entry.exports.length > 0;
+	let hasImports = bundle.externalModules.length > 0;
+	let hasExports = entry.exports.length > 0;
 
-	var intro;
-	if (!hasImports && !hasExports) {
+	let intro;
+	if ( !hasImports && !hasExports ) {
 		intro = standaloneUmdIntro({
 			amdName: options.amdName,
 		}, bundle.body.getIndentString() );

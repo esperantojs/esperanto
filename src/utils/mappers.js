@@ -11,13 +11,13 @@ export function quote ( str ) {
 }
 
 export function req ( path ) {
-	return 'require(' + quote(path) + ')';
+	return `require(${quote(path)})`;
 }
 
 export function globalify ( name ) {
   	if ( /^__dep\d+__$/.test( name ) ) {
 		return 'undefined';
 	} else {
-		return 'global.' + name;
+		return `global.${name}`;
 	}
 }

@@ -2,7 +2,7 @@ import packageResult from 'utils/packageResult';
 import { req } from 'utils/mappers';
 
 export default function cjs ( bundle, options ) {
-	var importBlock = bundle.externalModules.map( x => {
+	let importBlock = bundle.externalModules.map( x => {
 		return `var ${x.name} = ${req(x.id)};`;
 	}).join( '\n' );
 
@@ -10,7 +10,7 @@ export default function cjs ( bundle, options ) {
 		bundle.body.prepend( importBlock + '\n\n' );
 	}
 
-	var defaultName = bundle.entryModule.identifierReplacements.default;
+	let defaultName = bundle.entryModule.identifierReplacements.default;
 	if ( defaultName ) {
 		bundle.body.append( `\n\nmodule.exports = ${defaultName};` );
 	}

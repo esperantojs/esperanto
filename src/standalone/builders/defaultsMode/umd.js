@@ -6,18 +6,18 @@ import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
 import requireName from 'utils/umd/requireName';
 
 export default function umd ( mod, options ) {
-	var importNames = [];
-	var importPaths = [];
-	var seen = {};
-	var placeholders = 0;
+	let importNames = [];
+	let importPaths = [];
+	let seen = {};
+	let placeholders = 0;
 
 	requireName( options );
 
-	var hasImports = mod.imports.length > 0;
-	var hasExports = mod.exports.length > 0;
+	let hasImports = mod.imports.length > 0;
+	let hasExports = mod.exports.length > 0;
 
-	var intro;
-	if (!hasImports && !hasExports) {
+	let intro;
+	if ( !hasImports && !hasExports ) {
 		intro = standaloneUmdIntro({
 			amdName: options.amdName,
 		}, mod.body.getIndentString() );
@@ -29,7 +29,7 @@ export default function umd ( mod, options ) {
 
 				if ( x.as ) {
 					while ( placeholders ) {
-						importNames.push( '__dep' + importNames.length + '__' );
+						importNames.push( `__dep${importNames.length}__` );
 						placeholders--;
 					}
 					importNames.push( x.as );

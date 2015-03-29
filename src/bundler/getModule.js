@@ -5,8 +5,6 @@ import annotateAst from 'utils/ast/annotate';
 import disallowConflictingImports from '../utils/disallowConflictingImports';
 
 export default function getModule ( mod ) {
-	var imports, exports;
-
 	mod.body = new MagicString( mod.source );
 
 	let toRemove = [];
@@ -35,7 +33,7 @@ export default function getModule ( mod ) {
 		throw err;
 	}
 
-	[ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
+	let [ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
 
 	disallowConflictingImports( imports );
 

@@ -8,13 +8,13 @@ import getImportSummary from './utils/getImportSummary';
 export default function umd ( mod, options ) {
 	requireName( options );
 
-	var [ importPaths, importNames ] = getImportSummary( mod );
+	let [ importPaths, importNames ] = getImportSummary( mod );
 
-	var hasImports = mod.imports.length > 0;
-	var hasExports = mod.exports.length > 0;
+	let hasImports = mod.imports.length > 0;
+	let hasExports = mod.exports.length > 0;
 
-	var intro;
-	if (!hasImports && !hasExports) {
+	let intro;
+	if ( !hasImports && !hasExports ) {
 		intro = standaloneUmdIntro({
 			amdName: options.amdName,
 		}, mod.body.getIndentString() );

@@ -38,17 +38,16 @@ export default function getUniqueNames ( bundle ) {
 	// for the rest, make names as compact as possible without
 	// introducing conflicts
 	modules.concat( externalModules ).forEach( mod => {
-		var parts, i, name;
-
 		// is this already named?
 		if ( hasOwnProp.call( names, mod.id ) ) {
 			mod.name = names[ mod.id ];
 			return;
 		}
 
-		parts = splitPath( mod.id );
+		let name;
+		let parts = splitPath( mod.id );
+		let i = parts.length;
 
-		i = parts.length;
 		while ( i-- ) {
 			name = sanitize( parts.slice( i ).join( '_' ) );
 

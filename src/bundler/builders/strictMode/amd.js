@@ -1,19 +1,16 @@
-import template from 'utils/template';
 import packageResult from 'utils/packageResult';
 import { getId, getName, quote } from 'utils/mappers';
 import getExportBlock from './utils/getExportBlock';
 
-var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
-
 export default function amd ( bundle, options ) {
-	var externalDefaults = bundle.externalModules.filter( needsDefault );
-	var entry = bundle.entryModule;
+	let externalDefaults = bundle.externalModules.filter( needsDefault );
+	let entry = bundle.entryModule;
 
-	var importIds = bundle.externalModules.map( getId );
-	var importNames = bundle.externalModules.map( getName );
+	let importIds = bundle.externalModules.map( getId );
+	let importNames = bundle.externalModules.map( getName );
 
 	if ( externalDefaults.length ) {
-		var defaultsBlock = externalDefaults.map( x => {
+		let defaultsBlock = externalDefaults.map( x => {
 			// Case 1: default is used, and named is not
 			if ( !x.needsNamed ) {
 				return `${x.name} = ('default' in ${x.name} ? ${x.name}['default'] : ${x.name});`;
@@ -35,11 +32,15 @@ export default function amd ( bundle, options ) {
 		}
 	}
 
-	var intro = introTemplate({
-		amdName: options.amdName ? `${quote(options.amdName)}, ` : '',
-		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
-	}).replace( /\t/g, bundle.body.getIndentString() );
+	let amdName = options.amdName ? `${quote(options.amdName)}, ` : '';
+	let amdDeps = importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '';
+	let names = importNames.join( ', ' );
+
+	let intro = `define(${amdName}${amdDeps}function (${names}) {
+
+	'use strict';
+
+`.replace( /\t/g, bundle.body.getIndentString() );
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( bundle, bundle.body, options, 'toAmd', true );

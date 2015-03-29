@@ -17,7 +17,7 @@ export default function getUnscopedNames ( mod ) {
 	}
 
 	walk( mod.ast, {
-		enter: function ( node ) {
+		enter ( node ) {
 			// we're only interested in references, not property names etc
 			if ( node._skip ) return this.skip();
 
@@ -33,7 +33,7 @@ export default function getUnscopedNames ( mod ) {
 			}
 		},
 
-		leave: function ( node ) {
+		leave ( node ) {
 			if ( node.type === 'Program' ) {
 				return;
 			}
