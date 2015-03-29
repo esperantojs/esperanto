@@ -20,12 +20,6 @@ export default function resolveExports ( bundle ) {
 				name = split[1];
 
 				addExport( moduleId, name, s.name );
-
-				// if ( !bundleExports[ moduleId ] ) {
-				// 	bundleExports[ moduleId ] = {};
-				// }
-
-				// bundleExports[ moduleId ][ name ] = s.name;
 			});
 		}
 
