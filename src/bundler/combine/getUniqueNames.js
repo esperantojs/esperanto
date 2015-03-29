@@ -2,8 +2,8 @@ import hasOwnProp from 'utils/hasOwnProp';
 import builtins from 'utils/builtins';
 import { default as sanitize, splitPath } from 'utils/sanitize';
 
-export default function getUniqueNames ( modules, externalModules, userNames ) {
-	var names = {}, used = {};
+export default function getUniqueNames ( modules, externalModules, userNames, used ) {
+	var names = {};
 
 	// copy builtins
 	builtins.forEach( n => used[n] = true );

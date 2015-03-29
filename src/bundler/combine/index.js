@@ -7,15 +7,18 @@ import resolveExports from './resolveExports';
 import transformBody from './transformBody';
 
 export default function combine ( bundle ) {
-	var body;
-
-	body = new MagicString.Bundle({
+	let body = new MagicString.Bundle({
 		separator: '\n\n'
 	});
 
+	let declaredInBundle = bundle.modules.reduce( ( declared, mod ) => {
+		Object.keys( mod.ast._declared ).forEach( x => declared[x] = true );
+		return declared;
+	}, {} );
+
 	// populate names
-	var uniqueNames = getUniqueNames( bundle.modules, bundle.externalModules, bundle.names );
-	var setName = mod => mod.name = uniqueNames[ mod.id ];
+	let uniqueNames = getUniqueNames( bundle.modules, bundle.externalModules, bundle.names, declaredInBundle );
+	let setName = mod => mod.name = uniqueNames[ mod.id ];
 	bundle.modules.forEach( setName );
 	bundle.externalModules.forEach( setName );
 
@@ -32,7 +35,7 @@ export default function combine ( bundle ) {
 	bundle.modules.forEach( mod => {
 		// verify that this module doesn't import non-exported identifiers
 		mod.imports.forEach( x => {
-			var importedModule = bundle.moduleLookup[ x.id ];
+			let importedModule = bundle.moduleLookup[ x.id ];
 
 			if ( !importedModule || x.isBatch ) {
 				return;
