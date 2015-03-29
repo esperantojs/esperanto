@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.20 - 2015-03-27
+	esperanto.js v0.6.23 - 2015-03-29
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -983,6 +983,30 @@
 		}
 	}
 
+	function getId ( m ) {
+		return m.id;
+	}
+
+	function getName ( m ) {
+		return m.name;
+	}
+
+	function quote ( str ) {
+		return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
+	}
+
+	function req ( path ) {
+		return 'require(' + quote(path) + ')';
+	}
+
+	function globalify ( name ) {
+	  	if ( /^__dep\d+__$/.test( name ) ) {
+			return 'undefined';
+		} else {
+			return 'global.' + name;
+		}
+	}
+
 	/*
 		This module traverse a module's AST, attaching scope information
 		to nodes as it goes, which is later used to determine which
@@ -1052,9 +1076,13 @@
 							}
 						}
 
+						var names = node.params.map( getName );
+
+						names.forEach( function(name ) {return declared[ name ] = true} );
+
 						scope = node._scope = new Scope({
 							parent: scope,
-							params: node.params.map( function(x ) {return x.name} ) // TODO rest params?
+							params: names // TODO rest params?
 						});
 
 						break;
@@ -1412,11 +1440,11 @@
 		var usedNames = {};
 
 		imports.forEach( function(x ) {
+			if ( x.passthrough ) return;
+
 			if ( x.as ) {
 				checkName( x.as );
-			}
-
-			else {
+			} else {
 				x.specifiers.forEach( checkSpecifier );
 			}
 		});
@@ -1471,7 +1499,7 @@
 				sourceType: 'module',
 				onComment: function ( block, text, start, end ) {
 					// sourceMappingURL comments should be removed
-					if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+					if ( !block && SOURCEMAPPINGURL_REGEX.test( text ) ) {
 						toRemove.push({ start: start, end: end });
 					}
 				}
@@ -1525,7 +1553,7 @@
 
 				if ( hasOwnProp.call( usedNames, name ) ) {
 					// TODO write a test for this
-					throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
+					throw new Error( (("Naming collision: module " + moduleId) + (" cannot be called " + name) + "") );
 				}
 			}
 
@@ -1771,30 +1799,6 @@
 		return function ( importPath ) {
 			return resolveId( importPath, importerPath );
 		};
-	}
-
-	function getId ( m ) {
-		return m.id;
-	}
-
-	function getName ( m ) {
-		return m.name;
-	}
-
-	function quote ( str ) {
-		return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
-	}
-
-	function req ( path ) {
-		return 'require(' + quote(path) + ')';
-	}
-
-	function globalify ( name ) {
-	  	if ( /^__dep\d+__$/.test( name ) ) {
-			return 'undefined';
-		} else {
-			return 'global.' + name;
-		}
 	}
 
 	var amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
@@ -2129,7 +2133,7 @@
 		}
 	}
 
-	function rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode, capturedUpdates ) {
+	function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
 		var assignee, name, exportAs;
 
 		if ( node.type === 'AssignmentExpression' ) {
@@ -2165,16 +2169,10 @@
 			} else {
 				body.replace( node.start, node.start, (("exports." + exportAs) + " = ") );
 			}
-
-			// keep track of what we've already exported - we don't need to
-			// export it again later
-			if ( isTopLevelNode ) {
-				alreadyExported[ name ] = true;
-			}
 		}
 	}
 
-	function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported ) {
+	function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames ) {
 		var scope = ast._scope,
 			blockScope = ast._blockScope,
 			capturedUpdates = null,
@@ -2206,9 +2204,11 @@
 				// Catch illegal reassignments
 				disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
-				// Rewrite assignments to exports. This call may mutate `alreadyExported`
-				// and `capturedUpdates`, which are used elsewhere
-				rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, scope === ast._scope, capturedUpdates );
+				// Rewrite assignments to exports inside functions, to keep bindings live.
+				// This call may mutate `capturedUpdates`, which is used elsewhere
+				if ( scope !== ast._scope ) {
+					rewriteExportAssignments( body, node, exportNames, scope, capturedUpdates );
+				}
 
 				if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
 					replaceIdentifiers( body, node, identifierReplacements, scope );
@@ -2249,7 +2249,6 @@
 			importedBindings = {},
 			importedNamespaces = {},
 			exportNames,
-			alreadyExported = {},
 			earlyExports,
 			lateExports;
 
@@ -2261,7 +2260,7 @@
 		// ensure no conflict with `exports`
 		identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
 
-		traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
+		traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
 		// Remove import statements from the body of the module
 		mod.imports.forEach( function(x ) {
@@ -2328,7 +2327,7 @@
 				// functions should be exported early, in
 				// case of cyclic dependencies
 				earlyExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
-			} else if ( !alreadyExported.hasOwnProperty( name ) ) {
+			} else {
 				lateExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
 			}
 		});

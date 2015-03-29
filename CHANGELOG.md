@@ -1,5 +1,11 @@
 # changelog
 
+## 0.6.23
+
+* Function arguments are considered when naming imports to avoid conflicts ([#119](https://github.com/esperantojs/esperanto/issues/119))
+* Bindings are always exported at the end of a module, regardless of re-assignments ([#130](https://github.com/esperantojs/esperanto/issues/130))
+* Generated import names cannot be shadowed by non-root-scope declarations ([#133](https://github.com/esperantojs/esperanto/issues/133))
+
 ## 0.6.22
 
 * Allow imports to be re-exported ([#124](https://github.com/esperantojs/esperanto/issues/124))

@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.20 - 2015-03-27
+	esperanto.js v0.6.23 - 2015-03-29
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -85,6 +85,30 @@ function visit ( node, parent, enter, leave ) {
 	}
 }
 
+function getId ( m ) {
+	return m.id;
+}
+
+function getName ( m ) {
+	return m.name;
+}
+
+function quote ( str ) {
+	return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
+}
+
+function req ( path ) {
+	return 'require(' + quote(path) + ')';
+}
+
+function globalify ( name ) {
+  	if ( /^__dep\d+__$/.test( name ) ) {
+		return 'undefined';
+	} else {
+		return 'global.' + name;
+	}
+}
+
 /*
 	This module traverse a module's AST, attaching scope information
 	to nodes as it goes, which is later used to determine which
@@ -154,9 +178,13 @@ function annotateAst ( ast ) {
 						}
 					}
 
+					var names = node.params.map( getName );
+
+					names.forEach( function(name ) {return declared[ name ] = true} );
+
 					scope = node._scope = new Scope({
 						parent: scope,
-						params: node.params.map( function(x ) {return x.name} ) // TODO rest params?
+						params: names // TODO rest params?
 					});
 
 					break;
@@ -514,11 +542,11 @@ function disallowConflictingImports ( imports ) {
 	var usedNames = {};
 
 	imports.forEach( function(x ) {
+		if ( x.passthrough ) return;
+
 		if ( x.as ) {
 			checkName( x.as );
-		}
-
-		else {
+		} else {
 			x.specifiers.forEach( checkSpecifier );
 		}
 	});
@@ -573,7 +601,7 @@ function getStandaloneModule ( options ) {
 			sourceType: 'module',
 			onComment: function ( block, text, start, end ) {
 				// sourceMappingURL comments should be removed
-				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
+				if ( !block && SOURCEMAPPINGURL_REGEX.test( text ) ) {
 					toRemove.push({ start: start, end: end });
 				}
 			}
@@ -627,7 +655,7 @@ function determineImportNames ( imports, userFn, usedNames ) {
 
 			if ( hasOwnProp.call( usedNames, name ) ) {
 				// TODO write a test for this
-				throw new Error( 'Naming collision: module ' + moduleId + ' cannot be called ' + name );
+				throw new Error( (("Naming collision: module " + moduleId) + (" cannot be called " + name) + "") );
 			}
 		}
 
@@ -771,28 +799,37 @@ function resolveChains ( modules, moduleLookup ) {
 // we add `exports` to this list, to avoid conflicst
 var builtins = 'Array ArrayBuffer DataView Date Error EvalError Float32Array Float64Array Function Generator GeneratorFunction Infinity Int16Array Int32Array Int8Array InternalError Intl Iterator JSON Map Math NaN Number Object ParallelArray Promise Proxy RangeError ReferenceError Reflect RegExp Set StopIteration String Symbol SyntaxError TypeError TypedArray URIError Uint16Array Uint32Array Uint8Array Uint8ClampedArray WeakMap WeakSet decodeURI decodeURIComponent encodeURI encodeURIComponent escape eval exports isFinite isNaN null parseFloat parseInt undefined unescape uneval'.split( ' ' );
 
-function getUniqueNames ( modules, externalModules, userNames ) {
-	var names = {}, used = {};
+function getUniqueNames ( bundle ) {
+	var modules = bundle.modules, externalModules = bundle.externalModules;
+	var userNames = bundle.names;
+	var names = {};
+
+	var used = modules.reduce( function( declared, mod )  {
+		Object.keys( mod.ast._declared ).forEach( function(x ) {return declared[x] = true} );
+		return declared;
+	}, {} );
 
 	// copy builtins
 	builtins.forEach( function(n ) {return used[n] = true} );
 
 	// copy user-specified names
 	if ( userNames ) {
-		Object.keys( userNames ).forEach( function(n ) {
-			names[n] = userNames[n];
-			used[ userNames[n] ] = true;
+		Object.keys( userNames ).forEach( function(id ) {
+			names[ id ] = userNames[ id ];
+			used[ userNames[ id ] ] = true;
 		});
 	}
 
-	// infer names from default imports
+	// infer names from default imports - e.g. with `import _ from './utils'`,
+	// use '_' instead of generating a name from 'utils'
+	function inferName ( x ) {
+		if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
+			names[ x.id ] = x.as;
+			used[ x.as ] = true;
+		}
+	}
 	modules.forEach( function(mod ) {
-		mod.imports.forEach( function(x ) {
-			if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
-				names[ x.id ] = x.as;
-				used[ x.as ] = true;
-			}
-		});
+		mod.imports.forEach( inferName );
 	});
 
 	// for the rest, make names as compact as possible without
@@ -802,6 +839,7 @@ function getUniqueNames ( modules, externalModules, userNames ) {
 
 		// is this already named?
 		if ( hasOwnProp.call( names, mod.id ) ) {
+			mod.name = names[ mod.id ];
 			return;
 		}
 
@@ -821,7 +859,7 @@ function getUniqueNames ( modules, externalModules, userNames ) {
 		}
 
 		used[ name ] = true;
-		names[ mod.id ] = name;
+		mod.name = name;
 	});
 
 	return names;
@@ -845,30 +883,6 @@ function populateExternalModuleImports ( bundle ) {
 			});
 		});
 	});
-}
-
-function getId ( m ) {
-	return m.id;
-}
-
-function getName ( m ) {
-	return m.name;
-}
-
-function quote ( str ) {
-	return "'" + JSON.stringify(str).slice(1, -1).replace(/'/g, "\\'") + "'";
-}
-
-function req ( path ) {
-	return 'require(' + quote(path) + ')';
-}
-
-function globalify ( name ) {
-  	if ( /^__dep\d+__$/.test( name ) ) {
-		return 'undefined';
-	} else {
-		return 'global.' + name;
-	}
 }
 
 function getRenamedImports ( mod ) {
@@ -1066,12 +1080,6 @@ function resolveExports ( bundle ) {
 				name = split[1];
 
 				addExport( moduleId, name, s.name );
-
-				// if ( !bundleExports[ moduleId ] ) {
-				// 	bundleExports[ moduleId ] = {};
-				// }
-
-				// bundleExports[ moduleId ][ name ] = s.name;
 			});
 		}
 
@@ -1159,7 +1167,7 @@ function replaceIdentifiers ( body, node, identifierReplacements, scope ) {
 	}
 }
 
-function rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode, capturedUpdates ) {
+function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
 	var assignee, name, exportAs;
 
 	if ( node.type === 'AssignmentExpression' ) {
@@ -1195,16 +1203,10 @@ function rewriteExportAssignments ( body, node, exports, scope, alreadyExported,
 		} else {
 			body.replace( node.start, node.start, (("exports." + exportAs) + " = ") );
 		}
-
-		// keep track of what we've already exported - we don't need to
-		// export it again later
-		if ( isTopLevelNode ) {
-			alreadyExported[ name ] = true;
-		}
 	}
 }
 
-function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported ) {
+function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames ) {
 	var scope = ast._scope,
 		blockScope = ast._blockScope,
 		capturedUpdates = null,
@@ -1236,9 +1238,11 @@ function traverseAst ( ast, body, identifierReplacements, importedBindings, impo
 			// Catch illegal reassignments
 			disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
-			// Rewrite assignments to exports. This call may mutate `alreadyExported`
-			// and `capturedUpdates`, which are used elsewhere
-			rewriteExportAssignments( body, node, exportNames, scope, alreadyExported, scope === ast._scope, capturedUpdates );
+			// Rewrite assignments to exports inside functions, to keep bindings live.
+			// This call may mutate `capturedUpdates`, which is used elsewhere
+			if ( scope !== ast._scope ) {
+				rewriteExportAssignments( body, node, exportNames, scope, capturedUpdates );
+			}
 
 			if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
 				replaceIdentifiers( body, node, identifierReplacements, scope );
@@ -1278,7 +1282,6 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 		importedBindings,
 		importedNamespaces,
 		exportNames,
-		alreadyExported = {},
 		shouldExportEarly = {},
 		exportBlock;
 
@@ -1287,7 +1290,7 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 
 	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
-	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
+	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
 	// Remove import statements
 	mod.imports.forEach( function(x ) {
@@ -1380,12 +1383,8 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 		exportBlock = [];
 
 		Object.keys( exportNames ).forEach( function(name ) {
-			var exportAs;
-
-			if ( !alreadyExported[ name ] ) {
-				exportAs = exportNames[ name ];
-				exportBlock.push( (("exports." + exportAs) + (" = " + (identifierReplacements[name])) + ";") );
-			}
+			var exportAs = exportNames[ name ];
+			exportBlock.push( (("exports." + exportAs) + (" = " + (identifierReplacements[name])) + ";") );
 		});
 
 		if ( exportBlock.length ) {
@@ -1397,17 +1396,12 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 ;$D$0 = void 0}
 
 function combine ( bundle ) {
-	var body;
-
-	body = new MagicString.Bundle({
+	bundle.body = new MagicString.Bundle({
 		separator: '\n\n'
 	});
 
-	// populate names
-	var uniqueNames = getUniqueNames( bundle.modules, bundle.externalModules, bundle.names );
-	var setName = function(mod ) {return mod.name = uniqueNames[ mod.id ]};
-	bundle.modules.forEach( setName );
-	bundle.externalModules.forEach( setName );
+	// give each module in the bundle a unique name
+	getUniqueNames( bundle );
 
 	// determine which specifiers are imported from
 	// external modules
@@ -1430,19 +1424,17 @@ function combine ( bundle ) {
 
 			x.specifiers.forEach( function(s ) {
 				if ( !importedModule.doesExport[ s.name ] ) {
-					throw new Error( 'Module ' + importedModule.id + ' does not export ' + s.name + ' (imported by ' + mod.id + ')' );
+					throw new Error( (("Module '" + (importedModule.id)) + ("' does not export '" + (s.name)) + ("' (imported by '" + (mod.id)) + "')") );
 				}
 			});
 		});
 
-		body.addSource({
+		bundle.body.addSource({
 			filename: path.resolve( bundle.base, mod.relativePath ),
 			content: transformBody__transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});
 	});
-
-	bundle.body = body;
 }
 
 function getModule ( mod ) {var $D$1;
@@ -2094,7 +2086,6 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 		importedBindings = {},
 		importedNamespaces = {},
 		exportNames,
-		alreadyExported = {},
 		earlyExports,
 		lateExports;
 
@@ -2106,7 +2097,7 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 	// ensure no conflict with `exports`
 	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
 
-	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
+	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
 	// Remove import statements from the body of the module
 	mod.imports.forEach( function(x ) {
@@ -2173,7 +2164,7 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 			// functions should be exported early, in
 			// case of cyclic dependencies
 			earlyExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
-		} else if ( !alreadyExported.hasOwnProperty( name ) ) {
+		} else {
 			lateExports.push( (("exports." + exportAs) + (" = " + name) + ";") );
 		}
 	});
