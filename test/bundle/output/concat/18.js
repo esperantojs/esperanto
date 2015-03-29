@@ -1,11 +1,11 @@
 (function () { 'use strict';
 
-	var doThing__default = function () {
+	var _doThing = function () {
 		console.log( 'doing foo thing' );
 	}
 
 	var foo = function () {
-		doThing__default();
+		_doThing();
 	}
 
 	var bar = function () {

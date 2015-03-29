@@ -1,9 +1,9 @@
-define(['moment'], function (x) {
+define(['moment'], function (moment) {
 
 	'use strict';
 
-	var a__x = 'wut';
-	var a = a__x;
+	var x = 'wut';
+	var a = x;
 
 
 

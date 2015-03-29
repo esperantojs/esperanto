@@ -1,23 +1,18 @@
 import path from 'path';
 import MagicString from 'magic-string';
-import getUniqueNames from './getUniqueNames';
+import populateModuleNames from './populateModuleNames';
 import populateExternalModuleImports from './populateExternalModuleImports';
 import populateIdentifierReplacements from './populateIdentifierReplacements';
 import resolveExports from './resolveExports';
 import transformBody from './transformBody';
 
 export default function combine ( bundle ) {
-	var body;
-
-	body = new MagicString.Bundle({
+	bundle.body = new MagicString.Bundle({
 		separator: '\n\n'
 	});
 
-	// populate names
-	var uniqueNames = getUniqueNames( bundle.modules, bundle.externalModules, bundle.names );
-	var setName = mod => mod.name = uniqueNames[ mod.id ];
-	bundle.modules.forEach( setName );
-	bundle.externalModules.forEach( setName );
+	// give each module in the bundle a unique name
+	populateModuleNames( bundle );
 
 	// determine which specifiers are imported from
 	// external modules
@@ -32,7 +27,7 @@ export default function combine ( bundle ) {
 	bundle.modules.forEach( mod => {
 		// verify that this module doesn't import non-exported identifiers
 		mod.imports.forEach( x => {
-			var importedModule = bundle.moduleLookup[ x.id ];
+			let importedModule = bundle.moduleLookup[ x.id ];
 
 			if ( !importedModule || x.isBatch ) {
 				return;
@@ -40,17 +35,15 @@ export default function combine ( bundle ) {
 
 			x.specifiers.forEach( s => {
 				if ( !importedModule.doesExport[ s.name ] ) {
-					throw new Error( 'Module ' + importedModule.id + ' does not export ' + s.name + ' (imported by ' + mod.id + ')' );
+					throw new Error( `Module '${importedModule.id}' does not export '${s.name}' (imported by '${mod.id}')` );
 				}
 			});
 		});
 
-		body.addSource({
+		bundle.body.addSource({
 			filename: path.resolve( bundle.base, mod.relativePath ),
 			content: transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});
 	});
-
-	bundle.body = body;
 }

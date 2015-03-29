@@ -2,28 +2,37 @@ import hasOwnProp from 'utils/hasOwnProp';
 import builtins from 'utils/builtins';
 import { default as sanitize, splitPath } from 'utils/sanitize';
 
-export default function getUniqueNames ( modules, externalModules, userNames ) {
-	var names = {}, used = {};
+export default function getUniqueNames ( bundle ) {
+	let { modules, externalModules } = bundle;
+	let userNames = bundle.names;
+	let names = {};
+
+	let used = modules.reduce( ( declared, mod ) => {
+		Object.keys( mod.ast._declared ).forEach( x => declared[x] = true );
+		return declared;
+	}, {} );
 
 	// copy builtins
 	builtins.forEach( n => used[n] = true );
 
 	// copy user-specified names
 	if ( userNames ) {
-		Object.keys( userNames ).forEach( n => {
-			names[n] = userNames[n];
-			used[ userNames[n] ] = true;
+		Object.keys( userNames ).forEach( id => {
+			names[ id ] = userNames[ id ];
+			used[ userNames[ id ] ] = true;
 		});
 	}
 
-	// infer names from default imports
+	// infer names from default imports - e.g. with `import _ from './utils'`,
+	// use '_' instead of generating a name from 'utils'
+	function inferName ( x ) {
+		if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
+			names[ x.id ] = x.as;
+			used[ x.as ] = true;
+		}
+	}
 	modules.forEach( mod => {
-		mod.imports.forEach( x => {
-			if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
-				names[ x.id ] = x.as;
-				used[ x.as ] = true;
-			}
-		});
+		mod.imports.forEach( inferName );
 	});
 
 	// for the rest, make names as compact as possible without
@@ -33,6 +42,7 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 
 		// is this already named?
 		if ( hasOwnProp.call( names, mod.id ) ) {
+			mod.name = names[ mod.id ];
 			return;
 		}
 
@@ -52,7 +62,7 @@ export default function getUniqueNames ( modules, externalModules, userNames ) {
 		}
 
 		used[ name ] = true;
-		names[ mod.id ] = name;
+		mod.name = name;
 	});
 
 	return names;
