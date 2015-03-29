@@ -1,4 +1,4 @@
 module.exports = {
-	description: 'avoids conflicts between imports and declarations not in root scope',
+	description: 'prevents function arguments from shadowing imports',
 	strict: true
 };
