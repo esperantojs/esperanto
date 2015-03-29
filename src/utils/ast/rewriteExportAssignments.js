@@ -1,6 +1,6 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
-export default function rewriteExportAssignments ( body, node, exports, scope, alreadyExported, isTopLevelNode, capturedUpdates ) {
+export default function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
 	var assignee, name, exportAs;
 
 	if ( node.type === 'AssignmentExpression' ) {
@@ -35,12 +35,6 @@ export default function rewriteExportAssignments ( body, node, exports, scope, a
 			body.replace( node.end, node.end, `, exports.${exportAs} = ${name}` );
 		} else {
 			body.replace( node.start, node.start, `exports.${exportAs} = ` );
-		}
-
-		// keep track of what we've already exported - we don't need to
-		// export it again later
-		if ( isTopLevelNode ) {
-			alreadyExported[ name ] = true;
 		}
 	}
 }

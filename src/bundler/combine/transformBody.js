@@ -7,7 +7,6 @@ export default function transformBody ( bundle, mod, body ) {
 		importedBindings,
 		importedNamespaces,
 		exportNames,
-		alreadyExported = {},
 		shouldExportEarly = {},
 		exportBlock;
 
@@ -16,7 +15,7 @@ export default function transformBody ( bundle, mod, body ) {
 
 	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
-	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames, alreadyExported );
+	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
 	// Remove import statements
 	mod.imports.forEach( x => {
@@ -109,12 +108,8 @@ export default function transformBody ( bundle, mod, body ) {
 		exportBlock = [];
 
 		Object.keys( exportNames ).forEach( name => {
-			var exportAs;
-
-			if ( !alreadyExported[ name ] ) {
-				exportAs = exportNames[ name ];
-				exportBlock.push( `exports.${exportAs} = ${identifierReplacements[name]};` );
-			}
+			var exportAs = exportNames[ name ];
+			exportBlock.push( `exports.${exportAs} = ${identifierReplacements[name]};` );
 		});
 
 		if ( exportBlock.length ) {
