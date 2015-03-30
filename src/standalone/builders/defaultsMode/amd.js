@@ -3,6 +3,10 @@ import packageResult from 'utils/packageResult';
 import amdIntro from '../../../utils/amd/amdIntro';
 
 export default function amd ( mod, options ) {
+	mod.imports.forEach( x => {
+		mod.body.remove( x.start, x.next );
+	});
+
 	transformExportDeclaration( mod.exports[0], mod.body );
 
 	let intro = amdIntro({
