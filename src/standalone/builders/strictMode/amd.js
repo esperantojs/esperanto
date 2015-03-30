@@ -1,13 +1,8 @@
-import template from 'utils/template';
-import packageResult from 'utils/packageResult';
-import { resolveAgainst } from 'utils/resolveId';
+import packageResult from '../../../utils/packageResult';
+import { resolveAgainst } from '../../../utils/resolveId';
 import transformBody from './utils/transformBody';
 import getImportSummary from './utils/getImportSummary';
-import { quote } from 'utils/mappers';
-
-var introTemplate;
-
-introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
+import { quote } from '../../../utils/mappers';
 
 export default function amd ( mod, options ) {
 	let [ importPaths, importNames ] = getImportSummary( mod );
