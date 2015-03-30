@@ -39,15 +39,20 @@ export default function amdIntro ({ name, imports, hasExports, indentStr, absolu
 		names.unshift( 'exports' );
 	}
 
-	return `define(${
-		name ? quote(name) + ', ' : ''
-}${
-		paths.length ? '[' + paths.map( quote ).join( ', ' ) + '], ' : ''
-}function (${
-		names.join( ', ' )
-}) {
+	let intro = `
+define(${processName(name)}${processPaths(paths)}function (${names.join( ', ' ) }) {
 
 	'use strict';
 
-`.replace( /\t/g, indentStr );
+`;
+
+	return intro.replace( /\t/g, indentStr );
+}
+
+function processName ( name ) {
+	return name ? quote( name ) + ', ' : '';
+}
+
+function processPaths ( paths ) {
+	return paths.length ? '[' + paths.map( quote ).join( ', ' ) + '], ' : '';
 }
