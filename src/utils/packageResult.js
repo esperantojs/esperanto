@@ -1,19 +1,20 @@
 import walk from './ast/walk';
 import { splitPath } from 'utils/sanitize';
 
-var warned = {};
+const ABSOLUTE_PATH = /^(?:[A-Z]:)?[\/\\]/i;
+
+let warned = {};
 
 export default function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
-	var code, map;
-
 	// wrap output
 	if ( options.banner ) body.prepend( options.banner );
 	if ( options.footer ) body.append( options.footer );
 
-	code = body.toString();
+	let code = body.toString();
+	let map;
 
 	if ( !!options.sourceMap ) {
-		if ( options.sourceMap !== 'inline' && !options.sourceMapFile) {
+		if ( options.sourceMap !== 'inline' && !options.sourceMapFile ) {
 			throw new Error( 'You must provide `sourceMapFile` option' );
 		}
 
@@ -22,10 +23,10 @@ export default function packageResult ( bundleOrModule, body, options, methodNam
 		}
 
 		let sourceMapFile;
-		if (options.sourceMap === 'inline') {
+		if ( options.sourceMap === 'inline' ) {
 			sourceMapFile = null;
 		} else {
-			sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+			sourceMapFile = ABSOLUTE_PATH.test( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 		}
 
 		if ( isBundle ) {
@@ -37,7 +38,7 @@ export default function packageResult ( bundleOrModule, body, options, methodNam
 		map = body.generateMap({
 			includeContent: true,
 			file: sourceMapFile,
-			source: (sourceMapFile && !isBundle) ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
+			source: ( sourceMapFile && !isBundle ) ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 		});
 
 		if ( options.sourceMap === 'inline' ) {
@@ -51,21 +52,17 @@ export default function packageResult ( bundleOrModule, body, options, methodNam
 	}
 
 	return {
-		code: code,
-		map: map,
-		toString: function () {
+		code,
+		map,
+		toString () {
 			if ( !warned[ methodName ] ) {
-				console.log( 'Warning: esperanto.' + methodName + '() returns an object with a \'code\' property. You should use this instead of using the returned value directly' );
+				console.log( `Warning: esperanto.${methodName}() returns an object with a 'code' property. You should use this instead of using the returned value directly` );
 				warned[ methodName ] = true;
 			}
 
 			return code;
 		}
 	};
-}
-
-function isAbsolutePath ( path ) {
-	return /^(?:[A-Z]:)?[\/\\]/i.test( path );
 }
 
 function getRelativePath ( from, to ) {

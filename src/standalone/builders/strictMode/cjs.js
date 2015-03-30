@@ -4,23 +4,19 @@ import transformBody from './utils/transformBody';
 import { req } from 'utils/mappers';
 
 export default function cjs ( mod, options ) {
-	var importBlock, seen = {};
+	let seen = {};
 
 	// Create block of require statements
-	importBlock = mod.imports.map( x => {
-		var name, replacement;
-
+	let importBlock = mod.imports.map( x => {
 		if ( !hasOwnProp.call( seen, x.path ) ) {
+			seen[ x.path ] = true;
+
 			if ( x.isEmpty ) {
-				replacement = `${req(x.path)};`;
-			} else {
-				replacement = `var ${x.name} = ${req(x.path)};`;
+				return `${req(x.path)};`;
 			}
 
-			seen[ x.path ] = true;
+			return `var ${x.name} = ${req(x.path)};`;
 		}
-
-		return replacement;
 	}).filter( Boolean ).join( '\n' );
 
 	transformBody( mod, mod.body, {

@@ -9,12 +9,12 @@ import topLevelScopeConflicts from './topLevelScopeConflicts';
  */
 export default function populateIdentifierReplacements ( bundle ) {
 	// first, discover conflicts
-	var conflicts = topLevelScopeConflicts( bundle );
+	let conflicts = topLevelScopeConflicts( bundle );
 
 	// then figure out what identifiers need to be created
 	// for default exports
 	bundle.modules.forEach( mod => {
-		var x = mod.defaultExport;
+		let x = mod.defaultExport;
 
 		if ( x ) {
 			let result;
@@ -36,13 +36,11 @@ export default function populateIdentifierReplacements ( bundle ) {
 	// then determine which existing identifiers
 	// need to be replaced
 	bundle.modules.forEach( mod => {
-		var moduleIdentifiers;
-
-		moduleIdentifiers = mod.identifierReplacements;
+		let moduleIdentifiers = mod.identifierReplacements;
 
 		mod.ast._topLevelNames.forEach( n => {
 			moduleIdentifiers[n] = hasOwnProp.call( conflicts, n ) ?
-				mod.name + '__' + n :
+				`${mod.name}__${n}` :
 				n;
 		});
 
@@ -68,7 +66,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 					specifierName = s.name;
 
 					// If this is a chained import, get the origin
-					hash = moduleId + '@' + specifierName;
+					hash = `${moduleId}@${specifierName}`;
 					while ( hasOwnProp.call( bundle.chains, hash ) ) {
 						hash = bundle.chains[ hash ];
 						isChained = true;
@@ -87,7 +85,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 						// if it's an external module, always use __default if the
 						// bundle also uses named imports
 						if ( !!externalModule ) {
-							replacement = externalModule.needsNamed ? moduleName + '__default' : moduleName;
+							replacement = externalModule.needsNamed ? `${moduleName}__default` : moduleName;
 						}
 
 						// TODO We currently need to check for the existence of `mod`, because modules
@@ -98,7 +96,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 						}
 					} else if ( !externalModule ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
-							moduleName + '__' + specifierName :
+							`${moduleName}__${specifierName}` :
 							specifierName;
 					} else {
 						replacement = moduleName + '.' + specifierName;

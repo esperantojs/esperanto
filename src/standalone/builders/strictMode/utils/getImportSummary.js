@@ -1,7 +1,10 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
 export default function getImportSummary ( mod ) {
-	var importPaths = [], importNames = [], seen = {}, placeholders = 0;
+	let importPaths = [];
+	let importNames = [];
+	let seen = {};
+	let placeholders = 0;
 
 	mod.imports.forEach( x => {
 		if ( !hasOwnProp.call( seen, x.path ) ) {
@@ -9,7 +12,7 @@ export default function getImportSummary ( mod ) {
 
 			if ( x.specifiers.length ) {
 				while ( placeholders ) {
-					importNames.push( '__dep' + importNames.length + '__' );
+					importNames.push( `__dep${importNames.length}__` );
 					placeholders--;
 				}
 				importNames.push( x.name );

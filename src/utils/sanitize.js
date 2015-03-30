@@ -1,4 +1,6 @@
-var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
+const RESERVED = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
+const INVALID_CHAR = /[^a-zA-Z0-9_$]/g;
+const INVALID_LEADING_CHAR = /[^a-zA-Z_$]/;
 
 /**
  * Generates a sanitized (i.e. valid identifier) name from a module ID
@@ -6,13 +8,10 @@ var reserved = 'break case class catch const continue debugger default delete do
  * @returns {string}
  */
 export default function sanitize ( name ) {
-	name = name.replace( /[^a-zA-Z0-9_$]/g, '_' );
-	if ( /[^a-zA-Z_$]/.test( name[0] ) ) {
-		name = '_' + name;
-	}
+	name = name.replace( INVALID_CHAR, '_' );
 
-	if ( ~reserved.indexOf( name ) ) {
-		name = '_' + name;
+	if ( INVALID_LEADING_CHAR.test( name[0] ) || ~RESERVED.indexOf( name ) ) {
+		name = `_${name}`;
 	}
 
 	return name;

@@ -3,17 +3,10 @@ import getReadOnlyIdentifiers from 'utils/getReadOnlyIdentifiers';
 import traverseAst from 'utils/ast/traverse';
 
 export default function transformBody ( bundle, mod, body ) {
-	var identifierReplacements,
-		importedBindings,
-		importedNamespaces,
-		exportNames,
-		shouldExportEarly = {},
-		exportBlock;
+	let identifierReplacements = mod.identifierReplacements;
+	let [ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
 
-	identifierReplacements = mod.identifierReplacements;
-	[ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
-
-	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
+	let exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
 	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
@@ -23,6 +16,8 @@ export default function transformBody ( bundle, mod, body ) {
 			body.remove( x.start, x.next );
 		}
 	});
+
+	let shouldExportEarly = {};
 
 	// Remove export statements
 	mod.exports.forEach( x => {
@@ -105,7 +100,7 @@ export default function transformBody ( bundle, mod, body ) {
 	// (it doesn't have to be the entry module, which could re-export
 	// a binding from another module), we write exports here
 	if ( exportNames ) {
-		exportBlock = [];
+		let exportBlock = [];
 
 		Object.keys( exportNames ).forEach( name => {
 			var exportAs = exportNames[ name ];
