@@ -1,33 +1,20 @@
 import packageResult from 'utils/packageResult';
-import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
-import strictUmdIntro from 'utils/umd/strictUmdIntro';
+import umdIntro from 'utils/umd/umdIntro';
 import requireName from 'utils/umd/requireName';
 import transformBody from './utils/transformBody';
-import getImportSummary from './utils/getImportSummary';
 
 export default function umd ( mod, options ) {
 	requireName( options );
 
-	let [ importPaths, importNames ] = getImportSummary( mod );
-
-	let hasImports = mod.imports.length > 0;
-	let hasExports = mod.exports.length > 0;
-
-	let intro;
-	if ( !hasImports && !hasExports ) {
-		intro = standaloneUmdIntro({
-			amdName: options.amdName,
-		}, mod.body.getIndentString() );
-	} else {
-		intro = strictUmdIntro({
-			hasExports,
-			importPaths,
-			importNames,
-			amdName: options.amdName,
-			absolutePaths: options.absolutePaths,
-			name: options.name
-		}, mod.body.getIndentString() );
-	}
+	let intro = umdIntro({
+		hasExports: mod.exports.length > 0,
+		imports: mod.imports,
+		amdName: options.amdName,
+		absolutePaths: options.absolutePaths,
+		name: options.name,
+		indentStr: mod.body.getIndentString(),
+		strict: true
+	});
 
 	transformBody( mod, mod.body, {
 		intro: intro,
