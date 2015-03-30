@@ -8,7 +8,7 @@ global.assert = assert;
 
 module.exports = function () {
 	return new Promise( function ( fulfil ) {
-		var esperanto, start;
+		var esperanto, start, stats = {};
 
 		describe( 'esperanto.bundle()', function () {
 			var profiles;
@@ -32,7 +32,8 @@ module.exports = function () {
 			});
 
 			after( function () {
-				fulfil( Date.now() - start );
+				stats.total = Date.now() - start;
+				fulfil( stats );
 			});
 
 			describe( 'ES6 module semantics tests from es6-module-transpiler:', function () {
@@ -122,6 +123,14 @@ module.exports = function () {
 									amdName: config.amdName,
 									banner: config.banner,
 									footer: config.footer
+								});
+
+								Object.keys( transpiled.stats ).forEach( function ( key ) {
+									if ( !stats[ key ] ) {
+										stats[ key ] = 0;
+									}
+
+									stats[ key ] += transpiled.stats[ key ];
 								});
 
 								if ( config.error ) {

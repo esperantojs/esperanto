@@ -3,13 +3,16 @@ import MagicString from 'magic-string';
 import findImportsAndExports from 'utils/ast/findImportsAndExports';
 import annotateAst from 'utils/ast/annotate';
 import disallowConflictingImports from '../utils/disallowConflictingImports';
+import { startTimer, endTimer } from '../utils/time';
 
 export default function getModule ( mod ) {
+	mod.stats = {};
 	mod.body = new MagicString( mod.source );
 
 	let toRemove = [];
 
 	try {
+		startTimer();
 		mod.ast = acorn.parse( mod.source, {
 			ecmaVersion: 6,
 			sourceType: 'module',
@@ -20,6 +23,7 @@ export default function getModule ( mod ) {
 				}
 			}
 		});
+		mod.stats.parseTime = endTimer();
 
 		toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 		annotateAst( mod.ast );

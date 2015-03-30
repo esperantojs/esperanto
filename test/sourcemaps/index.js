@@ -6,7 +6,7 @@ var Promise = require( 'sander' ).Promise;
 
 module.exports = function () {
 	return new Promise( function ( fulfil ) {
-		var esperanto, start;
+		var esperanto, start, stats = {};
 
 		describe( 'sourcemap', function () {
 			this.timeout( 20000 );
@@ -23,7 +23,8 @@ module.exports = function () {
 			});
 
 			after( function () {
-				fulfil( Date.now() - start );
+				stats.total = Date.now() - start;
+				fulfil( stats );
 			});
 
 			describe( 'standalone', function () {

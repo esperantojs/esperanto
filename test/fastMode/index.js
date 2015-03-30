@@ -9,7 +9,7 @@ module.exports = function () {
 		var esperanto;
 
 		describe( 'fast mode', function () {
-			var tests, start;
+			var tests, start, stats = {};
 
 			this.timeout( 20000 );
 
@@ -49,12 +49,15 @@ module.exports = function () {
 
 				return require( '../utils/build' )().then( function ( lib ) {
 					esperanto = lib;
+
 					start = Date.now();
 				});
 			});
 
 			after( function () {
-				fulfil( Date.now() - start );
+				stats.total = Date.now() - start;
+
+				fulfil( stats );
 			});
 
 			describe( 'esperanto.toAmd()', function () {
@@ -83,6 +86,14 @@ module.exports = function () {
 								absolutePaths: t.config.absolutePaths,
 								banner: t.config.banner,
 								footer: t.config.footer
+							});
+
+							Object.keys( transpiled.stats ).forEach( function ( key ) {
+								if ( !stats[ key ] ) {
+									stats[ key ] = 0;
+								}
+
+								stats[ key ] += transpiled.stats[ key ];
 							});
 						} catch ( err ) {
 							if ( t.config.expectedError && ~err.message.indexOf( t.config.expectedError ) ) {

@@ -8,7 +8,7 @@ global.assert = assert;
 
 module.exports = function () {
 	return new Promise( function ( fulfil ) {
-		var esperanto, start;
+		var esperanto, start, stats = {};
 
 		describe( 'strict mode', function () {
 			this.timeout( 20000 );
@@ -41,7 +41,8 @@ module.exports = function () {
 			});
 
 			after( function () {
-				fulfil( Date.now() - start );
+				stats.total = Date.now() - start;
+				fulfil( stats );
 			});
 
 			describe( 'esperanto.toAmd()', function () {
@@ -70,6 +71,14 @@ module.exports = function () {
 								banner: t.config.banner,
 								footer: t.config.footer,
 								_evilES3SafeReExports: t.config._evilES3SafeReExports
+							});
+
+							Object.keys( transpiled.stats ).forEach( function ( key ) {
+								if ( !stats[ key ] ) {
+									stats[ key ] = 0;
+								}
+
+								stats[ key ] += transpiled.stats[ key ];
 							});
 						} catch ( err ) {
 							if ( t.config.expectedError && ~err.message.indexOf( t.config.expectedError ) ) {
@@ -113,6 +122,14 @@ module.exports = function () {
 								return sander.readFile( 'es6-module-transpiler-tests/input', dir, file ).then( String ).then( function ( source ) {
 									var transpiled = esperanto.toCjs( source, {
 										strict: true
+									});
+
+									Object.keys( transpiled.stats ).forEach( function ( key ) {
+										if ( !stats[ key ] ) {
+											stats[ key ] = 0;
+										}
+
+										stats[ key ] += transpiled.stats[ key ];
 									});
 
 									return sander.writeFile( 'es6-module-transpiler-tests/output', dir, file, transpiled.code );
