@@ -1,39 +1,22 @@
 import packageResult from 'utils/packageResult';
-import standaloneUmdIntro from 'utils/umd/standaloneUmdIntro';
-import defaultUmdIntro from 'utils/umd/defaultUmdIntro';
+import umdIntro from 'utils/umd/umdIntro';
 import requireName from 'utils/umd/requireName';
-import { getId, getName } from 'utils/mappers';
 
 export default function umd ( bundle, options ) {
 	requireName( options );
 
-	var entry = bundle.entryModule;
+	let entry = bundle.entryModule;
 
-	var hasImports = bundle.externalModules.length > 0;
-	var hasExports = entry.exports.length > 0;
+	let intro = umdIntro({
+		hasExports: entry.exports.length > 0,
+		imports: bundle.externalModules,
+		amdName: options.amdName,
+		name: options.name,
+		indentStr: bundle.body.getIndentString()
+	});
 
-	var intro;
-	if (!hasImports && !hasExports) {
-		intro = standaloneUmdIntro({
-			amdName: options.amdName,
-		}, bundle.body.getIndentString() );
-	} else {
-
-		var defaultName = entry.identifierReplacements.default;
-		if ( defaultName ) {
-			bundle.body.append( `\n\nreturn ${defaultName};` );
-		}
-
-		var importPaths = bundle.externalModules.map( getId );
-		var importNames = bundle.externalModules.map( getName );
-
-		intro = defaultUmdIntro({
-			hasExports,
-			importPaths,
-			importNames,
-			amdName: options.amdName,
-			name: options.name
-		}, bundle.body.getIndentString() );
+	if ( entry.defaultExport ) {
+		bundle.body.append( `\n\nreturn ${entry.identifierReplacements.default};` );
 	}
 
 	bundle.body.indent().prepend( intro ).trimLines().append('\n\n}));');

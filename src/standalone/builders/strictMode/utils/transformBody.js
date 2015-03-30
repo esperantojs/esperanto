@@ -5,18 +5,10 @@ import traverseAst from 'utils/ast/traverse';
 import hasOwnProp from 'utils/hasOwnProp';
 
 export default function transformBody ( mod, body, options ) {
-	var chains,
-		identifierReplacements,
-		importedBindings = {},
-		importedNamespaces = {},
-		exportNames,
-		earlyExports,
-		lateExports;
+	let [ chains, identifierReplacements ] = gatherImports( mod.imports );
+	let exportNames = getExportNames( mod.exports );
 
-	[ chains, identifierReplacements ] = gatherImports( mod.imports );
-	exportNames = getExportNames( mod.exports );
-
-	[ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
+	let [ importedBindings, importedNamespaces ] = getReadOnlyIdentifiers( mod.imports );
 
 	// ensure no conflict with `exports`
 	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
@@ -25,12 +17,6 @@ export default function transformBody ( mod, body, options ) {
 
 	// Remove import statements from the body of the module
 	mod.imports.forEach( x => {
-		if ( x.passthrough ) {
-			// this is an `export { foo } from './bar'` statement -
-			// it will be dealt with in the next section
-			return;
-		}
-
 		body.remove( x.start, x.next );
 	});
 
@@ -71,8 +57,8 @@ export default function transformBody ( mod, body, options ) {
 	});
 
 	// Append export block (this is the same for all module types, unlike imports)
-	earlyExports = [];
-	lateExports = [];
+	let earlyExports = [];
+	let lateExports = [];
 
 	Object.keys( exportNames ).forEach( name => {
 		var exportAs = exportNames[ name ];

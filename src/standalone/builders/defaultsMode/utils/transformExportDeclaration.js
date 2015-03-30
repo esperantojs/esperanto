@@ -40,6 +40,6 @@ export default function transformExportDeclaration ( declaration, body ) {
 	}
 
 	if ( exportedValue ) {
-		body.append( '\nreturn ' + exportedValue + ';' );
+		body.append( `\nreturn ${exportedValue};` );
 	}
 }

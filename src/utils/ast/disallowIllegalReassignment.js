@@ -4,7 +4,7 @@ var bindingMessage = 'Cannot reassign imported binding ',
 	namespaceMessage = 'Cannot reassign imported binding of namespace ';
 
 export default function disallowIllegalReassignment ( node, importedBindings, importedNamespaces, scope ) {
-	var assignee, name, isNamespaceAssignment;
+	let assignee, isNamespaceAssignment;
 
 	if ( node.type === 'AssignmentExpression' ) {
 		assignee = node.left;
@@ -23,7 +23,7 @@ export default function disallowIllegalReassignment ( node, importedBindings, im
 		return; // not assigning to a binding
 	}
 
-	name = assignee.name;
+	let name = assignee.name;
 
 	if ( hasOwnProp.call( isNamespaceAssignment ? importedNamespaces : importedBindings, name ) && !scope.contains( name ) ) {
 		throw new Error( ( isNamespaceAssignment ? namespaceMessage : bindingMessage ) + '`' + name + '`' );

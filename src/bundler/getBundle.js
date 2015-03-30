@@ -7,18 +7,18 @@ import combine from './combine';
 import sander from 'sander';
 import getModule from './getModule';
 
-var Promise = sander.Promise;
+const Promise = sander.Promise;
 
 export default function getBundle ( options ) {
-	var entry = options.entry.replace( /\.js$/, '' ),
-		modules = [],
-		moduleLookup = {},
-		promiseByPath = {},
-		skip = options.skip,
-		names = options.names,
-		base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/',
-		externalModules = [],
-		externalModuleLookup = {};
+	let entry = options.entry.replace( /\.js$/, '' );
+	let modules = [];
+	let moduleLookup = {};
+	let promiseByPath = {};
+	let skip = options.skip;
+	let names = options.names;
+	let base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/';
+	let externalModules = [];
+	let externalModuleLookup = {};
 
 	if ( !entry.indexOf( base ) ) {
 		entry = entry.substring( base.length );
@@ -26,12 +26,10 @@ export default function getBundle ( options ) {
 
 	return resolvePath( base, entry, null ).then( entryPath => {
 		return fetchModule( entry, entryPath ).then( () => {
-			var entryModule, bundle;
-
-			entryModule = moduleLookup[ entry ];
+			let entryModule = moduleLookup[ entry ];
 			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
-			bundle = {
+			let bundle = {
 				entry,
 				entryModule,
 				base,
@@ -70,7 +68,7 @@ export default function getBundle ( options ) {
 				}
 
 				module = getModule({
-					source: source,
+					source,
 					id: moduleId,
 					relativePath: path.relative( base, modulePath ),
 					path: modulePath
@@ -125,9 +123,7 @@ export default function getBundle ( options ) {
 
 function resolvePath ( base, moduleId, importerPath, resolver ) {
 	return tryPath( path.resolve( base, moduleId + '.js' ) )
-		.catch( function () {
-			return tryPath( path.resolve( base, moduleId, 'index.js' ) );
-		})
+		.catch( () => tryPath( path.resolve( base, moduleId, 'index.js' ) ) )
 		.catch( function ( err ) {
 			if ( resolver ) {
 				return resolver( moduleId, importerPath );
@@ -138,9 +134,7 @@ function resolvePath ( base, moduleId, importerPath, resolver ) {
 }
 
 function tryPath ( path ) {
-	return sander.stat( path ).then( function () {
-		return path;
-	});
+	return sander.stat( path ).then( () => path );
 }
 
 function isThenable ( obj ) {

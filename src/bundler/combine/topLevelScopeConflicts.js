@@ -5,11 +5,12 @@ import { getName } from 'utils/mappers';
 import getRenamedImports from './getRenamedImports';
 
 export default function topLevelScopeConflicts ( bundle ) {
-	var conflicts = {}, inBundle = {};
-	var importNames = bundle.externalModules.map( getName );
+	let conflicts = {};
+	let inBundle = {};
+	let importNames = bundle.externalModules.map( getName );
 
 	bundle.modules.forEach( mod => {
-		var names = builtins
+		let names = builtins
 
 			// all top defined identifiers are in top scope
 			.concat( mod.ast._topLevelNames )

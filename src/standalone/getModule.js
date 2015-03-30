@@ -52,12 +52,12 @@ export default function getStandaloneModule ( options ) {
 }
 
 function determineImportNames ( imports, userFn, usedNames ) {
-	var nameById = {}, inferredNames = {};
-
-	usedNames = usedNames || {};
+	let nameById = {};
+	let inferredNames = {};
 
 	imports.forEach( x => {
-		var moduleId, parts, i, prefix = '', name, candidate;
+		let moduleId = x.path;
+		let name;
 
 		moduleId = x.path;
 
@@ -78,7 +78,10 @@ function determineImportNames ( imports, userFn, usedNames ) {
 		}
 
 		else {
-			parts = splitPath( moduleId );
+			let parts = splitPath( moduleId );
+			let i;
+			let prefix = '';
+			let candidate;
 
 			do {
 				i = parts.length;

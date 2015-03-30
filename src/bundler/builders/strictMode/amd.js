@@ -1,19 +1,13 @@
-import template from 'utils/template';
-import packageResult from 'utils/packageResult';
-import { getId, getName, quote } from 'utils/mappers';
+import packageResult from '../../../utils/packageResult';
+import amdIntro from '../../../utils/amd/amdIntro';
 import getExportBlock from './utils/getExportBlock';
 
-var introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
-
 export default function amd ( bundle, options ) {
-	var externalDefaults = bundle.externalModules.filter( needsDefault );
-	var entry = bundle.entryModule;
-
-	var importIds = bundle.externalModules.map( getId );
-	var importNames = bundle.externalModules.map( getName );
+	let externalDefaults = bundle.externalModules.filter( needsDefault );
+	let entry = bundle.entryModule;
 
 	if ( externalDefaults.length ) {
-		var defaultsBlock = externalDefaults.map( x => {
+		let defaultsBlock = externalDefaults.map( x => {
 			// Case 1: default is used, and named is not
 			if ( !x.needsNamed ) {
 				return `${x.name} = ('default' in ${x.name} ? ${x.name}['default'] : ${x.name});`;
@@ -26,20 +20,16 @@ export default function amd ( bundle, options ) {
 		bundle.body.prepend( defaultsBlock + '\n\n' );
 	}
 
-	if ( entry.exports.length ) {
-		importIds.unshift( 'exports' );
-		importNames.unshift( 'exports' );
-
-		if ( entry.defaultExport ) {
-			bundle.body.append( '\n\n' + getExportBlock( entry ) );
-		}
+	if ( entry.defaultExport ) {
+		bundle.body.append( '\n\n' + getExportBlock( entry ) );
 	}
 
-	var intro = introTemplate({
-		amdName: options.amdName ? `${quote(options.amdName)}, ` : '',
-		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
-	}).replace( /\t/g, bundle.body.getIndentString() );
+	let intro = amdIntro({
+		name: options.amdName,
+		imports: bundle.externalModules,
+		hasExports: entry.exports.length,
+		indentStr: bundle.body.getIndentString()
+	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( bundle, bundle.body, options, 'toAmd', true );

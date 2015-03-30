@@ -1,7 +1,7 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
 export default function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
-	var assignee, name, exportAs;
+	let assignee;
 
 	if ( node.type === 'AssignmentExpression' ) {
 		assignee = node.left;
@@ -15,18 +15,17 @@ export default function rewriteExportAssignments ( body, node, exports, scope, c
 		return;
 	}
 
-	name = assignee.name;
+	let name = assignee.name;
 
 	if ( scope.contains( name, true ) ) {
 		return; // shadows an export
 	}
 
-	if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
+	if ( exports && hasOwnProp.call( exports, name ) ) {
+		let exportAs = exports[ name ];
+
 		if ( !!capturedUpdates ) {
-			capturedUpdates.push({
-				name: name,
-				exportAs: exportAs
-			});
+			capturedUpdates.push({ name, exportAs });
 			return;
 		}
 

@@ -7,12 +7,12 @@
 import walk from './walk';
 import { getName } from '../mappers';
 
-var Scope = function ( options ) {
+function Scope ( options ) {
 	options = options || {};
 
 	this.parent = options.parent;
 	this.names = options.params || [];
-};
+}
 
 Scope.prototype = {
 	add: function ( name ) {
@@ -37,9 +37,13 @@ Scope.prototype = {
 };
 
 export default function annotateAst ( ast ) {
-	var scope = new Scope(), blockScope = new Scope(), declared = {}, topLevelFunctionNames = [], templateLiteralRanges = [];
+	let scope = new Scope();
+	let blockScope = new Scope();
+	let declared = {};
+	let topLevelFunctionNames = [];
+	let templateLiteralRanges = [];
 
-	var envDepth = 0;
+	let envDepth = 0;
 
 	walk( ast, {
 		enter ( node ) {
@@ -55,7 +59,7 @@ export default function annotateAst ( ast ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':
 
-					envDepth++;
+					envDepth += 1;
 
 					// fallthrough
 
@@ -124,7 +128,7 @@ export default function annotateAst ( ast ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':
 
-					envDepth--;
+					envDepth -= 1;
 
 					// fallthrough
 
