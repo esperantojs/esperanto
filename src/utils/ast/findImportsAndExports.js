@@ -212,8 +212,11 @@ function processExport ( node, source ) {
 	else {
 		result.type = 'named';
 		result.specifiers = node.specifiers.map( s => {
-			return { name: s.local.name };
-		}); // TODO as?
+			return {
+				name: s.local.name,
+				as: s.exported.name
+			};
+		});
 	}
 
 	return result;

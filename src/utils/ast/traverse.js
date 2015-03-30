@@ -70,5 +70,5 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 }
 
 function exportCapturedUpdate ( c ) {
-	return ` exports.${c.name} = ${c.exportAs};`;
+	return ` exports.${c.exportAs} = ${c.name};`;
 }
