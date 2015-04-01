@@ -35,6 +35,13 @@ module.exports = function () {
 				var config = require( '../samples/' + dir + '/_config' ),
 					source = sander.readFileSync( __dirname, '../samples', dir, 'source.js' ).toString();
 
+				if ( config.ast ) {
+					source = {
+						code: source,
+						ast: config.ast
+					};
+				}
+
 				return {
 					id: dir,
 					config: config,
