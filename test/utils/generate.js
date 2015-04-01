@@ -37,6 +37,13 @@ require( './build' )().then( function ( esperanto ) {
 
 				if ( config.strict ) return;
 
+				if ( config.ast ) {
+					source = {
+						code: source,
+						ast: config.ast
+					};
+				}
+
 				promises = profiles.map( function ( profile ) {
 					var transpiled = esperanto[ profile.method ]( source, {
 						name: profile.options && profile.options.name,
@@ -79,6 +86,13 @@ require( './build' )().then( function ( esperanto ) {
 			return sander.readFile( '../samples', sample, 'source.js' ).then( String ).then( function ( source ) {
 				var config = require( '../samples/' + sample + '/_config' ),
 					promises;
+
+				if ( config.ast ) {
+					source = {
+						code: source,
+						ast: config.ast
+					};
+				}
 
 				promises = profiles.map( function ( profile ) {
 					var transpiled = esperanto[ profile.method ]( source, {
@@ -137,7 +151,8 @@ require( './build' )().then( function ( esperanto ) {
 					skip: config.skip,
 					names: config.names,
 					transform: config.transform,
-					resolvePath: config.resolvePath
+					resolvePath: config.resolvePath,
+					modules: config.modules
 				}).then( function ( bundle ) {
 					try {
 						var transpiled = bundle[ profile.method ]({
