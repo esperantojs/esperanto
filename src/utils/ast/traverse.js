@@ -37,7 +37,7 @@ export default function traverseAst ( ast, body, identifierReplacements, importe
 			// Rewrite assignments to exports inside functions, to keep bindings live.
 			// This call may mutate `capturedUpdates`, which is used elsewhere
 			if ( scope !== ast._scope ) {
-				rewriteExportAssignments( body, node, exportNames, scope, capturedUpdates );
+				rewriteExportAssignments( body, node, parent, exportNames, scope, capturedUpdates );
 			}
 
 			if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
