@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.25
+
+* Reliable updating of exported expressions ([#142](https://github.com/esperantojs/esperanto/issues/142))
+
 ## 0.6.24
 
 * Renamed exports (`export { foo as bar }`) works
