@@ -7,6 +7,7 @@ import moduleBuilders from 'standalone/builders';
 import bundleBuilders from 'bundler/builders';
 import concat from 'bundler/builders/concat';
 import { getName } from 'utils/mappers';
+import { startTimer, endTimer } from './utils/time';
 
 let deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
 let alreadyWarned = false;
@@ -31,6 +32,8 @@ function transpileMethod ( format ) {
 
 		let builder;
 
+		startTimer( 'build' );
+
 		if ( !options.strict ) {
 			// ensure there are no named imports/exports. TODO link to a wiki page...
 			if ( hasNamedImports( mod ) || hasNamedExports( mod ) ) {
@@ -42,7 +45,9 @@ function transpileMethod ( format ) {
 			builder = moduleBuilders.strictMode[ format ];
 		}
 
-		return builder( mod, options );
+		let transpiled = builder( mod, options );
+		transpiled.stats.build = endTimer( 'build' );
+		return transpiled;
 	};
 }
 
@@ -92,7 +97,11 @@ export default {
 					builder = bundleBuilders.strictMode[ format ];
 				}
 
-				return builder( bundle, options );
+				startTimer( 'build' );
+				let transpiled = builder( bundle, options );
+				transpiled.stats.build = endTimer( 'build' );
+
+				return transpiled;
 			}
 		});
 	}

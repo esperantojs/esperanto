@@ -1,16 +1,20 @@
 import walk from './ast/walk';
 import { splitPath } from 'utils/sanitize';
+import { startTimer, endTimer } from 'utils/time';
 
 const ABSOLUTE_PATH = /^(?:[A-Z]:)?[\/\\]/i;
 
 let warned = {};
 
 export default function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
+	startTimer();
+
 	// wrap output
 	if ( options.banner ) body.prepend( options.banner );
 	if ( options.footer ) body.append( options.footer );
 
 	let code = body.toString();
+
 	let map;
 
 	if ( !!options.sourceMap ) {
@@ -51,9 +55,12 @@ export default function packageResult ( bundleOrModule, body, options, methodNam
 		map = null;
 	}
 
+	bundleOrModule.stats.packageResult = endTimer();
+
 	return {
 		code,
 		map,
+		stats: bundleOrModule.stats,
 		toString () {
 			if ( !warned[ methodName ] ) {
 				console.log( `Warning: esperanto.${methodName}() returns an object with a 'code' property. You should use this instead of using the returned value directly` );

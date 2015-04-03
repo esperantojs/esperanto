@@ -6,25 +6,41 @@ import getUnscopedNames from 'utils/ast/getUnscopedNames';
 import disallowConflictingImports from '../utils/disallowConflictingImports';
 import hasOwnProp from 'utils/hasOwnProp';
 import { default as sanitize, splitPath } from 'utils/sanitize';
+import { startTimer, endTimer } from 'utils/time';
 
 const SOURCEMAPPINGURL_REGEX = /^# sourceMappingURL=/;
 
 export default function getStandaloneModule ( options ) {
-	let toRemove = [];
+	startTimer( 'analyse' );
 
 	let mod = {
-		body: new MagicString( options.source ),
-		ast: acorn.parse( options.source, {
-			ecmaVersion: 6,
-			sourceType: 'module',
-			onComment ( block, text, start, end ) {
-				// sourceMappingURL comments should be removed
-				if ( !block && SOURCEMAPPINGURL_REGEX.test( text ) ) {
-					toRemove.push({ start, end });
-				}
-			}
-		})
+		body: null,
+		ast: null,
+		imports: null,
+		exports: null,
+		stats: null
 	};
+
+	mod.stats = {
+		parseTime: null
+	};
+
+	let toRemove = [];
+
+	mod.body = new MagicString( options.source );
+
+	startTimer();
+	mod.ast = acorn.parse( options.source, {
+		ecmaVersion: 6,
+		sourceType: 'module',
+		onComment ( block, text, start, end ) {
+			// sourceMappingURL comments should be removed
+			if ( !block && SOURCEMAPPINGURL_REGEX.test( text ) ) {
+				toRemove.push({ start, end });
+			}
+		}
+	});
+	mod.stats.parseTime = endTimer();
 
 	toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 
@@ -38,7 +54,9 @@ export default function getStandaloneModule ( options ) {
 	let conflicts = {};
 
 	if ( options.strict ) {
+		startTimer();
 		annotateAst( mod.ast );
+		mod.stats.annotateAst = endTimer();
 
 		// TODO there's probably an easier way to get this array
 		Object.keys( mod.ast._declared ).concat( getUnscopedNames( mod ) ).forEach( n => {
@@ -46,7 +64,11 @@ export default function getStandaloneModule ( options ) {
 		});
 	}
 
+	startTimer();
 	determineImportNames( imports, options.getModuleName, conflicts );
+	mod.stats.determineImportNames = endTimer();
+
+	mod.stats.analyse = endTimer( 'analyse' );
 
 	return mod;
 }

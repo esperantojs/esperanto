@@ -6,6 +6,7 @@ import resolveChains from './utils/resolveChains';
 import combine from './combine';
 import sander from 'sander';
 import getModule from './getModule';
+import { startTimer, endTimer } from '../utils/time';
 
 const Promise = sander.Promise;
 
@@ -19,6 +20,11 @@ export default function getBundle ( options ) {
 	let base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/';
 	let externalModules = [];
 	let externalModuleLookup = {};
+
+	let stats = {
+		parseTime: 0,
+		analyse: 0
+	};
 
 	if ( !entry.indexOf( base ) ) {
 		entry = entry.substring( base.length );
@@ -39,10 +45,13 @@ export default function getBundle ( options ) {
 				externalModuleLookup,
 				skip,
 				names,
+				stats,
 				chains: resolveChains( modules, moduleLookup )
 			};
 
+			startTimer( 'combine' );
 			combine( bundle );
+			bundle.stats.combine = endTimer( 'combine' );
 
 			return bundle;
 		});
@@ -67,12 +76,17 @@ export default function getBundle ( options ) {
 					}
 				}
 
+				startTimer( 'analyse' );
+
 				module = getModule({
 					source,
 					id: moduleId,
 					relativePath: path.relative( base, modulePath ),
 					path: modulePath
 				});
+
+				stats.parseTime += module.stats.parseTime;
+				stats.analyse += endTimer( 'analyse' );
 
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
