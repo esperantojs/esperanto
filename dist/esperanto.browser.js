@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.25 - 2015-04-02
+	esperanto.js v0.6.26 - 2015-04-03
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -952,6 +952,8 @@
 	}
 
 	function visit ( node, parent, enter, leave ) {
+		if ( !node ) return;
+
 		if ( enter ) {
 			ast_walk__context.shouldSkip = false;
 			enter.call( ast_walk__context, node, parent );

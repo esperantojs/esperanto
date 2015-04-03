@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.26
+
+* AST walker handles sparse arrays ([#144](https://github.com/esperantojs/esperanto/issues/144))
+
 ## 0.6.25
 
 * Reliable updating of exported expressions ([#142](https://github.com/esperantojs/esperanto/issues/142))
