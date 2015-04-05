@@ -1,5 +1,18 @@
 # changelog
 
+## 0.6.26
+
+* AST walker handles sparse arrays ([#144](https://github.com/esperantojs/esperanto/issues/144))
+
+## 0.6.25
+
+* Reliable updating of exported expressions ([#142](https://github.com/esperantojs/esperanto/issues/142))
+
+## 0.6.24
+
+* Renamed exports (`export { foo as bar }`) works
+* Internal tidy up/refactoring, resulting in smaller library
+
 ## 0.6.23
 
 * Function arguments are considered when naming imports to avoid conflicts ([#119](https://github.com/esperantojs/esperanto/issues/119))

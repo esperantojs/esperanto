@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.23 - 2015-03-29
+	esperanto.js v0.6.26 - 2015-04-03
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -9,10 +9,11 @@
 
 var acorn = require('acorn');
 var MagicString = require('magic-string');
-var path = require('path');
+var _path = require('path');
 var sander = require('sander');
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
+var utils_hasOwnProp = hasOwnProp;
 
 function hasNamedImports ( mod ) {
 	var i = mod.imports.length;
@@ -38,27 +39,29 @@ function walk ( ast, leave) {var enter = leave.enter, leave = leave.leave;
 	visit( ast, null, enter, leave );
 }
 
-var walk__context = {
-	skip: function()  {return walk__context.shouldSkip = true}
+var ast_walk__context = {
+	skip: function()  {return ast_walk__context.shouldSkip = true}
 };
 
-var walk__childKeys = {};
+var ast_walk__childKeys = {};
 
-var walk__toString = Object.prototype.toString;
+var ast_walk__toString = Object.prototype.toString;
 
 function isArray ( thing ) {
-	return walk__toString.call( thing ) === '[object Array]';
+	return ast_walk__toString.call( thing ) === '[object Array]';
 }
 
 function visit ( node, parent, enter, leave ) {
+	if ( !node ) return;
+
 	if ( enter ) {
-		walk__context.shouldSkip = false;
-		enter.call( walk__context, node, parent );
-		if ( walk__context.shouldSkip ) return;
+		ast_walk__context.shouldSkip = false;
+		enter.call( ast_walk__context, node, parent );
+		if ( ast_walk__context.shouldSkip ) return;
 	}
 
-	var keys = walk__childKeys[ node.type ] || (
-		walk__childKeys[ node.type ] = Object.keys( node ).filter( function(key ) {return typeof node[ key ] === 'object'} )
+	var keys = ast_walk__childKeys[ node.type ] || (
+		ast_walk__childKeys[ node.type ] = Object.keys( node ).filter( function(key ) {return typeof node[ key ] === 'object'} )
 	);
 
 	var key, value, i, j;
@@ -98,14 +101,14 @@ function quote ( str ) {
 }
 
 function req ( path ) {
-	return 'require(' + quote(path) + ')';
+	return (("require(" + (quote(path))) + ")");
 }
 
 function globalify ( name ) {
   	if ( /^__dep\d+__$/.test( name ) ) {
 		return 'undefined';
 	} else {
-		return 'global.' + name;
+		return ("global." + name);
 	}
 }
 
@@ -115,12 +118,12 @@ function globalify ( name ) {
 	identifiers need to be rewritten to avoid collisions
 */
 
-var Scope = function ( options ) {
+function Scope ( options ) {
 	options = options || {};
 
 	this.parent = options.parent;
 	this.names = options.params || [];
-};
+}
 
 Scope.prototype = {
 	add: function ( name ) {
@@ -145,7 +148,11 @@ Scope.prototype = {
 };
 
 function annotateAst ( ast ) {
-	var scope = new Scope(), blockScope = new Scope(), declared = {}, topLevelFunctionNames = [], templateLiteralRanges = [];
+	var scope = new Scope();
+	var blockScope = new Scope();
+	var declared = {};
+	var topLevelFunctionNames = [];
+	var templateLiteralRanges = [];
 
 	var envDepth = 0;
 
@@ -163,7 +170,7 @@ function annotateAst ( ast ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':
 
-					envDepth++;
+					envDepth += 1;
 
 					// fallthrough
 
@@ -232,7 +239,7 @@ function annotateAst ( ast ) {
 				case 'FunctionExpression':
 				case 'FunctionDeclaration':
 
-					envDepth--;
+					envDepth -= 1;
 
 					// fallthrough
 
@@ -485,8 +492,11 @@ function processExport ( node, source ) {
 	else {
 		result.type = 'named';
 		result.specifiers = node.specifiers.map( function(s ) {
-			return { name: s.local.name };
-		}); // TODO as?
+			return {
+				name: s.local.name,
+				as: s.exported.name
+			};
+		});
 	}
 
 	return result;
@@ -504,7 +514,7 @@ function getUnscopedNames ( mod ) {
 				});
 			});
 		}
-		return hasOwnProp.call( importedNames, name );
+		return utils_hasOwnProp.call( importedNames, name );
 	}
 
 	walk( mod.ast, {
@@ -556,7 +566,7 @@ function disallowConflictingImports ( imports ) {
 	}
 
 	function checkName ( name ) {
-		if ( hasOwnProp.call( usedNames, name ) ) {
+		if ( utils_hasOwnProp.call( usedNames, name ) ) {
 			throw new SyntaxError( (("Duplicated import ('" + name) + "')") );
 		}
 
@@ -564,7 +574,9 @@ function disallowConflictingImports ( imports ) {
 	}
 }
 
-var reserved = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
+var RESERVED = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split( ' ' );
+var INVALID_CHAR = /[^a-zA-Z0-9_$]/g;
+var INVALID_LEADING_CHAR = /[^a-zA-Z_$]/;
 
 /**
  * Generates a sanitized (i.e. valid identifier) name from a module ID
@@ -572,13 +584,10 @@ var reserved = 'break case class catch const continue debugger default delete do
  * @returns {string}
  */
 function sanitize ( name ) {
-	name = name.replace( /[^a-zA-Z0-9_$]/g, '_' );
-	if ( /[^a-zA-Z_$]/.test( name[0] ) ) {
-		name = '_' + name;
-	}
+	name = name.replace( INVALID_CHAR, '_' );
 
-	if ( ~reserved.indexOf( name ) ) {
-		name = '_' + name;
+	if ( INVALID_LEADING_CHAR.test( name[0] ) || ~RESERVED.indexOf( name ) ) {
+		name = ("_" + name);
 	}
 
 	return name;
@@ -634,17 +643,17 @@ function getStandaloneModule ( options ) {
 }
 
 function determineImportNames ( imports, userFn, usedNames ) {
-	var nameById = {}, inferredNames = {};
-
-	usedNames = usedNames || {};
+	var nameById = {};
+	var inferredNames = {};
 
 	imports.forEach( function(x ) {
-		var moduleId, parts, i, prefix = '', name, candidate;
+		var moduleId = x.path;
+		var name;
 
 		moduleId = x.path;
 
 		// use existing value
-		if ( hasOwnProp.call( nameById, moduleId ) ) {
+		if ( utils_hasOwnProp.call( nameById, moduleId ) ) {
 			x.name = nameById[ moduleId ];
 			return;
 		}
@@ -653,21 +662,24 @@ function determineImportNames ( imports, userFn, usedNames ) {
 		if ( userFn && ( name = userFn( moduleId ) ) ) {
 			name = sanitize( name );
 
-			if ( hasOwnProp.call( usedNames, name ) ) {
+			if ( utils_hasOwnProp.call( usedNames, name ) ) {
 				// TODO write a test for this
 				throw new Error( (("Naming collision: module " + moduleId) + (" cannot be called " + name) + "") );
 			}
 		}
 
 		else {
-			parts = splitPath( moduleId );
+			var parts = splitPath( moduleId );
+			var i;
+			var prefix = '';
+			var candidate;
 
 			do {
 				i = parts.length;
 				while ( i-- > 0 ) {
 					candidate = prefix + sanitize( parts.slice( i ).join( '__' ) );
 
-					if ( !hasOwnProp.call( usedNames, candidate ) ) {
+					if ( !utils_hasOwnProp.call( usedNames, candidate ) ) {
 						name = candidate;
 						break;
 					}
@@ -686,13 +698,13 @@ function determineImportNames ( imports, userFn, usedNames ) {
 	// use inferred names for default imports, wherever they
 	// don't clash with path-based names
 	imports.forEach( function(x ) {
-		if ( x.as && !hasOwnProp.call( usedNames, x.as ) ) {
+		if ( x.as && !utils_hasOwnProp.call( usedNames, x.as ) ) {
 			inferredNames[ x.path ] = x.as;
 		}
 	});
 
 	imports.forEach( function(x ) {
-		if ( hasOwnProp.call( inferredNames, x.path ) ) {
+		if ( utils_hasOwnProp.call( inferredNames, x.path ) ) {
 			x.name = inferredNames[ x.path ];
 		}
 	});
@@ -740,7 +752,7 @@ function sortModules ( entry, moduleLookup ) {
 	function visit ( mod ) {
 		// ignore external modules, and modules we've
 		// already included
-		if ( !mod || hasOwnProp.call( seen, mod.id ) ) {
+		if ( !mod || utils_hasOwnProp.call( seen, mod.id ) ) {
 			return;
 		}
 
@@ -770,14 +782,14 @@ function resolveChains ( modules, moduleLookup ) {
 				if ( s.isBatch ) {
 					// if this is an internal module, we need to tell that module that
 					// it needs to export an object full of getters
-					if ( hasOwnProp.call( moduleLookup, x.id ) ) {
+					if ( utils_hasOwnProp.call( moduleLookup, x.id ) ) {
 						moduleLookup[ x.id ]._exportsNamespace = true;
 					}
 
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = x.id + '@' + s.name;
+				origin[ s.as ] = (("" + (x.id)) + ("@" + (s.name)) + "");
 			});
 		});
 
@@ -785,8 +797,8 @@ function resolveChains ( modules, moduleLookup ) {
 			if ( !x.specifiers ) return;
 
 			x.specifiers.forEach( function(s ) {
-				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ mod.id + '@' + s.name ] = origin[ s.name ];
+				if ( utils_hasOwnProp.call( origin, s.name ) ) {
+					chains[ (("" + (mod.id)) + ("@" + (s.name)) + "") ] = origin[ s.name ];
 				}
 			});
 		});
@@ -796,7 +808,7 @@ function resolveChains ( modules, moduleLookup ) {
 }
 
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
-// we add `exports` to this list, to avoid conflicst
+// we add `exports` to this list, to avoid conflicts
 var builtins = 'Array ArrayBuffer DataView Date Error EvalError Float32Array Float64Array Function Generator GeneratorFunction Infinity Int16Array Int32Array Int8Array InternalError Intl Iterator JSON Map Math NaN Number Object ParallelArray Promise Proxy RangeError ReferenceError Reflect RegExp Set StopIteration String Symbol SyntaxError TypeError TypedArray URIError Uint16Array Uint32Array Uint8Array Uint8ClampedArray WeakMap WeakSet decodeURI decodeURIComponent encodeURI encodeURIComponent escape eval exports isFinite isNaN null parseFloat parseInt undefined unescape uneval'.split( ' ' );
 
 function getUniqueNames ( bundle ) {
@@ -823,7 +835,7 @@ function getUniqueNames ( bundle ) {
 	// infer names from default imports - e.g. with `import _ from './utils'`,
 	// use '_' instead of generating a name from 'utils'
 	function inferName ( x ) {
-		if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
+		if ( x.isDefault && !utils_hasOwnProp.call( names, x.id ) && !utils_hasOwnProp.call( used, x.as ) ) {
 			names[ x.id ] = x.as;
 			used[ x.as ] = true;
 		}
@@ -835,26 +847,25 @@ function getUniqueNames ( bundle ) {
 	// for the rest, make names as compact as possible without
 	// introducing conflicts
 	modules.concat( externalModules ).forEach( function(mod ) {
-		var parts, i, name;
-
 		// is this already named?
-		if ( hasOwnProp.call( names, mod.id ) ) {
+		if ( utils_hasOwnProp.call( names, mod.id ) ) {
 			mod.name = names[ mod.id ];
 			return;
 		}
 
-		parts = splitPath( mod.id );
+		var name;
+		var parts = splitPath( mod.id );
+		var i = parts.length;
 
-		i = parts.length;
 		while ( i-- ) {
 			name = sanitize( parts.slice( i ).join( '_' ) );
 
-			if ( !hasOwnProp.call( used, name ) ) {
+			if ( !utils_hasOwnProp.call( used, name ) ) {
 				break;
 			}
 		}
 
-		while ( hasOwnProp.call( used, name ) ) {
+		while ( utils_hasOwnProp.call( used, name ) ) {
 			name = '_' + name;
 		}
 
@@ -902,7 +913,8 @@ function getRenamedImports ( mod ) {
 }
 
 function topLevelScopeConflicts ( bundle ) {
-	var conflicts = {}, inBundle = {};
+	var conflicts = {};
+	var inBundle = {};
 	var importNames = bundle.externalModules.map( getName );
 
 	bundle.modules.forEach( function(mod ) {
@@ -924,7 +936,7 @@ function topLevelScopeConflicts ( bundle ) {
 
 		// merge this module's top scope with bundle top scope
 		names.forEach( function(name ) {
-			if ( hasOwnProp.call( inBundle, name ) ) {
+			if ( utils_hasOwnProp.call( inBundle, name ) ) {
 				conflicts[ name ] = true;
 			} else {
 				inBundle[ name ] = true;
@@ -948,11 +960,11 @@ function populateIdentifierReplacements ( bundle ) {
 			var result;
 
 			if ( x.hasDeclaration && x.name ) {
-				result = hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, x.name ) ?
+				result = utils_hasOwnProp.call( conflicts, x.name ) || otherModulesDeclare( mod, x.name ) ?
 					(("" + (mod.name)) + ("__" + (x.name)) + "") :
 					x.name;
 			} else {
-				result = hasOwnProp.call( conflicts, mod.name ) || ( x.value !== mod.name && ~mod.ast._topLevelNames.indexOf( mod.name )) || otherModulesDeclare( mod, mod.name ) ?
+				result = utils_hasOwnProp.call( conflicts, mod.name ) || ( x.value !== mod.name && ~mod.ast._topLevelNames.indexOf( mod.name )) || otherModulesDeclare( mod, mod.name ) ?
 					(("" + (mod.name)) + "__default") :
 					mod.name;
 			}
@@ -964,13 +976,11 @@ function populateIdentifierReplacements ( bundle ) {
 	// then determine which existing identifiers
 	// need to be replaced
 	bundle.modules.forEach( function(mod ) {
-		var moduleIdentifiers;
-
-		moduleIdentifiers = mod.identifierReplacements;
+		var moduleIdentifiers = mod.identifierReplacements;
 
 		mod.ast._topLevelNames.forEach( function(n ) {
-			moduleIdentifiers[n] = hasOwnProp.call( conflicts, n ) ?
-				mod.name + '__' + n :
+			moduleIdentifiers[n] = utils_hasOwnProp.call( conflicts, n ) ?
+				(("" + (mod.name)) + ("__" + n) + "") :
 				n;
 		});
 
@@ -981,7 +991,7 @@ function populateIdentifierReplacements ( bundle ) {
 				return;
 			}
 
-			externalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id ) && bundle.externalModuleLookup[ x.id ];
+			externalModule = utils_hasOwnProp.call( bundle.externalModuleLookup, x.id ) && bundle.externalModuleLookup[ x.id ];
 
 			x.specifiers.forEach( function(s ) {
 				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
@@ -996,8 +1006,8 @@ function populateIdentifierReplacements ( bundle ) {
 					specifierName = s.name;
 
 					// If this is a chained import, get the origin
-					hash = moduleId + '@' + specifierName;
-					while ( hasOwnProp.call( bundle.chains, hash ) ) {
+					hash = (("" + moduleId) + ("@" + specifierName) + "");
+					while ( utils_hasOwnProp.call( bundle.chains, hash ) ) {
 						hash = bundle.chains[ hash ];
 						isChained = true;
 					}
@@ -1015,7 +1025,7 @@ function populateIdentifierReplacements ( bundle ) {
 						// if it's an external module, always use __default if the
 						// bundle also uses named imports
 						if ( !!externalModule ) {
-							replacement = externalModule.needsNamed ? moduleName + '__default' : moduleName;
+							replacement = externalModule.needsNamed ? (("" + moduleName) + "__default") : moduleName;
 						}
 
 						// TODO We currently need to check for the existence of `mod`, because modules
@@ -1025,8 +1035,8 @@ function populateIdentifierReplacements ( bundle ) {
 							replacement = mod.identifierReplacements.default;
 						}
 					} else if ( !externalModule ) {
-						replacement = hasOwnProp.call( conflicts, specifierName ) ?
-							moduleName + '__' + specifierName :
+						replacement = utils_hasOwnProp.call( conflicts, specifierName ) ?
+							(("" + moduleName) + ("__" + specifierName) + "") :
 							specifierName;
 					} else {
 						replacement = moduleName + '.' + specifierName;
@@ -1051,7 +1061,7 @@ function populateIdentifierReplacements ( bundle ) {
 				continue;
 			}
 
-			if ( hasOwnProp.call( otherMod.ast._declared, replacement ) ) {
+			if ( utils_hasOwnProp.call( otherMod.ast._declared, replacement ) ) {
 				return true;
 			}
 		}
@@ -1062,29 +1072,22 @@ function resolveExports ( bundle ) {
 	var bundleExports = {};
 
 	bundle.entryModule.exports.forEach( function(x ) {
-		var name;
-
 		if ( x.specifiers ) {
 			x.specifiers.forEach( function(s ) {
-				var hash = bundle.entryModule.id + '@' + s.name,
-					split,
-					moduleId,
-					name;
+				var hash = (("" + (bundle.entryModule.id)) + ("@" + (s.name)) + "");
 
 				while ( bundle.chains[ hash ] ) {
 					hash = bundle.chains[ hash ];
 				}
 
-				split = hash.split( '@' );
-				moduleId = split[0];
-				name = split[1];
+				var moduleId = (name = hash.split( '@' ))[0], name = name[1];
 
 				addExport( moduleId, name, s.name );
 			});
 		}
 
-		else if ( !x.isDefault && ( name = x.name ) ) {
-			addExport( bundle.entry, name, name );
+		else if ( !x.isDefault && x.name ) {
+			addExport( bundle.entry, x.name, x.name );
 		}
 	});
 
@@ -1103,7 +1106,7 @@ function resolveExports ( bundle ) {
  * Scans an array of imports, and determines which identifiers
    are readonly, and which cannot be assigned to. For example
    you cannot `import foo from 'foo'` then do `foo = 42`, nor
-   can you `import * from 'foo'` then do `foo.answer = 42`
+   can you `import * as foo from 'foo'` then do `foo.answer = 42`
  * @param {array} imports - the array of imports
  * @returns {array} [ importedBindings, importedNamespaces ]
  */
@@ -1129,7 +1132,7 @@ var bindingMessage = 'Cannot reassign imported binding ',
 	namespaceMessage = 'Cannot reassign imported binding of namespace ';
 
 function disallowIllegalReassignment ( node, importedBindings, importedNamespaces, scope ) {
-	var assignee, name, isNamespaceAssignment;
+	var assignee, isNamespaceAssignment;
 
 	if ( node.type === 'AssignmentExpression' ) {
 		assignee = node.left;
@@ -1148,16 +1151,16 @@ function disallowIllegalReassignment ( node, importedBindings, importedNamespace
 		return; // not assigning to a binding
 	}
 
-	name = assignee.name;
+	var name = assignee.name;
 
-	if ( hasOwnProp.call( isNamespaceAssignment ? importedNamespaces : importedBindings, name ) && !scope.contains( name ) ) {
+	if ( utils_hasOwnProp.call( isNamespaceAssignment ? importedNamespaces : importedBindings, name ) && !scope.contains( name ) ) {
 		throw new Error( ( isNamespaceAssignment ? namespaceMessage : bindingMessage ) + '`' + name + '`' );
 	}
 }
 
 function replaceIdentifiers ( body, node, identifierReplacements, scope ) {
 	var name = node.name;
-	var replacement = hasOwnProp.call( identifierReplacements, name ) && identifierReplacements[ name ];
+	var replacement = utils_hasOwnProp.call( identifierReplacements, name ) && identifierReplacements[ name ];
 
 	// TODO unchanged identifiers shouldn't have got this far -
 	// remove the `replacement !== name` safeguard once that's the case
@@ -1167,8 +1170,8 @@ function replaceIdentifiers ( body, node, identifierReplacements, scope ) {
 	}
 }
 
-function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
-	var assignee, name, exportAs;
+function rewriteExportAssignments ( body, node, parent, exports, scope, capturedUpdates ) {
+	var assignee;
 
 	if ( node.type === 'AssignmentExpression' ) {
 		assignee = node.left;
@@ -1182,35 +1185,44 @@ function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates 
 		return;
 	}
 
-	name = assignee.name;
+	var name = assignee.name;
 
 	if ( scope.contains( name, true ) ) {
 		return; // shadows an export
 	}
 
-	if ( exports && hasOwnProp.call( exports, name ) && ( exportAs = exports[ name ] ) ) {
+	if ( exports && utils_hasOwnProp.call( exports, name ) ) {
+		var exportAs = exports[ name ];
+
 		if ( !!capturedUpdates ) {
-			capturedUpdates.push({
-				name: name,
-				exportAs: exportAs
-			});
+			capturedUpdates.push({ name: name, exportAs: exportAs });
 			return;
 		}
 
 		// special case - increment/decrement operators
 		if ( node.operator === '++' || node.operator === '--' ) {
-			body.replace( node.end, node.end, ((", exports." + exportAs) + (" = " + name) + "") );
+			var prefix = ("");
+			var suffix = ((", exports." + exportAs) + (" = " + name) + "");
+			if ( parent.type !== 'ExpressionStatement' ) {
+				if ( !node.prefix ) {
+					suffix += ((", " + name) + (" " + (node.operator === '++' ? '-' : '+')) + " 1")
+				}
+				prefix += ("( ");
+				suffix += (" )");
+			}
+			body.insert( node.start, prefix );
+			body.insert( node.end, suffix );
 		} else {
-			body.replace( node.start, node.start, (("exports." + exportAs) + " = ") );
+			body.insert( node.start, (("exports." + exportAs) + " = ") );
 		}
 	}
 }
 
 function traverseAst ( ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames ) {
-	var scope = ast._scope,
-		blockScope = ast._blockScope,
-		capturedUpdates = null,
-		previousCapturedUpdates = null;
+	var scope = ast._scope;
+	var blockScope = ast._blockScope;
+	var capturedUpdates = null;
+	var previousCapturedUpdates = null;
 
 	walk( ast, {
 		enter: function ( node, parent ) {
@@ -1235,13 +1247,12 @@ function traverseAst ( ast, body, identifierReplacements, importedBindings, impo
 				return;
 			}
 
-			// Catch illegal reassignments
 			disallowIllegalReassignment( node, importedBindings, importedNamespaces, scope );
 
 			// Rewrite assignments to exports inside functions, to keep bindings live.
 			// This call may mutate `capturedUpdates`, which is used elsewhere
 			if ( scope !== ast._scope ) {
-				rewriteExportAssignments( body, node, exportNames, scope, capturedUpdates );
+				rewriteExportAssignments( body, node, parent, exportNames, scope, capturedUpdates );
 			}
 
 			if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
@@ -1274,21 +1285,14 @@ function traverseAst ( ast, body, identifierReplacements, importedBindings, impo
 }
 
 function exportCapturedUpdate ( c ) {
-	return ((" exports." + (c.name)) + (" = " + (c.exportAs)) + ";");
+	return ((" exports." + (c.exportAs)) + (" = " + (c.name)) + ";");
 }
 
-function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
-	var identifierReplacements,
-		importedBindings,
-		importedNamespaces,
-		exportNames,
-		shouldExportEarly = {},
-		exportBlock;
+function combine_transformBody__transformBody ( bundle, mod, body ) {
+	var identifierReplacements = mod.identifierReplacements;
+	var importedBindings = (importedNamespaces = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = importedNamespaces[1];
 
-	identifierReplacements = mod.identifierReplacements;
-	importedBindings = ($D$0 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$0[1], $D$0;
-
-	exportNames = hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
+	var exportNames = utils_hasOwnProp.call( bundle.exports, mod.id ) && bundle.exports[ mod.id ];
 
 	traverseAst( mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames );
 
@@ -1298,6 +1302,8 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 			body.remove( x.start, x.next );
 		}
 	});
+
+	var shouldExportEarly = {};
 
 	// Remove export statements
 	mod.exports.forEach( function(x ) {
@@ -1324,7 +1330,7 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 				if ( name === identifierReplacements.default ) {
 					body.remove( x.start, x.end );
 				} else {
-					var original = hasOwnProp.call( identifierReplacements, name ) ? identifierReplacements[ name ] : name;
+					var original = utils_hasOwnProp.call( identifierReplacements, name ) ? identifierReplacements[ name ] : name;
 					body.replace( x.start, x.end, (("var " + (identifierReplacements.default)) + (" = " + original) + ";") );
 				}
 			}
@@ -1380,7 +1386,7 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 	// (it doesn't have to be the entry module, which could re-export
 	// a binding from another module), we write exports here
 	if ( exportNames ) {
-		exportBlock = [];
+		var exportBlock = [];
 
 		Object.keys( exportNames ).forEach( function(name ) {
 			var exportAs = exportNames[ name ];
@@ -1393,7 +1399,7 @@ function transformBody__transformBody ( bundle, mod, body ) {var $D$0;
 	}
 
 	return body.trim();
-;$D$0 = void 0}
+}
 
 function combine ( bundle ) {
 	bundle.body = new MagicString.Bundle({
@@ -1430,16 +1436,14 @@ function combine ( bundle ) {
 		});
 
 		bundle.body.addSource({
-			filename: path.resolve( bundle.base, mod.relativePath ),
-			content: transformBody__transformBody( bundle, mod, mod.body ),
+			filename: _path.resolve( bundle.base, mod.relativePath ),
+			content: combine_transformBody__transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});
 	});
 }
 
-function getModule ( mod ) {var $D$1;
-	var imports, exports;
-
+function getModule ( mod ) {
 	mod.body = new MagicString( mod.source );
 
 	var toRemove = [];
@@ -1468,7 +1472,7 @@ function getModule ( mod ) {var $D$1;
 		throw err;
 	}
 
-	imports = ($D$1 = findImportsAndExports( mod, mod.source, mod.ast ))[0], exports = $D$1[1], $D$1;
+	var imports = (exports = findImportsAndExports( mod, mod.source, mod.ast ))[0], exports = exports[1];
 
 	disallowConflictingImports( imports );
 
@@ -1504,20 +1508,20 @@ function getModule ( mod ) {var $D$1;
 	});
 
 	return mod;
-;$D$1 = void 0}
+}
 
-var getBundle__Promise = sander.Promise;
+var bundler_getBundle__Promise = sander.Promise;
 
 function getBundle ( options ) {
-	var entry = options.entry.replace( /\.js$/, '' ),
-		modules = [],
-		moduleLookup = {},
-		promiseByPath = {},
-		skip = options.skip,
-		names = options.names,
-		base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/',
-		externalModules = [],
-		externalModuleLookup = {};
+	var entry = options.entry.replace( /\.js$/, '' );
+	var modules = [];
+	var moduleLookup = {};
+	var promiseByPath = {};
+	var skip = options.skip;
+	var names = options.names;
+	var base = ( options.base ? _path.resolve( options.base ) : process.cwd() ) + '/';
+	var externalModules = [];
+	var externalModuleLookup = {};
 
 	if ( !entry.indexOf( base ) ) {
 		entry = entry.substring( base.length );
@@ -1525,12 +1529,10 @@ function getBundle ( options ) {
 
 	return resolvePath( base, entry, null ).then( function(entryPath ) {
 		return fetchModule( entry, entryPath ).then( function()  {
-			var entryModule, bundle;
-
-			entryModule = moduleLookup[ entry ];
+			var entryModule = moduleLookup[ entry ];
 			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
-			bundle = {
+			var bundle = {
 				entry: entry,
 				entryModule: entryModule,
 				base: base,
@@ -1556,7 +1558,7 @@ function getBundle ( options ) {
 	});
 
 	function fetchModule ( moduleId, modulePath ) {
-		if ( !hasOwnProp.call( promiseByPath, modulePath ) ) {
+		if ( !utils_hasOwnProp.call( promiseByPath, modulePath ) ) {
 			promiseByPath[ modulePath ] = sander.readFile( modulePath ).then( String ).then( function ( source ) {
 				var module, promises;
 
@@ -1571,7 +1573,7 @@ function getBundle ( options ) {
 				module = getModule({
 					source: source,
 					id: moduleId,
-					relativePath: path.relative( base, modulePath ),
+					relativePath: _path.relative( base, modulePath ),
 					path: modulePath
 				});
 
@@ -1592,7 +1594,7 @@ function getBundle ( options ) {
 
 					return resolvePath( base, x.id, modulePath, options.resolvePath ).then( function(modulePath ) {
 						// short-circuit cycles
-						if ( hasOwnProp.call( promiseByPath, modulePath ) ) {
+						if ( utils_hasOwnProp.call( promiseByPath, modulePath ) ) {
 							return;
 						}
 
@@ -1600,7 +1602,7 @@ function getBundle ( options ) {
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
-							if ( !hasOwnProp.call( externalModuleLookup, x.id ) ) {
+							if ( !utils_hasOwnProp.call( externalModuleLookup, x.id ) ) {
 								var externalModule = {
 									id: x.id
 								};
@@ -1614,7 +1616,7 @@ function getBundle ( options ) {
 					} );
 				});
 
-				return getBundle__Promise.all( promises );
+				return bundler_getBundle__Promise.all( promises );
 			});
 		}
 
@@ -1623,10 +1625,8 @@ function getBundle ( options ) {
 }
 
 function resolvePath ( base, moduleId, importerPath, resolver ) {
-	return tryPath( path.resolve( base, moduleId + '.js' ) )
-		.catch( function () {
-			return tryPath( path.resolve( base, moduleId, 'index.js' ) );
-		})
+	return tryPath( _path.resolve( base, moduleId + '.js' ) )
+		.catch( function()  {return tryPath( _path.resolve( base, moduleId, 'index.js' ) )} )
 		.catch( function ( err ) {
 			if ( resolver ) {
 				return resolver( moduleId, importerPath );
@@ -1637,9 +1637,7 @@ function resolvePath ( base, moduleId, importerPath, resolver ) {
 }
 
 function tryPath ( path ) {
-	return sander.stat( path ).then( function () {
-		return path;
-	});
+	return sander.stat( path ).then( function()  {return path} );
 }
 
 function isThenable ( obj ) {
@@ -1688,23 +1686,24 @@ function transformExportDeclaration ( declaration, body ) {
 	}
 
 	if ( exportedValue ) {
-		body.append( '\nreturn ' + exportedValue + ';' );
+		body.append( (("\nreturn " + exportedValue) + ";") );
 	}
 }
 
-var warned = {};
+var ABSOLUTE_PATH = /^(?:[A-Z]:)?[\/\\]/i;
+
+var utils_packageResult__warned = {};
 
 function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
-	var code, map;
-
 	// wrap output
 	if ( options.banner ) body.prepend( options.banner );
 	if ( options.footer ) body.append( options.footer );
 
-	code = body.toString();
+	var code = body.toString();
+	var map;
 
 	if ( !!options.sourceMap ) {
-		if ( options.sourceMap !== 'inline' && !options.sourceMapFile) {
+		if ( options.sourceMap !== 'inline' && !options.sourceMapFile ) {
 			throw new Error( 'You must provide `sourceMapFile` option' );
 		}
 
@@ -1713,10 +1712,10 @@ function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
 		}
 
 		var sourceMapFile;
-		if (options.sourceMap === 'inline') {
+		if ( options.sourceMap === 'inline' ) {
 			sourceMapFile = null;
 		} else {
-			sourceMapFile = isAbsolutePath( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
+			sourceMapFile = ABSOLUTE_PATH.test( options.sourceMapFile ) ? options.sourceMapFile : './' + splitPath( options.sourceMapFile ).pop();
 		}
 
 		if ( isBundle ) {
@@ -1728,7 +1727,7 @@ function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
 		map = body.generateMap({
 			includeContent: true,
 			file: sourceMapFile,
-			source: (sourceMapFile && !isBundle) ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
+			source: ( sourceMapFile && !isBundle ) ? getRelativePath( sourceMapFile, options.sourceMapSource ) : null
 		});
 
 		if ( options.sourceMap === 'inline' ) {
@@ -1745,18 +1744,14 @@ function packageResult ( bundleOrModule, body, options, methodName, isBundle ) {
 		code: code,
 		map: map,
 		toString: function () {
-			if ( !warned[ methodName ] ) {
-				console.log( 'Warning: esperanto.' + methodName + '() returns an object with a \'code\' property. You should use this instead of using the returned value directly' );
-				warned[ methodName ] = true;
+			if ( !utils_packageResult__warned[ methodName ] ) {
+				console.log( (("Warning: esperanto." + methodName) + "() returns an object with a 'code' property. You should use this instead of using the returned value directly") );
+				utils_packageResult__warned[ methodName ] = true;
 			}
 
 			return code;
 		}
 	};
-}
-
-function isAbsolutePath ( path ) {
-	return /^(?:[A-Z]:)?[\/\\]/i.test( path );
 }
 
 function getRelativePath ( from, to ) {
@@ -1801,76 +1796,94 @@ function markModuleSourcemapLocations ( mod ) {
 	});
 }
 
-/**
- * Creates a template function from a template string. The template
-   may have `<%= someVar %>` interpolators, and the returned function
-   should be called with a data object e.g. `{ someVar: 'someData' }`
- * @param {string} str - the template string
- * @returns {function}
- */
-function template ( str ) {
-	return function ( data ) {
-		return str.replace( /<%=\s*([^\s]+)\s*%>/g, function ( match, $1 ) {
-			return $1 in data ? data[ $1 ] : match;
-		});
-	};
-}
+function getImportSummary (name) {var imports = name.imports, absolutePaths = name.absolutePaths, name = name.name;
+	var paths = [];
+	var names = [];
+	var seen = {};
+	var placeholders = 0;
 
-var amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n' );
+	imports.forEach( function(x ) {
+		var path = x.id || x.path; // TODO unify these
 
-function amd__amd ( mod, options ) {
-	var seen = {},
-		importNames = [],
-		importPaths = [],
-		intro,
-		placeholders = 0;
+		if ( !seen[ path ] ) {
+			seen[ path ] = true;
 
-	// gather imports, and remove import declarations
-	mod.imports.forEach( function(x ) {
-		var path = options.absolutePaths ? resolveId( x.path, options.amdName ) : x.path;
+			paths.push( path );
 
-		if ( !hasOwnProp.call( seen, path ) ) {
-			importPaths.push( path );
-
-			if ( x.as ) {
+			// TODO x could be an external module, or an internal one.
+			// they have different shapes, resulting in the confusing
+			// code below
+			if ( ( x.needsDefault || x.needsNamed ) || ( x.specifiers && x.specifiers.length ) ) {
 				while ( placeholders ) {
-					importNames.push( '__dep' + importNames.length + '__' );
+					names.push( (("__dep" + (names.length)) + "__") );
 					placeholders--;
 				}
-				importNames.push( x.as );
+				names.push( x.name );
 			} else {
 				placeholders++;
 			}
-
-			seen[ path ] = true;
 		}
+	});
 
+	var ids = absolutePaths ? paths.map( function(relativePath ) {return resolveId( relativePath, name )} ) : paths.slice();
+
+	return { ids: ids, paths: paths, names: names };
+}
+
+function processName ( name ) {
+	return name ? quote( name ) + ', ' : '';
+}
+
+function processIds ( ids ) {
+	return ids.length ? '[' + ids.map( quote ).join( ', ' ) + '], ' : '';
+}
+
+function amdIntro (absolutePaths) {var name = absolutePaths.name, imports = absolutePaths.imports, hasExports = absolutePaths.hasExports, indentStr = absolutePaths.indentStr, absolutePaths = absolutePaths.absolutePaths;
+	var ids = (names = getImportSummary({ name: name, imports: imports, absolutePaths: absolutePaths })).ids, names = names.names;
+
+	if ( hasExports ) {
+		ids.unshift( 'exports' );
+		names.unshift( 'exports' );
+	}
+
+	var intro = (("\
+\ndefine(" + (processName(name))) + ("" + (processIds(ids))) + ("function (" + (names.join( ', ' ))) + ") {\
+\n\
+\n	'use strict';\
+\n\
+\n");
+
+	return intro.replace( /\t/g, indentStr );
+}
+
+function defaultsMode_amd__amd ( mod, options ) {
+	mod.imports.forEach( function(x ) {
 		mod.body.remove( x.start, x.next );
 	});
 
 	transformExportDeclaration( mod.exports[0], mod.body );
 
-	intro = amd__introTemplate({
-		amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
-		paths: importPaths.length ? '[' + importPaths.map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
+	var intro = amdIntro({
+		name: options.amdName,
+		imports: mod.imports,
+		absolutePaths: options.absolutePaths,
+		indentStr: mod.body.getIndentString()
 	});
 
 	mod.body.trim()
-		.prepend( "'use strict';\n\n" )
-		.trim()
 		.indent()
 		.prepend( intro )
+		.trim()
 		.append( '\n\n});' );
 
 	return packageResult( mod, mod.body, options, 'toAmd' );
 }
 
-function cjs__cjs ( mod, options ) {
-	var seen = {}, exportDeclaration;
+function defaultsMode_cjs__cjs ( mod, options ) {
+	var seen = {};
 
 	mod.imports.forEach( function(x ) {
-		if ( !hasOwnProp.call( seen, x.path ) ) {
+		if ( !utils_hasOwnProp.call( seen, x.path ) ) {
 			var replacement = x.isEmpty ? (("" + (req(x.path))) + ";") : (("var " + (x.as)) + (" = " + (req(x.path))) + ";");
 			mod.body.replace( x.start, x.end, replacement );
 
@@ -1880,18 +1893,18 @@ function cjs__cjs ( mod, options ) {
 		}
 	});
 
-	exportDeclaration = mod.exports[0];
+	var exportDeclaration = mod.exports[0];
 
 	if ( exportDeclaration ) {
 		switch ( exportDeclaration.type ) {
 			case 'namedFunction':
 			case 'namedClass':
-				mod.body.remove( exportDeclaration.start, exportDeclaration.node.declaration.start );
+				mod.body.remove( exportDeclaration.start, exportDeclaration.valueStart );
 				mod.body.replace( exportDeclaration.end, exportDeclaration.end, (("\nmodule.exports = " + (exportDeclaration.node.declaration.id.name)) + ";") );
 				break;
 
 			default:
-				mod.body.replace( exportDeclaration.start, exportDeclaration.node.declaration.start, 'module.exports = ' );
+				mod.body.replace( exportDeclaration.start, exportDeclaration.valueStart, 'module.exports = ' );
 				break;
 		}
 	}
@@ -1901,53 +1914,63 @@ function cjs__cjs ( mod, options ) {
 	return packageResult( mod, mod.body, options, 'toCjs' );
 }
 
-function standaloneUmdIntro ( options, indentStr ) {
-	var amdName = options.amdName ?
-		quote(options.amdName) + ", " :
-		'';
+function umdIntro (strict) {var amdName = strict.amdName, name = strict.name, hasExports = strict.hasExports, imports = strict.imports, absolutePaths = strict.absolutePaths, externalDefaults = strict.externalDefaults, indentStr = strict.indentStr, strict = strict.strict;
+	var intro;
 
-	var intro =
-(("(function (factory) {\
-\n	!(typeof exports === 'object' && typeof module !== 'undefined') &&\
-\n	typeof define === 'function' && define.amd ? define(" + amdName) + "factory) :\
-\n	factory()\
-\n}(function () { 'use strict';\
+	if ( !hasExports && !imports.length ) {
+		intro =
+			(("(function (factory) {\
+\n				!(typeof exports === 'object' && typeof module !== 'undefined') &&\
+\n				typeof define === 'function' && define.amd ? define(" + (processName(amdName))) + "factory) :\
+\n				factory()\
+\n			}(function () { 'use strict';\
 \n\
-\n");
+\n			");
+	}
 
-	return intro.replace( /\t/g, indentStr );
-}
+	else {
+		var ids = (names = getImportSummary({ imports: imports, name: amdName, absolutePaths: absolutePaths })).ids, paths = names.paths, names = names.names;
 
-function defaultUmdIntro ( options, indentStr ) {
-	var hasExports = options.hasExports;
+		var amdExport, cjsExport, globalExport, defaultsBlock;
 
-	var amdName = options.amdName ?
-		quote(options.amdName) + ", " :
-		'';
-	var amdDeps = options.importPaths.length > 0 ?
-		'[' + ( options.absolutePaths ? options.importPaths.map( resolveAgainst( options.amdName ) ) : options.importPaths ).map( quote ).join( ', ' ) + '], ' :
-		'';
-	var cjsDeps = options.importPaths.map( req ).join( ', ' );
-	var globalDeps = options.importNames.map( globalify ).join( ', ' );
-	var args = options.importNames.join( ', ' );
+		if ( strict ) {
+			cjsExport = (("factory(" + (( hasExports ? [ 'exports' ] : [] ).concat( paths.map( req ) ).join( ', ' ))) + ")");
+			var globalDeps = ( hasExports ? [ (("(global." + name) + " = {})") ] : [] ).concat( names.map( globalify ) ).join( ', ' );
+			globalExport = (("factory(" + globalDeps) + ")");
 
-	var cjsExport =
-		(hasExports ? 'module.exports = ' : '') + (("factory(" + cjsDeps) + ")");
+			if ( hasExports ) {
+				ids.unshift( 'exports' );
+				names.unshift( 'exports' );
+			}
 
-	var globalExport =
-		(hasExports ? (("global." + (options.name)) + " = ") : '') + (("factory(" + globalDeps) + ")");
+			amdExport = (("define(" + (processName(amdName))) + ("" + (processIds(ids))) + "factory)");
+			defaultsBlock = '';
+			if ( externalDefaults && externalDefaults.length > 0 ) {
+				defaultsBlock = externalDefaults.map( function(x )
+					{return '\t' + ( x.needsNamed ? (("var " + (x.name)) + "__default") : x.name ) +
+						((" = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");")}
+				).join('\n') + '\n\n';
+			}
+		} else {
+			amdExport = (("define(" + (processName(amdName))) + ("" + (processIds(ids))) + "factory)");
+			cjsExport = ( hasExports ? 'module.exports = ' : '' ) + (("factory(" + (paths.map( req ).join( ', ' ))) + ")");
+			globalExport = ( hasExports ? (("global." + name) + " = ") : '' ) + (("factory(" + (names.map( globalify ).join( ', ' ))) + ")");
 
+			defaultsBlock = '';
+		}
 
-	var intro =
-(("(function (global, factory) {\
-\n	typeof exports === 'object' && typeof module !== 'undefined' ? " + cjsExport) + (" :\
-\n	typeof define === 'function' && define.amd ? define(" + amdName) + ("" + amdDeps) + ("factory) :\
-\n	" + globalExport) + ("\
-\n}(this, function (" + args) + ") { 'use strict';\
+		intro =
+			(("(function (global, factory) {\
+\n				typeof exports === 'object' && typeof module !== 'undefined' ? " + cjsExport) + (" :\
+\n				typeof define === 'function' && define.amd ? " + amdExport) + (" :\
+\n				" + globalExport) + ("\
+\n			}(this, function (" + (names.join( ', ' ))) + (") { 'use strict';\
 \n\
-\n");
+\n			" + defaultsBlock) + "");
 
-	return intro.replace( /\t/g, indentStr );
+	}
+
+	return intro.replace( /^\t\t\t/gm, '' ).replace( /\t/g, indentStr );
 }
 
 var EsperantoError = function ( message, data ) {
@@ -1967,63 +1990,33 @@ EsperantoError.prototype = new Error();
 EsperantoError.prototype.constructor = EsperantoError;
 EsperantoError.prototype.name = 'EsperantoError';
 
+var utils_EsperantoError = EsperantoError;
+
 function requireName ( options ) {
 	if ( !options.name ) {
-		throw new EsperantoError( 'You must supply a `name` option for UMD modules', {
+		throw new utils_EsperantoError( 'You must supply a `name` option for UMD modules', {
 			code: 'MISSING_NAME'
 		});
 	}
 }
 
-function umd__umd ( mod, options ) {
-	var importNames = [];
-	var importPaths = [];
-	var seen = {};
-	var placeholders = 0;
-
+function defaultsMode_umd__umd ( mod, options ) {
 	requireName( options );
 
-	var hasImports = mod.imports.length > 0;
-	var hasExports = mod.exports.length > 0;
+	mod.imports.forEach( function(x ) {
+		mod.body.remove( x.start, x.next );
+	});
 
-	var intro;
-	if (!hasImports && !hasExports) {
-		intro = standaloneUmdIntro({
-			amdName: options.amdName,
-		}, mod.body.getIndentString() );
-	} else {
-		// gather imports, and remove import declarations
-		mod.imports.forEach( function(x ) {
-			if ( !hasOwnProp.call( seen, x.path ) ) {
-				importPaths.push( x.path );
+	var intro = umdIntro({
+		hasExports: mod.exports.length > 0,
+		imports: mod.imports,
+		amdName: options.amdName,
+		absolutePaths: options.absolutePaths,
+		name: options.name,
+		indentStr: mod.body.getIndentString()
+	});
 
-				if ( x.as ) {
-					while ( placeholders ) {
-						importNames.push( '__dep' + importNames.length + '__' );
-						placeholders--;
-					}
-					importNames.push( x.as );
-				} else {
-					placeholders++;
-				}
-
-				seen[ x.path ] = true;
-			}
-
-			mod.body.remove( x.start, x.next );
-		});
-
-		transformExportDeclaration( mod.exports[0], mod.body );
-
-		intro = defaultUmdIntro({
-			hasExports: hasExports,
-			importPaths: importPaths,
-			importNames: importNames,
-			amdName: options.amdName,
-			absolutePaths: options.absolutePaths,
-			name: options.name
-		}, mod.body.getIndentString() );
-	}
+	transformExportDeclaration( mod.exports[0], mod.body );
 
 	mod.body.indent().prepend( intro ).trimLines().append( '\n\n}));' );
 
@@ -2031,24 +2024,23 @@ function umd__umd ( mod, options ) {
 }
 
 var defaultsMode = {
-	amd: amd__amd,
-	cjs: cjs__cjs,
-	umd: umd__umd
+	amd: defaultsMode_amd__amd,
+	cjs: defaultsMode_cjs__cjs,
+	umd: defaultsMode_umd__umd
 };
 
 function gatherImports ( imports ) {
-	var chains = {}, identifierReplacements = {};
+	var chains = {};
+	var identifierReplacements = {};
 
 	imports.forEach( function(x ) {
 		x.specifiers.forEach( function(s ) {
-			var name, replacement;
-
 			if ( s.isBatch ) {
 				return;
 			}
 
-			name = s.as;
-			replacement = x.name + ( s.isDefault ? ("['default']") : ("." + (s.name)) );
+			var name = s.as;
+			var replacement = x.name + ( s.isDefault ? ("['default']") : ("." + (s.name)) );
 
 			if ( !x.passthrough ) {
 				identifierReplacements[ name ] = replacement;
@@ -2073,26 +2065,18 @@ function getExportNames ( exports ) {
 		}
 
 		x.specifiers.forEach( function(s ) {
-			result[ s.name ] = s.name;
+			result[ s.name ] = s.as;
 		});
 	});
 
 	return result;
 }
 
-function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
-	var chains,
-		identifierReplacements,
-		importedBindings = {},
-		importedNamespaces = {},
-		exportNames,
-		earlyExports,
-		lateExports;
+function utils_transformBody__transformBody ( mod, body, options ) {
+	var chains = (identifierReplacements = gatherImports( mod.imports ))[0], identifierReplacements = identifierReplacements[1];
+	var exportNames = getExportNames( mod.exports );
 
-	chains = ($D$2 = gatherImports( mod.imports ))[0], identifierReplacements = $D$2[1], $D$2;
-	exportNames = getExportNames( mod.exports );
-
-	importedBindings = ($D$2 = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = $D$2[1], $D$2;
+	var importedBindings = (importedNamespaces = getReadOnlyIdentifiers( mod.imports ))[0], importedNamespaces = importedNamespaces[1];
 
 	// ensure no conflict with `exports`
 	identifierReplacements.exports = deconflict( 'exports', mod.ast._declared );
@@ -2101,12 +2085,6 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 
 	// Remove import statements from the body of the module
 	mod.imports.forEach( function(x ) {
-		if ( x.passthrough ) {
-			// this is an `export { foo } from './bar'` statement -
-			// it will be dealt with in the next section
-			return;
-		}
-
 		body.remove( x.start, x.next );
 	});
 
@@ -2147,8 +2125,8 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 	});
 
 	// Append export block (this is the same for all module types, unlike imports)
-	earlyExports = [];
-	lateExports = [];
+	var earlyExports = [];
+	var lateExports = [];
 
 	Object.keys( exportNames ).forEach( function(name ) {
 		var exportAs = exportNames[ name ];
@@ -2182,61 +2160,24 @@ function utils_transformBody__transformBody ( mod, body, options ) {var $D$2;
 	if ( options.intro && options.outro ) {
 		body.indent().prepend( options.intro ).trimLines().append( options.outro );
 	}
-;$D$2 = void 0}
+}
 
 function deconflict ( name, declared ) {
-	while ( hasOwnProp.call( declared, name ) ) {
+	while ( utils_hasOwnProp.call( declared, name ) ) {
 		name = '_' + name;
 	}
 
 	return name;
 }
 
-function getImportSummary ( mod ) {
-	var importPaths = [], importNames = [], seen = {}, placeholders = 0;
-
-	mod.imports.forEach( function(x ) {
-		if ( !hasOwnProp.call( seen, x.path ) ) {
-			importPaths.push( x.path );
-
-			if ( x.specifiers.length ) {
-				while ( placeholders ) {
-					importNames.push( '__dep' + importNames.length + '__' );
-					placeholders--;
-				}
-				importNames.push( x.name );
-			} else {
-				placeholders++;
-			}
-
-			seen[ x.path ] = true;
-		}
+function strictMode_amd__amd ( mod, options ) {
+	var intro = amdIntro({
+		name: options.amdName,
+		absolutePaths: options.absolutePaths,
+		imports: mod.imports,
+		indentStr: mod.body.getIndentString(),
+		hasExports: mod.exports.length
 	});
-
-	return [ importPaths, importNames ];
-}
-
-var strictMode_amd__introTemplate;
-
-strictMode_amd__introTemplate = template( 'define(<%= amdName %><%= paths %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
-
-function strictMode_amd__amd ( mod, options ) {var $D$3;
-	var importPaths,
-		importNames,
-		intro;
-
-	importPaths = ($D$3 = getImportSummary( mod ))[0], importNames = $D$3[1], $D$3;
-
-	if ( mod.exports.length ) {
-		importPaths.unshift( 'exports' );
-		importNames.unshift( 'exports' );
-	}
-
-	intro = strictMode_amd__introTemplate({
-		amdName: options.amdName ? (("'" + (options.amdName)) + "', ") : '',
-		paths: importPaths.length ? '[' + ( options.absolutePaths ? importPaths.map( resolveAgainst( options.amdName ) ) : importPaths ).map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
-	}).replace( /\t/g, mod.body.getIndentString() );
 
 	utils_transformBody__transformBody( mod, mod.body, {
 		intro: intro,
@@ -2245,26 +2186,22 @@ function strictMode_amd__amd ( mod, options ) {var $D$3;
 	});
 
 	return packageResult( mod, mod.body, options, 'toAmd' );
-;$D$3 = void 0}
+}
 
 function strictMode_cjs__cjs ( mod, options ) {
-	var importBlock, seen = {};
+	var seen = {};
 
 	// Create block of require statements
-	importBlock = mod.imports.map( function(x ) {
-		var name, replacement;
+	var importBlock = mod.imports.map( function(x ) {
+		if ( !utils_hasOwnProp.call( seen, x.path ) ) {
+			seen[ x.path ] = true;
 
-		if ( !hasOwnProp.call( seen, x.path ) ) {
 			if ( x.isEmpty ) {
-				replacement = (("" + (req(x.path))) + ";");
-			} else {
-				replacement = (("var " + (x.name)) + (" = " + (req(x.path))) + ";");
+				return (("" + (req(x.path))) + ";");
 			}
 
-			seen[ x.path ] = true;
+			return (("var " + (x.name)) + (" = " + (req(x.path))) + ";");
 		}
-
-		return replacement;
 	}).filter( Boolean ).join( '\n' );
 
 	utils_transformBody__transformBody( mod, mod.body, {
@@ -2277,65 +2214,18 @@ function strictMode_cjs__cjs ( mod, options ) {
 	return packageResult( mod, mod.body, options, 'toCjs' );
 }
 
-function strictUmdIntro ( options, indentStr ) {
-	var hasExports = options.hasExports;
-
-	var amdName = options.amdName ?
-		"'" + options.amdName + "', " :
-		'';
-	var amdDeps = hasExports || options.importPaths.length > 0 ?
-		'[' +
-			( hasExports ? [ 'exports' ] : [] ).concat( options.absolutePaths ? options.importPaths.map( resolveAgainst( options.amdName ) ) : options.importPaths ).map( quote ).join( ', ' ) +
-		'], ' :
-		'';
-	var cjsDeps = ( hasExports ? [ 'exports' ] : [] ).concat( options.importPaths.map( req ) ).join( ', ' );
-	var globalDeps = ( hasExports ? [ (("(global." + (options.name)) + " = {})") ] : [] )
-		.concat( options.importNames.map( globalify ) ).join( ', ' );
-	var args = ( hasExports ? [ 'exports' ] : [] ).concat( options.importNames ).join( ', ' );
-
-	var defaultsBlock = '';
-	if ( options.externalDefaults && options.externalDefaults.length > 0 ) {
-		defaultsBlock = options.externalDefaults.map( function(x )
-			{return '\t' + ( x.needsNamed ? (("var " + (x.name)) + "__default") : x.name ) +
-				((" = ('default' in " + (x.name)) + (" ? " + (x.name)) + ("['default'] : " + (x.name)) + ");")}
-		).join('\n') + '\n\n';
-	}
-
-	var intro =
-(("(function (global, factory) {\
-\n	typeof exports === 'object' && typeof module !== 'undefined' ? factory(" + cjsDeps) + (") :\
-\n	typeof define === 'function' && define.amd ? define(" + amdName) + ("" + amdDeps) + ("factory) :\
-\n	factory(" + globalDeps) + (")\
-\n}(this, function (" + args) + (") { 'use strict';\
-\n\
-\n" + defaultsBlock) + "");
-
-	return intro.replace( /\t/g, indentStr );
-}
-
 function strictMode_umd__umd ( mod, options ) {
 	requireName( options );
 
-	var importPaths = (importNames = getImportSummary( mod ))[0], importNames = importNames[1];
-
-	var hasImports = mod.imports.length > 0;
-	var hasExports = mod.exports.length > 0;
-
-	var intro;
-	if (!hasImports && !hasExports) {
-		intro = standaloneUmdIntro({
-			amdName: options.amdName,
-		}, mod.body.getIndentString() );
-	} else {
-		intro = strictUmdIntro({
-			hasExports: hasExports,
-			importPaths: importPaths,
-			importNames: importNames,
-			amdName: options.amdName,
-			absolutePaths: options.absolutePaths,
-			name: options.name
-		}, mod.body.getIndentString() );
-	}
+	var intro = umdIntro({
+		hasExports: mod.exports.length > 0,
+		imports: mod.imports,
+		amdName: options.amdName,
+		absolutePaths: options.absolutePaths,
+		name: options.name,
+		indentStr: mod.body.getIndentString(),
+		strict: true
+	});
 
 	utils_transformBody__transformBody( mod, mod.body, {
 		intro: intro,
@@ -2358,29 +2248,23 @@ var moduleBuilders = {
 	strictMode: strictMode
 };
 
-var defaultsMode_amd__introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
-
-function defaultsMode_amd__amd ( bundle, options ) {
+function builders_defaultsMode_amd__amd ( bundle, options ) {
 	var defaultName = bundle.entryModule.identifierReplacements.default;
 	if ( defaultName ) {
 		bundle.body.append( (("\n\nreturn " + defaultName) + ";") );
 	}
 
-	var intro = defaultsMode_amd__introTemplate({
-		amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
-		amdDeps: bundle.externalModules.length ? '[' + bundle.externalModules.map( quoteId ).join( ', ' ) + '], ' : '',
-		names: bundle.externalModules.map( getName ).join( ', ' )
-	}).replace( /\t/g, bundle.body.getIndentString() );
+	var intro = amdIntro({
+		name: options.amdName,
+		imports: bundle.externalModules,
+		indentStr: bundle.body.getIndentString()
+	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( bundle, bundle.body, options, 'toAmd', true );
 }
 
-function quoteId ( m ) {
-	return "'" + m.id + "'";
-}
-
-function defaultsMode_cjs__cjs ( bundle, options ) {
+function builders_defaultsMode_cjs__cjs ( bundle, options ) {
 	var importBlock = bundle.externalModules.map( function(x ) {
 		return (("var " + (x.name)) + (" = " + (req(x.id))) + ";");
 	}).join( '\n' );
@@ -2399,36 +2283,21 @@ function defaultsMode_cjs__cjs ( bundle, options ) {
 	return packageResult( bundle, bundle.body, options, 'toCjs', true );
 }
 
-function defaultsMode_umd__umd ( bundle, options ) {
+function builders_defaultsMode_umd__umd ( bundle, options ) {
 	requireName( options );
 
 	var entry = bundle.entryModule;
 
-	var hasImports = bundle.externalModules.length > 0;
-	var hasExports = entry.exports.length > 0;
+	var intro = umdIntro({
+		hasExports: entry.exports.length > 0,
+		imports: bundle.externalModules,
+		amdName: options.amdName,
+		name: options.name,
+		indentStr: bundle.body.getIndentString()
+	});
 
-	var intro;
-	if (!hasImports && !hasExports) {
-		intro = standaloneUmdIntro({
-			amdName: options.amdName,
-		}, bundle.body.getIndentString() );
-	} else {
-
-		var defaultName = entry.identifierReplacements.default;
-		if ( defaultName ) {
-			bundle.body.append( (("\n\nreturn " + defaultName) + ";") );
-		}
-
-		var importPaths = bundle.externalModules.map( getId );
-		var importNames = bundle.externalModules.map( getName );
-
-		intro = defaultUmdIntro({
-			hasExports: hasExports,
-			importPaths: importPaths,
-			importNames: importNames,
-			amdName: options.amdName,
-			name: options.name
-		}, bundle.body.getIndentString() );
+	if ( entry.defaultExport ) {
+		bundle.body.append( (("\n\nreturn " + (entry.identifierReplacements.default)) + ";") );
 	}
 
 	bundle.body.indent().prepend( intro ).trimLines().append('\n\n}));');
@@ -2437,9 +2306,9 @@ function defaultsMode_umd__umd ( bundle, options ) {
 }
 
 var builders_defaultsMode = {
-	amd: defaultsMode_amd__amd,
-	cjs: defaultsMode_cjs__cjs,
-	umd: defaultsMode_umd__umd
+	amd: builders_defaultsMode_amd__amd,
+	cjs: builders_defaultsMode_cjs__cjs,
+	umd: builders_defaultsMode_umd__umd
 };
 
 function getExportBlock ( entry ) {
@@ -2447,14 +2316,9 @@ function getExportBlock ( entry ) {
 	return (("exports['default'] = " + name) + ";");
 }
 
-var builders_strictMode_amd__introTemplate = template( 'define(<%= amdName %><%= amdDeps %>function (<%= names %>) {\n\n\t\'use strict\';\n\n' );
-
 function builders_strictMode_amd__amd ( bundle, options ) {
 	var externalDefaults = bundle.externalModules.filter( builders_strictMode_amd__needsDefault );
 	var entry = bundle.entryModule;
-
-	var importIds = bundle.externalModules.map( getId );
-	var importNames = bundle.externalModules.map( getName );
 
 	if ( externalDefaults.length ) {
 		var defaultsBlock = externalDefaults.map( function(x ) {
@@ -2470,20 +2334,16 @@ function builders_strictMode_amd__amd ( bundle, options ) {
 		bundle.body.prepend( defaultsBlock + '\n\n' );
 	}
 
-	if ( entry.exports.length ) {
-		importIds.unshift( 'exports' );
-		importNames.unshift( 'exports' );
-
-		if ( entry.defaultExport ) {
-			bundle.body.append( '\n\n' + getExportBlock( entry ) );
-		}
+	if ( entry.defaultExport ) {
+		bundle.body.append( '\n\n' + getExportBlock( entry ) );
 	}
 
-	var intro = builders_strictMode_amd__introTemplate({
-		amdName: options.amdName ? (("" + (quote(options.amdName))) + ", ") : '',
-		amdDeps: importIds.length ? '[' + importIds.map( quote ).join( ', ' ) + '], ' : '',
-		names: importNames.join( ', ' )
-	}).replace( /\t/g, bundle.body.getIndentString() );
+	var intro = amdIntro({
+		name: options.amdName,
+		imports: bundle.externalModules,
+		hasExports: entry.exports.length,
+		indentStr: bundle.body.getIndentString()
+	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
 	return packageResult( bundle, bundle.body, options, 'toAmd', true );
@@ -2526,31 +2386,18 @@ function builders_strictMode_umd__umd ( bundle, options ) {
 
 	var entry = bundle.entryModule;
 
-	var hasImports = bundle.externalModules.length > 0;
-	var hasExports = entry.exports.length > 0;
+	var intro = umdIntro({
+		hasExports: entry.exports.length > 0,
+		imports: bundle.externalModules,
+		externalDefaults: bundle.externalModules.filter( builders_strictMode_umd__needsDefault ),
+		amdName: options.amdName,
+		name: options.name,
+		indentStr: bundle.body.getIndentString(),
+		strict: true
+	});
 
-	var intro;
-	if (!hasImports && !hasExports) {
-		intro = standaloneUmdIntro({
-			amdName: options.amdName,
-		}, bundle.body.getIndentString() );
-	} else {
-
-		if ( hasExports && entry.defaultExport ) {
-			bundle.body.append( '\n\n' + getExportBlock( entry ) );
-		}
-
-		var importPaths = bundle.externalModules.map( getId );
-		var importNames = bundle.externalModules.map( getName );
-
-		intro = strictUmdIntro({
-			hasExports: hasExports,
-			importPaths: importPaths,
-			importNames: importNames,
-			externalDefaults: bundle.externalModules.filter( builders_strictMode_umd__needsDefault ),
-			amdName: options.amdName,
-			name: options.name,
-		}, bundle.body.getIndentString() );
+	if ( entry.defaultExport ) {
+		bundle.body.append( '\n\n' + getExportBlock( entry ) );
 	}
 
 	bundle.body.indent().prepend( intro ).trimLines().append('\n\n}));');
@@ -2575,16 +2422,15 @@ var bundleBuilders = {
 };
 
 function concat ( bundle, options ) {
-	var intro, outro, indent;
-
 	// This bundle must be self-contained - no imports or exports
 	if ( bundle.externalModules.length || bundle.entryModule.exports.length ) {
 		throw new Error( (("bundle.concat() can only be used with bundles that have no imports/exports (imports: [" + (bundle.externalModules.map(function(x){return x.id}).join(', '))) + ("], exports: [" + (bundle.entryModule.exports.join(', '))) + "])") );
 	}
 
 	// TODO test these options
-	intro = 'intro' in options ? options.intro : ("(function () { 'use strict';\n\n");
-	outro = 'outro' in options ? options.outro : '\n\n})();';
+	var intro = 'intro' in options ? options.intro : ("(function () { 'use strict';\n\n");
+	var outro = 'outro' in options ? options.outro : '\n\n})();';
+	var indent;
 
 	if ( !( 'indent' in options ) || options.indent === true ) {
 		indent = bundle.body.getIndentString();
@@ -2597,26 +2443,28 @@ function concat ( bundle, options ) {
 	return packageResult( bundle, bundle.body, options, 'toString', true );
 }
 
-var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
-	alreadyWarned = false;
+var esperanto__deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
+var esperanto__alreadyWarned = false;
 
 function transpileMethod ( format ) {
 	return function ( source ) {var options = arguments[1];if(options === void 0)options = {};
-		var mod,
-			body,
-			builder;
+		var mod = getStandaloneModule({
+			source: source,
+			getModuleName: options.getModuleName,
+			strict: options.strict
+		});
 
-		mod = getStandaloneModule({ source: source, getModuleName: options.getModuleName, strict: options.strict });
-
-		if ( 'defaultOnly' in options && !alreadyWarned ) {
+		if ( 'defaultOnly' in options && !esperanto__alreadyWarned ) {
 			// TODO link to a wiki page explaining this, or something
-			console.log( deprecateMessage );
-			alreadyWarned = true;
+			console.log( esperanto__deprecateMessage );
+			esperanto__alreadyWarned = true;
 		}
 
 		if ( options.absolutePaths && !options.amdName ) {
 			throw new Error( 'You must specify an `amdName` in order to use the `absolutePaths` option' );
 		}
+
+		var builder;
 
 		if ( !options.strict ) {
 			// ensure there are no named imports/exports. TODO link to a wiki page...
@@ -2651,16 +2499,14 @@ var esperanto = {
 				concat: function(options ) {return concat( bundle, options || {} )}
 			};
 
-			function transpile ( format, options ) {
-				var builder;
-
-				options = options || {};
-
-				if ( 'defaultOnly' in options && !alreadyWarned ) {
+			function transpile ( format ) {var options = arguments[1];if(options === void 0)options = {};
+				if ( 'defaultOnly' in options && !esperanto__alreadyWarned ) {
 					// TODO link to a wiki page explaining this, or something
-					console.log( deprecateMessage );
-					alreadyWarned = true;
+					console.log( esperanto__deprecateMessage );
+					esperanto__alreadyWarned = true;
 				}
+
+				var builder;
 
 				if ( !options.strict ) {
 					// ensure there are no named imports/exports
@@ -2670,7 +2516,7 @@ var esperanto = {
 
 					bundle.modules.forEach( function(mod ) {
 						mod.imports.forEach( function(x ) {
-							if ( hasOwnProp.call( bundle.externalModuleLookup, x.id ) && ( !x.isDefault && !x.isBatch ) ) {
+							if ( utils_hasOwnProp.call( bundle.externalModuleLookup, x.id ) && ( !x.isDefault && !x.isBatch ) ) {
 								throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
 							}
 						});

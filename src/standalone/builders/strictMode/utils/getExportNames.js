@@ -10,7 +10,7 @@ export default function getExportNames ( exports ) {
 		}
 
 		x.specifiers.forEach( s => {
-			result[ s.name ] = s.name;
+			result[ s.name ] = s.as;
 		});
 	});
 

@@ -1,6 +1,6 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
-export default function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
+export default function rewriteExportAssignments ( body, node, parent, exports, scope, capturedUpdates ) {
 	let assignee;
 
 	if ( node.type === 'AssignmentExpression' ) {
@@ -31,9 +31,19 @@ export default function rewriteExportAssignments ( body, node, exports, scope, c
 
 		// special case - increment/decrement operators
 		if ( node.operator === '++' || node.operator === '--' ) {
-			body.replace( node.end, node.end, `, exports.${exportAs} = ${name}` );
+			let prefix = ``;
+			let suffix = `, exports.${exportAs} = ${name}`;
+			if ( parent.type !== 'ExpressionStatement' ) {
+				if ( !node.prefix ) {
+					suffix += `, ${name} ${node.operator === '++' ? '-' : '+'} 1`
+				}
+				prefix += `( `;
+				suffix += ` )`;
+			}
+			body.insert( node.start, prefix );
+			body.insert( node.end, suffix );
 		} else {
-			body.replace( node.start, node.start, `exports.${exportAs} = ` );
+			body.insert( node.start, `exports.${exportAs} = ` );
 		}
 	}
 }

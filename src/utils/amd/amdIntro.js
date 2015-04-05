@@ -1,23 +1,21 @@
-import { getId, getName, quote } from 'utils/mappers';
+import getImportSummary from './getImportSummary';
+import processName from './processName';
+import processIds from './processIds';
 
-export default function amdIntro ({ name, imports, hasExports, indentStr }) {
-	let paths = imports.map( getId );
-	let names = imports.map( getName );
+export default function amdIntro ({ name, imports, hasExports, indentStr, absolutePaths }) {
+	let { ids, names } = getImportSummary({ name, imports, absolutePaths });
 
 	if ( hasExports ) {
-		paths.unshift( 'exports' );
+		ids.unshift( 'exports' );
 		names.unshift( 'exports' );
 	}
 
-	return `define(${
-		name ? quote(name) + ', ' : ''
-}${
-		paths.length ? '[' + paths.map( quote ).join( ', ' ) + '], ' : ''
-}function (${
-		names.join( ', ' )
-}) {
+	let intro = `
+define(${processName(name)}${processIds(ids)}function (${names.join( ', ' ) }) {
 
 	'use strict';
 
-`.replace( /\t/g, indentStr );
+`;
+
+	return intro.replace( /\t/g, indentStr );
 }
