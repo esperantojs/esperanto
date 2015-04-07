@@ -8,7 +8,8 @@ export default function amd ( mod, options ) {
 		absolutePaths: options.absolutePaths,
 		imports: mod.imports,
 		indentStr: mod.body.getIndentString(),
-		hasExports: mod.exports.length
+		hasExports: mod.exports.length,
+		useStrict: options.useStrict !== false
 	});
 
 	transformBody( mod, mod.body, {

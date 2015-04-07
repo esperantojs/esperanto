@@ -15,7 +15,9 @@ export default function cjs ( bundle, options ) {
 		bundle.body.append( `\n\nmodule.exports = ${defaultName};` );
 	}
 
-	bundle.body.prepend("'use strict';\n\n").trimLines();
+	if ( options.useStrict !== false ) {
+		bundle.body.prepend("'use strict';\n\n").trimLines();
+	}
 
 	return packageResult( bundle, bundle.body, options, 'toCjs', true );
 }

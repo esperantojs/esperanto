@@ -1,0 +1,1 @@
+implicitGlobal = 'lol';

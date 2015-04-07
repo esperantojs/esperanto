@@ -2,7 +2,7 @@ import getImportSummary from './getImportSummary';
 import processName from './processName';
 import processIds from './processIds';
 
-export default function amdIntro ({ name, imports, hasExports, indentStr, absolutePaths }) {
+export default function amdIntro ({ name, imports, hasExports, indentStr, absolutePaths, useStrict }) {
 	let { ids, names } = getImportSummary({ name, imports, absolutePaths });
 
 	if ( hasExports ) {
@@ -13,9 +13,11 @@ export default function amdIntro ({ name, imports, hasExports, indentStr, absolu
 	let intro = `
 define(${processName(name)}${processIds(ids)}function (${names.join( ', ' ) }) {
 
-	'use strict';
-
 `;
 
-	return intro.replace( /\t/g, indentStr );
+	if ( useStrict ) {
+		intro += `${indentStr}'use strict';\n\n`;
+	}
+
+	return intro;
 }

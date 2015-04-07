@@ -102,7 +102,8 @@ module.exports = function () {
 								skip: config.skip,
 								names: config.names,
 								transform: config.transform,
-								resolvePath: config.resolvePath
+								resolvePath: config.resolvePath,
+								modules: config.modules
 							}).then( function ( bundle ) {
 								var options, transpiled, actual;
 
@@ -121,7 +122,8 @@ module.exports = function () {
 									name: options.name,
 									amdName: config.amdName,
 									banner: config.banner,
-									footer: config.footer
+									footer: config.footer,
+									useStrict: config.useStrict
 								});
 
 								if ( config.error ) {

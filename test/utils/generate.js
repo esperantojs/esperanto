@@ -37,6 +37,13 @@ require( './build' )().then( function ( esperanto ) {
 
 				if ( config.strict ) return;
 
+				if ( config.ast ) {
+					source = {
+						code: source,
+						ast: config.ast
+					};
+				}
+
 				promises = profiles.map( function ( profile ) {
 					var transpiled = esperanto[ profile.method ]( source, {
 						name: profile.options && profile.options.name,
@@ -44,7 +51,8 @@ require( './build' )().then( function ( esperanto ) {
 						absolutePaths: config.absolutePaths,
 						strict: profile.options && profile.options.strict,
 						banner: config.banner,
-						footer: config.footer
+						footer: config.footer,
+						useStrict: config.useStrict
 					});
 					return sander.writeFile( '../fastMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
@@ -80,6 +88,13 @@ require( './build' )().then( function ( esperanto ) {
 				var config = require( '../samples/' + sample + '/_config' ),
 					promises;
 
+				if ( config.ast ) {
+					source = {
+						code: source,
+						ast: config.ast
+					};
+				}
+
 				promises = profiles.map( function ( profile ) {
 					var transpiled = esperanto[ profile.method ]( source, {
 						name: profile.options && profile.options.name,
@@ -88,7 +103,8 @@ require( './build' )().then( function ( esperanto ) {
 						strict: profile.options && profile.options.strict,
 						banner: config.banner,
 						footer: config.footer,
-						_evilES3SafeReExports: config._evilES3SafeReExports
+						_evilES3SafeReExports: config._evilES3SafeReExports,
+						useStrict: config.useStrict
 					});
 					return sander.writeFile( '../strictMode/output', profile.outputdir, sample + '.js', transpiled.code );
 				});
@@ -137,7 +153,8 @@ require( './build' )().then( function ( esperanto ) {
 					skip: config.skip,
 					names: config.names,
 					transform: config.transform,
-					resolvePath: config.resolvePath
+					resolvePath: config.resolvePath,
+					modules: config.modules
 				}).then( function ( bundle ) {
 					try {
 						var transpiled = bundle[ profile.method ]({
@@ -145,7 +162,8 @@ require( './build' )().then( function ( esperanto ) {
 							name: profile.options && profile.options.name,
 							amdName: config.amdName,
 							banner: config.banner,
-							footer: config.footer
+							footer: config.footer,
+							useStrict: config.useStrict
 						});
 						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled.code );
 					} catch ( err ) {

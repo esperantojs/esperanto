@@ -13,7 +13,8 @@ export default function amd ( mod, options ) {
 		name: options.amdName,
 		imports: mod.imports,
 		absolutePaths: options.absolutePaths,
-		indentStr: mod.body.getIndentString()
+		indentStr: mod.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	mod.body.trim()

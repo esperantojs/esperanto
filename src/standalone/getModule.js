@@ -10,11 +10,20 @@ import { default as sanitize, splitPath } from 'utils/sanitize';
 const SOURCEMAPPINGURL_REGEX = /^# sourceMappingURL=/;
 
 export default function getStandaloneModule ( options ) {
+	let code, ast;
+
+	if ( typeof options.source === 'object' ) {
+		code = options.source.code;
+		ast = options.source.ast;
+	} else {
+		code = options.source;
+	}
+
 	let toRemove = [];
 
 	let mod = {
-		body: new MagicString( options.source ),
-		ast: acorn.parse( options.source, {
+		body: new MagicString( code ),
+		ast: ast || ( acorn.parse( code, {
 			ecmaVersion: 6,
 			sourceType: 'module',
 			onComment ( block, text, start, end ) {
@@ -23,12 +32,12 @@ export default function getStandaloneModule ( options ) {
 					toRemove.push({ start, end });
 				}
 			}
-		})
+		}))
 	};
 
 	toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 
-	let [ imports, exports ] = findImportsAndExports( mod, options.source, mod.ast );
+	let [ imports, exports ] = findImportsAndExports( mod, code, mod.ast );
 
 	disallowConflictingImports( imports );
 

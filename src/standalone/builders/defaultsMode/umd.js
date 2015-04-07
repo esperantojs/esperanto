@@ -16,7 +16,8 @@ export default function umd ( mod, options ) {
 		amdName: options.amdName,
 		absolutePaths: options.absolutePaths,
 		name: options.name,
-		indentStr: mod.body.getIndentString()
+		indentStr: mod.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	transformExportDeclaration( mod.exports[0], mod.body );

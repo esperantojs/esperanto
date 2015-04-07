@@ -5,12 +5,12 @@ import annotateAst from 'utils/ast/annotate';
 import disallowConflictingImports from '../utils/disallowConflictingImports';
 
 export default function getModule ( mod ) {
-	mod.body = new MagicString( mod.source );
+	mod.body = new MagicString( mod.code );
 
 	let toRemove = [];
 
 	try {
-		mod.ast = acorn.parse( mod.source, {
+		mod.ast = mod.ast || ( acorn.parse( mod.code, {
 			ecmaVersion: 6,
 			sourceType: 'module',
 			onComment ( block, text, start, end ) {
@@ -19,7 +19,7 @@ export default function getModule ( mod ) {
 					toRemove.push({ start, end });
 				}
 			}
-		});
+		}));
 
 		toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 		annotateAst( mod.ast );
@@ -33,7 +33,7 @@ export default function getModule ( mod ) {
 		throw err;
 	}
 
-	let [ imports, exports ] = findImportsAndExports( mod, mod.source, mod.ast );
+	let [ imports, exports ] = findImportsAndExports( mod, mod.code, mod.ast );
 
 	disallowConflictingImports( imports );
 

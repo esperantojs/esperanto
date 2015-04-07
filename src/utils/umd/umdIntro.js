@@ -3,7 +3,8 @@ import processName from '../amd/processName';
 import processIds from '../amd/processIds';
 import getImportSummary from '../amd/getImportSummary';
 
-export default function umdIntro ({ amdName, name, hasExports, imports, absolutePaths, externalDefaults, indentStr, strict }) {
+export default function umdIntro ({ amdName, name, hasExports, imports, absolutePaths, externalDefaults, indentStr, strict, useStrict }) {
+	const useStrictPragma = useStrict ? ` 'use strict';` : '';
 	let intro;
 
 	if ( !hasExports && !imports.length ) {
@@ -12,7 +13,7 @@ export default function umdIntro ({ amdName, name, hasExports, imports, absolute
 				!(typeof exports === 'object' && typeof module !== 'undefined') &&
 				typeof define === 'function' && define.amd ? define(${processName(amdName)}factory) :
 				factory()
-			}(function () { 'use strict';
+			}(function () {${useStrictPragma}
 
 			`;
 	}
@@ -53,7 +54,7 @@ export default function umdIntro ({ amdName, name, hasExports, imports, absolute
 				typeof exports === 'object' && typeof module !== 'undefined' ? ${cjsExport} :
 				typeof define === 'function' && define.amd ? ${amdExport} :
 				${globalExport}
-			}(this, function (${names.join( ', ' )}) { 'use strict';
+			}(this, function (${names.join( ', ' )}) {${useStrictPragma}
 
 			${defaultsBlock}`;
 

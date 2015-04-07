@@ -24,7 +24,9 @@ export default function cjs ( mod, options ) {
 		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
-	mod.body.prepend( "'use strict';\n\n" ).trimLines();
+	if ( options.useStrict !== false ) {
+		mod.body.prepend( "'use strict';\n\n" ).trimLines();
+	}
 
 	return packageResult( mod, mod.body, options, 'toCjs' );
 }

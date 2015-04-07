@@ -1,0 +1,5 @@
+define(function () {
+
+	implicitGlobal = 'lol';
+
+});

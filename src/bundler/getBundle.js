@@ -11,6 +11,7 @@ const Promise = sander.Promise;
 
 export default function getBundle ( options ) {
 	let entry = options.entry.replace( /\.js$/, '' );
+	let userModules = options.modules || {};
 	let modules = [];
 	let moduleLookup = {};
 	let promiseByPath = {};
@@ -24,8 +25,8 @@ export default function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return resolvePath( base, entry, null ).then( entryPath => {
-		return fetchModule( entry, entryPath ).then( () => {
+	return resolvePath( base, userModules, entry, null ).then( relativePath => {
+		return fetchModule( entry, relativePath ).then( () => {
 			let entryModule = moduleLookup[ entry ];
 			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
@@ -54,30 +55,46 @@ export default function getBundle ( options ) {
 		throw err;
 	});
 
-	function fetchModule ( moduleId, modulePath ) {
-		if ( !hasOwnProp.call( promiseByPath, modulePath ) ) {
-			promiseByPath[ modulePath ] = sander.readFile( modulePath ).then( String ).then( function ( source ) {
-				var module, promises;
+	function fetchModule ( moduleId, relativePath ) {
+		let absolutePath = path.resolve( base, relativePath );
+
+		if ( !hasOwnProp.call( promiseByPath, relativePath ) ) {
+			promiseByPath[ relativePath ] = (
+				hasOwnProp.call( userModules, relativePath ) ?
+					Promise.resolve( userModules[ relativePath ] ) :
+					sander.readFile( absolutePath ).then( String )
+			).then( function ( source ) {
+				let code, ast;
+
+				// normalise
+				if ( typeof source === 'object' ) {
+					code = source.code;
+					ast = source.ast;
+				} else {
+					code = source;
+					ast = null;
+				}
 
 				if ( options.transform ) {
-					source = options.transform( source, modulePath );
+					code = options.transform( code, absolutePath );
 
-					if ( typeof source !== 'string' && !isThenable( source ) ) {
+					if ( typeof code !== 'string' && !isThenable( code ) ) {
 						throw new Error( 'transform should return String or Promise' );
 					}
 				}
 
-				module = getModule({
-					source,
+				let module = getModule({
 					id: moduleId,
-					relativePath: path.relative( base, modulePath ),
-					path: modulePath
+					path: absolutePath,
+					code,
+					ast,
+					relativePath
 				});
 
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
-				promises = module.imports.map( x => {
+				let promises = module.imports.map( x => {
 					x.id = resolveId( x.path, module.relativePath );
 
 					if ( x.id === moduleId ) {
@@ -89,13 +106,13 @@ export default function getBundle ( options ) {
 						return;
 					}
 
-					return resolvePath( base, x.id, modulePath, options.resolvePath ).then( modulePath => {
+					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( relativePath => {
 						// short-circuit cycles
-						if ( hasOwnProp.call( promiseByPath, modulePath ) ) {
+						if ( hasOwnProp.call( promiseByPath, relativePath ) ) {
 							return;
 						}
 
-						return fetchModule( x.id, modulePath );
+						return fetchModule( x.id, relativePath );
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
@@ -117,13 +134,13 @@ export default function getBundle ( options ) {
 			});
 		}
 
-		return promiseByPath[ modulePath ];
+		return promiseByPath[ relativePath ];
 	}
 }
 
-function resolvePath ( base, moduleId, importerPath, resolver ) {
-	return tryPath( path.resolve( base, moduleId + '.js' ) )
-		.catch( () => tryPath( path.resolve( base, moduleId, 'index.js' ) ) )
+function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
+	return tryPath( base, moduleId + '.js', userModules )
+		.catch( () => tryPath( base, moduleId + path.sep + 'index.js', userModules ) )
 		.catch( function ( err ) {
 			if ( resolver ) {
 				return resolver( moduleId, importerPath );
@@ -133,8 +150,11 @@ function resolvePath ( base, moduleId, importerPath, resolver ) {
 		});
 }
 
-function tryPath ( path ) {
-	return sander.stat( path ).then( () => path );
+function tryPath ( base, filename, userModules ) {
+	if ( hasOwnProp.call( userModules, filename ) ) {
+		return Promise.resolve( filename );
+	}
+	return sander.stat( base, filename ).then( () => filename );
 }
 
 function isThenable ( obj ) {
