@@ -13,7 +13,8 @@ export default function umd ( mod, options ) {
 		absolutePaths: options.absolutePaths,
 		name: options.name,
 		indentStr: mod.body.getIndentString(),
-		strict: true
+		strict: true,
+		useStrict: options.useStrict !== false
 	});
 
 	transformBody( mod, mod.body, {

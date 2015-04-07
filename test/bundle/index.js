@@ -122,7 +122,8 @@ module.exports = function () {
 									name: options.name,
 									amdName: config.amdName,
 									banner: config.banner,
-									footer: config.footer
+									footer: config.footer,
+									useStrict: config.useStrict
 								});
 
 								if ( config.error ) {

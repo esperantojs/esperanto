@@ -15,7 +15,8 @@ export default function umd ( bundle, options ) {
 		amdName: options.amdName,
 		name: options.name,
 		indentStr: bundle.body.getIndentString(),
-		strict: true
+		strict: true,
+		useStrict: options.useStrict !== false
 	});
 
 	if ( entry.defaultExport ) {

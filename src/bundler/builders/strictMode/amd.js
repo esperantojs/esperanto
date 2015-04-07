@@ -28,7 +28,8 @@ export default function amd ( bundle, options ) {
 		name: options.amdName,
 		imports: bundle.externalModules,
 		hasExports: entry.exports.length,
-		indentStr: bundle.body.getIndentString()
+		indentStr: bundle.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );

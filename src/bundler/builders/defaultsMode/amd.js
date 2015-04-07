@@ -10,7 +10,8 @@ export default function amd ( bundle, options ) {
 	let intro = amdIntro({
 		name: options.amdName,
 		imports: bundle.externalModules,
-		indentStr: bundle.body.getIndentString()
+		indentStr: bundle.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );

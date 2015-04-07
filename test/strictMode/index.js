@@ -76,7 +76,8 @@ module.exports = function () {
 								absolutePaths: t.config.absolutePaths,
 								banner: t.config.banner,
 								footer: t.config.footer,
-								_evilES3SafeReExports: t.config._evilES3SafeReExports
+								_evilES3SafeReExports: t.config._evilES3SafeReExports,
+								useStrict: t.config.useStrict
 							});
 						} catch ( err ) {
 							if ( t.config.expectedError && ~err.message.indexOf( t.config.expectedError ) ) {

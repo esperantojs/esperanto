@@ -89,7 +89,8 @@ module.exports = function () {
 								amdName: t.config.amdName,
 								absolutePaths: t.config.absolutePaths,
 								banner: t.config.banner,
-								footer: t.config.footer
+								footer: t.config.footer,
+								useStrict: t.config.useStrict
 							});
 						} catch ( err ) {
 							if ( t.config.expectedError && ~err.message.indexOf( t.config.expectedError ) ) {
