@@ -1,5 +1,11 @@
 # changelog
 
+## 0.6.27
+
+* AST can be supplied when doing one-to-one transformations (e.g. `esperanto.toAmd({ code, ast })`) ([#140](https://github.com/esperantojs/esperanto/issues/140))
+* Modules can be supplied directly when bundling, rather than reading from disk ([docs here](https://github.com/esperantojs/esperanto/wiki/Bundling-multiple-ES6-modules#modules)) ([#140](https://github.com/esperantojs/esperanto/issues/140))
+* 'use strict' pragma is omitted if `useStrict: false` option is supplied ([#141](https://github.com/esperantojs/esperanto/issues/141))
+
 ## 0.6.26
 
 * AST walker handles sparse arrays ([#144](https://github.com/esperantojs/esperanto/issues/144))
