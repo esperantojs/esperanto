@@ -15,6 +15,8 @@ function isArray ( thing ) {
 }
 
 function visit ( node, parent, enter, leave ) {
+	if ( !node ) return;
+
 	if ( enter ) {
 		context.shouldSkip = false;
 		enter.call( context, node, parent );

@@ -92,23 +92,25 @@ function convert ( options, method ) {
 				}
 
 				// transpile all the things
-				return sander.lsr( options.input ).then( function ( files ) {
-					var promises = files.map( function ( file ) {
-						var input = path.join( options.input, file );
-						var output = path.join( options.output, file );
+				return sander.lsr( options.input )
+					.then( filterOutNonJs )
+					.then( function ( files ) {
+						var promises = files.map( function ( file ) {
+							var input = path.join( options.input, file );
+							var output = path.join( options.output, file );
 
-						var fileOptions = assign( {}, options, {
-							input: input,
-							output: output,
-							sourceMapSource: input,
-							sourceMapFile: output
+							var fileOptions = assign( {}, options, {
+								input: input,
+								output: output,
+								sourceMapSource: input,
+								sourceMapFile: output
+							});
+
+							return convert( fileOptions, method );
 						});
 
-						return convert( fileOptions, method );
+						return Promise.all( promises );
 					});
-
-					return Promise.all( promises );
-				});
 			}
 
 			return sander.readFile( options.input )
@@ -184,4 +186,11 @@ function assign ( target ) {
 	});
 
 	return target;
+}
+
+function filterOutNonJs ( files ) {
+	var isJs = /\.js$/;
+	return files.filter( function ( file ) {
+		return isJs.test( file );
+	});
 }

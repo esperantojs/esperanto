@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.24 - 2015-03-30
+	esperanto.js v0.6.26 - 2015-04-03
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -952,6 +952,8 @@
 	}
 
 	function visit ( node, parent, enter, leave ) {
+		if ( !node ) return;
+
 		if ( enter ) {
 			ast_walk__context.shouldSkip = false;
 			enter.call( ast_walk__context, node, parent );
@@ -2139,7 +2141,7 @@
 		}
 	}
 
-	function rewriteExportAssignments ( body, node, exports, scope, capturedUpdates ) {
+	function rewriteExportAssignments ( body, node, parent, exports, scope, capturedUpdates ) {
 		var assignee;
 
 		if ( node.type === 'AssignmentExpression' ) {
@@ -2170,9 +2172,19 @@
 
 			// special case - increment/decrement operators
 			if ( node.operator === '++' || node.operator === '--' ) {
-				body.replace( node.end, node.end, ((", exports." + exportAs) + (" = " + name) + "") );
+				var prefix = ("");
+				var suffix = ((", exports." + exportAs) + (" = " + name) + "");
+				if ( parent.type !== 'ExpressionStatement' ) {
+					if ( !node.prefix ) {
+						suffix += ((", " + name) + (" " + (node.operator === '++' ? '-' : '+')) + " 1")
+				}
+					prefix += ("( ");
+					suffix += (" )");
+				}
+				body.insert( node.start, prefix );
+				body.insert( node.end, suffix );
 			} else {
-				body.replace( node.start, node.start, (("exports." + exportAs) + " = ") );
+				body.insert( node.start, (("exports." + exportAs) + " = ") );
 			}
 		}
 	}
@@ -2211,7 +2223,7 @@
 				// Rewrite assignments to exports inside functions, to keep bindings live.
 				// This call may mutate `capturedUpdates`, which is used elsewhere
 				if ( scope !== ast._scope ) {
-					rewriteExportAssignments( body, node, exportNames, scope, capturedUpdates );
+					rewriteExportAssignments( body, node, parent, exportNames, scope, capturedUpdates );
 				}
 
 				if ( node.type === 'Identifier' && parent.type !== 'FunctionExpression' ) {
