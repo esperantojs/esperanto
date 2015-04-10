@@ -166,6 +166,12 @@ require( './build' )().then( function ( esperanto ) {
 							useStrict: config.useStrict,
 							sourceMap: config.sourceMap
 						});
+
+						// necessary for CI
+						if ( config.sourceMap ) {
+							transpiled.code = transpiled.code.replace( /base64,.+/, 'base64,xyz' );
+						}
+
 						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled.code );
 					} catch ( err ) {
 						// some modules can't be transpiled with defaultOnly

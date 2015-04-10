@@ -109,6 +109,10 @@ module.exports = function () {
 
 								options = profile.options || {};
 
+								if ( ( bundle.imports.length && !config.imports ) || ( bundle.exports.length && !config.exports ) ) {
+									throw new Error( 'config is missing imports/exports' );
+								}
+
 								if ( config.imports || bundle.imports.length ) {
 									assert.deepEqual( bundle.imports.sort(), config.imports.sort() );
 								}
@@ -132,6 +136,11 @@ module.exports = function () {
 								}
 
 								actual = makeWhitespaceVisible( transpiled.code );
+
+								// necessary for CI
+								if ( config.sourceMap ) {
+									actual = actual.replace( /base64,.+/, 'base64,xyz' );
+								}
 
 								return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
 									var expected = makeWhitespaceVisible( str );
