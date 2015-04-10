@@ -142,8 +142,19 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 	return tryPath( base, moduleId + '.js', userModules )
 		.catch( () => tryPath( base, moduleId + path.sep + 'index.js', userModules ) )
 		.catch( function ( err ) {
-			if ( resolver ) {
-				return resolver( moduleId, importerPath );
+			const resolvedPromise = resolver && Promise.resolve( resolver( moduleId, importerPath ) );
+
+			if ( resolvedPromise ) {
+				return resolvedPromise.then( resolvedPath => {
+					if ( !resolvedPath ) {
+						// hack but whatevs, it saves handling real ENOENTs differently
+						let err = new Error();
+						err.code = 'ENOENT';
+						throw err;
+					}
+
+					return sander.stat( resolvedPath ).then( () => resolvedPath );
+				});
 			} else {
 				throw err;
 			}
