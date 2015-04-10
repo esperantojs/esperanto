@@ -123,7 +123,8 @@ module.exports = function () {
 									amdName: config.amdName,
 									banner: config.banner,
 									footer: config.footer,
-									useStrict: config.useStrict
+									useStrict: config.useStrict,
+									sourceMap: config.sourceMap
 								});
 
 								if ( config.error ) {

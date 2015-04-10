@@ -163,7 +163,8 @@ require( './build' )().then( function ( esperanto ) {
 							amdName: config.amdName,
 							banner: config.banner,
 							footer: config.footer,
-							useStrict: config.useStrict
+							useStrict: config.useStrict,
+							sourceMap: config.sourceMap
 						});
 						return sander.writeFile( '../bundle/output', profile.outputdir, sourceBundle + '.js', transpiled.code );
 					} catch ( err ) {
