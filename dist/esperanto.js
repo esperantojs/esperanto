@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.26 - 2015-04-03
+	esperanto.js v0.6.28 - 2015-04-15
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -601,11 +601,20 @@ function splitPath ( path ) {
 var SOURCEMAPPINGURL_REGEX = /^# sourceMappingURL=/;
 
 function getStandaloneModule ( options ) {
+	var code, ast;
+
+	if ( typeof options.source === 'object' ) {
+		code = options.source.code;
+		ast = options.source.ast;
+	} else {
+		code = options.source;
+	}
+
 	var toRemove = [];
 
 	var mod = {
-		body: new MagicString( options.source ),
-		ast: acorn.parse( options.source, {
+		body: new MagicString( code ),
+		ast: ast || ( acorn.parse( code, {
 			ecmaVersion: 6,
 			sourceType: 'module',
 			onComment: function ( block, text, start, end ) {
@@ -614,12 +623,12 @@ function getStandaloneModule ( options ) {
 					toRemove.push({ start: start, end: end });
 				}
 			}
-		})
+		}))
 	};
 
 	toRemove.forEach( function(end)  {var start = end.start, end = end.end;return mod.body.remove( start, end )} );
 
-	var imports = (exports = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = exports[1];
+	var imports = (exports = findImportsAndExports( mod, code, mod.ast ))[0], exports = exports[1];
 
 	disallowConflictingImports( imports );
 
@@ -1444,12 +1453,12 @@ function combine ( bundle ) {
 }
 
 function getModule ( mod ) {
-	mod.body = new MagicString( mod.source );
+	mod.body = new MagicString( mod.code );
 
 	var toRemove = [];
 
 	try {
-		mod.ast = acorn.parse( mod.source, {
+		mod.ast = mod.ast || ( acorn.parse( mod.code, {
 			ecmaVersion: 6,
 			sourceType: 'module',
 			onComment: function ( block, text, start, end ) {
@@ -1458,7 +1467,7 @@ function getModule ( mod ) {
 					toRemove.push({ start: start, end: end });
 				}
 			}
-		});
+		}));
 
 		toRemove.forEach( function(end)  {var start = end.start, end = end.end;return mod.body.remove( start, end )} );
 		annotateAst( mod.ast );
@@ -1472,7 +1481,7 @@ function getModule ( mod ) {
 		throw err;
 	}
 
-	var imports = (exports = findImportsAndExports( mod, mod.source, mod.ast ))[0], exports = exports[1];
+	var imports = (exports = findImportsAndExports( mod, mod.code, mod.ast ))[0], exports = exports[1];
 
 	disallowConflictingImports( imports );
 
@@ -1514,6 +1523,7 @@ var bundler_getBundle__Promise = sander.Promise;
 
 function getBundle ( options ) {
 	var entry = options.entry.replace( /\.js$/, '' );
+	var userModules = options.modules || {};
 	var modules = [];
 	var moduleLookup = {};
 	var promiseByPath = {};
@@ -1527,8 +1537,8 @@ function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return resolvePath( base, entry, null ).then( function(entryPath ) {
-		return fetchModule( entry, entryPath ).then( function()  {
+	return resolvePath( base, userModules, entry, null ).then( function(relativePath ) {
+		return fetchModule( entry, relativePath ).then( function()  {
 			var entryModule = moduleLookup[ entry ];
 			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
 
@@ -1557,30 +1567,46 @@ function getBundle ( options ) {
 		throw err;
 	});
 
-	function fetchModule ( moduleId, modulePath ) {
-		if ( !utils_hasOwnProp.call( promiseByPath, modulePath ) ) {
-			promiseByPath[ modulePath ] = sander.readFile( modulePath ).then( String ).then( function ( source ) {
-				var module, promises;
+	function fetchModule ( moduleId, relativePath ) {
+		var absolutePath = _path.resolve( base, relativePath );
+
+		if ( !utils_hasOwnProp.call( promiseByPath, relativePath ) ) {
+			promiseByPath[ relativePath ] = (
+				utils_hasOwnProp.call( userModules, relativePath ) ?
+					bundler_getBundle__Promise.resolve( userModules[ relativePath ] ) :
+					sander.readFile( absolutePath ).then( String )
+			).then( function ( source ) {
+				var code, ast;
+
+				// normalise
+				if ( typeof source === 'object' ) {
+					code = source.code;
+					ast = source.ast;
+				} else {
+					code = source;
+					ast = null;
+				}
 
 				if ( options.transform ) {
-					source = options.transform( source, modulePath );
+					code = options.transform( code, absolutePath );
 
-					if ( typeof source !== 'string' && !isThenable( source ) ) {
+					if ( typeof code !== 'string' && !isThenable( code ) ) {
 						throw new Error( 'transform should return String or Promise' );
 					}
 				}
 
-				module = getModule({
-					source: source,
+				var module = getModule({
 					id: moduleId,
-					relativePath: _path.relative( base, modulePath ),
-					path: modulePath
+					path: absolutePath,
+					code: code,
+					ast: ast,
+					relativePath: relativePath
 				});
 
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
-				promises = module.imports.map( function(x ) {
+				var promises = module.imports.map( function(x ) {
 					x.id = resolveId( x.path, module.relativePath );
 
 					if ( x.id === moduleId ) {
@@ -1592,13 +1618,13 @@ function getBundle ( options ) {
 						return;
 					}
 
-					return resolvePath( base, x.id, modulePath, options.resolvePath ).then( function(modulePath ) {
+					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( function(relativePath ) {
 						// short-circuit cycles
-						if ( utils_hasOwnProp.call( promiseByPath, modulePath ) ) {
+						if ( utils_hasOwnProp.call( promiseByPath, relativePath ) ) {
 							return;
 						}
 
-						return fetchModule( x.id, modulePath );
+						return fetchModule( x.id, relativePath );
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
@@ -1620,24 +1646,38 @@ function getBundle ( options ) {
 			});
 		}
 
-		return promiseByPath[ modulePath ];
+		return promiseByPath[ relativePath ];
 	}
 }
 
-function resolvePath ( base, moduleId, importerPath, resolver ) {
-	return tryPath( _path.resolve( base, moduleId + '.js' ) )
-		.catch( function()  {return tryPath( _path.resolve( base, moduleId, 'index.js' ) )} )
+function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
+	return tryPath( base, moduleId + '.js', userModules )
+		.catch( function()  {return tryPath( base, moduleId + _path.sep + 'index.js', userModules )} )
 		.catch( function ( err ) {
-			if ( resolver ) {
-				return resolver( moduleId, importerPath );
+			var resolvedPromise = resolver && bundler_getBundle__Promise.resolve( resolver( moduleId, importerPath ) );
+
+			if ( resolvedPromise ) {
+				return resolvedPromise.then( function(resolvedPath ) {
+					if ( !resolvedPath ) {
+						// hack but whatevs, it saves handling real ENOENTs differently
+						var err = new Error();
+						err.code = 'ENOENT';
+						throw err;
+					}
+
+					return sander.stat( resolvedPath ).then( function()  {return resolvedPath} );
+				});
 			} else {
 				throw err;
 			}
 		});
 }
 
-function tryPath ( path ) {
-	return sander.stat( path ).then( function()  {return path} );
+function tryPath ( base, filename, userModules ) {
+	if ( utils_hasOwnProp.call( userModules, filename ) ) {
+		return bundler_getBundle__Promise.resolve( filename );
+	}
+	return sander.stat( base, filename ).then( function()  {return filename} );
 }
 
 function isThenable ( obj ) {
@@ -1838,7 +1878,7 @@ function processIds ( ids ) {
 	return ids.length ? '[' + ids.map( quote ).join( ', ' ) + '], ' : '';
 }
 
-function amdIntro (absolutePaths) {var name = absolutePaths.name, imports = absolutePaths.imports, hasExports = absolutePaths.hasExports, indentStr = absolutePaths.indentStr, absolutePaths = absolutePaths.absolutePaths;
+function amdIntro (useStrict) {var name = useStrict.name, imports = useStrict.imports, hasExports = useStrict.hasExports, indentStr = useStrict.indentStr, absolutePaths = useStrict.absolutePaths, useStrict = useStrict.useStrict;
 	var ids = (names = getImportSummary({ name: name, imports: imports, absolutePaths: absolutePaths })).ids, names = names.names;
 
 	if ( hasExports ) {
@@ -1849,11 +1889,13 @@ function amdIntro (absolutePaths) {var name = absolutePaths.name, imports = abso
 	var intro = (("\
 \ndefine(" + (processName(name))) + ("" + (processIds(ids))) + ("function (" + (names.join( ', ' ))) + ") {\
 \n\
-\n	'use strict';\
-\n\
 \n");
 
-	return intro.replace( /\t/g, indentStr );
+	if ( useStrict ) {
+		intro += (("" + indentStr) + "'use strict';\n\n");
+	}
+
+	return intro;
 }
 
 function defaultsMode_amd__amd ( mod, options ) {
@@ -1867,7 +1909,8 @@ function defaultsMode_amd__amd ( mod, options ) {
 		name: options.amdName,
 		imports: mod.imports,
 		absolutePaths: options.absolutePaths,
-		indentStr: mod.body.getIndentString()
+		indentStr: mod.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	mod.body.trim()
@@ -1909,21 +1952,24 @@ function defaultsMode_cjs__cjs ( mod, options ) {
 		}
 	}
 
-	mod.body.prepend( "'use strict';\n\n" ).trimLines();
+	if ( options.useStrict !== false ) {
+		mod.body.prepend( "'use strict';\n\n" ).trimLines();
+	}
 
 	return packageResult( mod, mod.body, options, 'toCjs' );
 }
 
-function umdIntro (strict) {var amdName = strict.amdName, name = strict.name, hasExports = strict.hasExports, imports = strict.imports, absolutePaths = strict.absolutePaths, externalDefaults = strict.externalDefaults, indentStr = strict.indentStr, strict = strict.strict;
+function umdIntro (useStrict) {var amdName = useStrict.amdName, name = useStrict.name, hasExports = useStrict.hasExports, imports = useStrict.imports, absolutePaths = useStrict.absolutePaths, externalDefaults = useStrict.externalDefaults, indentStr = useStrict.indentStr, strict = useStrict.strict, useStrict = useStrict.useStrict;
+	var useStrictPragma = useStrict ? (" 'use strict';") : '';
 	var intro;
 
 	if ( !hasExports && !imports.length ) {
 		intro =
 			(("(function (factory) {\
 \n				!(typeof exports === 'object' && typeof module !== 'undefined') &&\
-\n				typeof define === 'function' && define.amd ? define(" + (processName(amdName))) + "factory) :\
+\n				typeof define === 'function' && define.amd ? define(" + (processName(amdName))) + ("factory) :\
 \n				factory()\
-\n			}(function () { 'use strict';\
+\n			}(function () {" + useStrictPragma) + "\
 \n\
 \n			");
 	}
@@ -1964,7 +2010,7 @@ function umdIntro (strict) {var amdName = strict.amdName, name = strict.name, ha
 \n				typeof exports === 'object' && typeof module !== 'undefined' ? " + cjsExport) + (" :\
 \n				typeof define === 'function' && define.amd ? " + amdExport) + (" :\
 \n				" + globalExport) + ("\
-\n			}(this, function (" + (names.join( ', ' ))) + (") { 'use strict';\
+\n			}(this, function (" + (names.join( ', ' ))) + (") {" + useStrictPragma) + ("\
 \n\
 \n			" + defaultsBlock) + "");
 
@@ -2013,7 +2059,8 @@ function defaultsMode_umd__umd ( mod, options ) {
 		amdName: options.amdName,
 		absolutePaths: options.absolutePaths,
 		name: options.name,
-		indentStr: mod.body.getIndentString()
+		indentStr: mod.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	transformExportDeclaration( mod.exports[0], mod.body );
@@ -2176,7 +2223,8 @@ function strictMode_amd__amd ( mod, options ) {
 		absolutePaths: options.absolutePaths,
 		imports: mod.imports,
 		indentStr: mod.body.getIndentString(),
-		hasExports: mod.exports.length
+		hasExports: mod.exports.length,
+		useStrict: options.useStrict !== false
 	});
 
 	utils_transformBody__transformBody( mod, mod.body, {
@@ -2209,7 +2257,9 @@ function strictMode_cjs__cjs ( mod, options ) {
 		_evilES3SafeReExports: options._evilES3SafeReExports
 	});
 
-	mod.body.prepend( "'use strict';\n\n" ).trimLines();
+	if ( options.useStrict !== false ) {
+		mod.body.prepend( "'use strict';\n\n" ).trimLines();
+	}
 
 	return packageResult( mod, mod.body, options, 'toCjs' );
 }
@@ -2224,7 +2274,8 @@ function strictMode_umd__umd ( mod, options ) {
 		absolutePaths: options.absolutePaths,
 		name: options.name,
 		indentStr: mod.body.getIndentString(),
-		strict: true
+		strict: true,
+		useStrict: options.useStrict !== false
 	});
 
 	utils_transformBody__transformBody( mod, mod.body, {
@@ -2257,7 +2308,8 @@ function builders_defaultsMode_amd__amd ( bundle, options ) {
 	var intro = amdIntro({
 		name: options.amdName,
 		imports: bundle.externalModules,
-		indentStr: bundle.body.getIndentString()
+		indentStr: bundle.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
@@ -2278,7 +2330,9 @@ function builders_defaultsMode_cjs__cjs ( bundle, options ) {
 		bundle.body.append( (("\n\nmodule.exports = " + defaultName) + ";") );
 	}
 
-	bundle.body.prepend("'use strict';\n\n").trimLines();
+	if ( options.useStrict !== false ) {
+		bundle.body.prepend("'use strict';\n\n").trimLines();
+	}
 
 	return packageResult( bundle, bundle.body, options, 'toCjs', true );
 }
@@ -2293,7 +2347,8 @@ function builders_defaultsMode_umd__umd ( bundle, options ) {
 		imports: bundle.externalModules,
 		amdName: options.amdName,
 		name: options.name,
-		indentStr: bundle.body.getIndentString()
+		indentStr: bundle.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	if ( entry.defaultExport ) {
@@ -2342,7 +2397,8 @@ function builders_strictMode_amd__amd ( bundle, options ) {
 		name: options.amdName,
 		imports: bundle.externalModules,
 		hasExports: entry.exports.length,
-		indentStr: bundle.body.getIndentString()
+		indentStr: bundle.body.getIndentString(),
+		useStrict: options.useStrict !== false
 	});
 
 	bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
@@ -2376,7 +2432,9 @@ function builders_strictMode_cjs__cjs ( bundle, options ) {
 		bundle.body.append( '\n\n' + getExportBlock( entry ) );
 	}
 
-	bundle.body.prepend("'use strict';\n\n").trimLines();
+	if ( options.useStrict !== false ) {
+		bundle.body.prepend("'use strict';\n\n").trimLines();
+	}
 
 	return packageResult( bundle, bundle.body, options, 'toCjs', true );
 }
@@ -2393,7 +2451,8 @@ function builders_strictMode_umd__umd ( bundle, options ) {
 		amdName: options.amdName,
 		name: options.name,
 		indentStr: bundle.body.getIndentString(),
-		strict: true
+		strict: true,
+		useStrict: options.useStrict !== false
 	});
 
 	if ( entry.defaultExport ) {

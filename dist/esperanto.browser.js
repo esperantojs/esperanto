@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.26 - 2015-04-03
+	esperanto.js v0.6.28 - 2015-04-15
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -147,9 +147,9 @@
 			);
 
 			return new src_SourceMap({
-				file: options.file.split( /[\/\\]/ ).pop(),
+				file: ( options.file ? options.file.split( /[\/\\]/ ).pop() : null ),
 				sources: this.sources.map( function ( source ) {
-					return utils_getRelativePath__getRelativePath( options.file, source.filename );
+					return options.file ? utils_getRelativePath__getRelativePath( options.file, source.filename ) : source.filename;
 				}),
 				sourcesContent: this.sources.map( function ( source ) {
 					return options.includeContent ? source.content.original : null;
@@ -558,7 +558,7 @@
 			options = options || {};
 
 			return new src_SourceMap({
-				file: ( options.file ? options.file.split( '/' ).pop() : null ),
+				file: ( options.file ? options.file.split( /[\/\\]/ ).pop() : null ),
 				sources: [ options.source ? utils_getRelativePath__getRelativePath( options.file || '', options.source ) : null ],
 				sourcesContent: options.includeContent ? [ this.original ] : [ null ],
 				names: [],
@@ -686,9 +686,7 @@
 				throw new TypeError( 'inserted content must be a string' );
 			}
 
-			if ( index === 0 ) {
-				this.prepend( content );
-			} else if ( index === this.original.length ) {
+			if ( index === this.original.length ) {
 				this.append( content );
 			} else {
 				var mapped = this.locate(index);
@@ -1501,11 +1499,20 @@
 	var SOURCEMAPPINGURL_REGEX = /^# sourceMappingURL=/;
 
 	function getStandaloneModule ( options ) {
+		var code, ast;
+
+		if ( typeof options.source === 'object' ) {
+			code = options.source.code;
+			ast = options.source.ast;
+		} else {
+			code = options.source;
+		}
+
 		var toRemove = [];
 
 		var mod = {
-			body: new magic_string( options.source ),
-			ast: acorn.parse( options.source, {
+			body: new magic_string( code ),
+			ast: ast || ( acorn.parse( code, {
 				ecmaVersion: 6,
 				sourceType: 'module',
 				onComment: function ( block, text, start, end ) {
@@ -1514,12 +1521,12 @@
 						toRemove.push({ start: start, end: end });
 					}
 				}
-			})
+			}))
 		};
 
 		toRemove.forEach( function(end)  {var start = end.start, end = end.end;return mod.body.remove( start, end )} );
 
-		var imports = (exports = findImportsAndExports( mod, options.source, mod.ast ))[0], exports = exports[1];
+		var imports = (exports = findImportsAndExports( mod, code, mod.ast ))[0], exports = exports[1];
 
 		disallowConflictingImports( imports );
 
@@ -1839,7 +1846,7 @@
 		return ids.length ? '[' + ids.map( quote ).join( ', ' ) + '], ' : '';
 	}
 
-	function amdIntro (absolutePaths) {var name = absolutePaths.name, imports = absolutePaths.imports, hasExports = absolutePaths.hasExports, indentStr = absolutePaths.indentStr, absolutePaths = absolutePaths.absolutePaths;
+	function amdIntro (useStrict) {var name = useStrict.name, imports = useStrict.imports, hasExports = useStrict.hasExports, indentStr = useStrict.indentStr, absolutePaths = useStrict.absolutePaths, useStrict = useStrict.useStrict;
 		var ids = (names = getImportSummary({ name: name, imports: imports, absolutePaths: absolutePaths })).ids, names = names.names;
 
 		if ( hasExports ) {
@@ -1850,11 +1857,13 @@
 		var intro = (("\
 \ndefine(" + (processName(name))) + ("" + (processIds(ids))) + ("function (" + (names.join( ', ' ))) + ") {\
 \n\
-\n	'use strict';\
-\n\
 \n");
 
-		return intro.replace( /\t/g, indentStr );
+		if ( useStrict ) {
+			intro += (("" + indentStr) + "'use strict';\n\n");
+		}
+
+		return intro;
 	}
 
 	function defaultsMode_amd__amd ( mod, options ) {
@@ -1868,7 +1877,8 @@
 			name: options.amdName,
 			imports: mod.imports,
 			absolutePaths: options.absolutePaths,
-			indentStr: mod.body.getIndentString()
+			indentStr: mod.body.getIndentString(),
+			useStrict: options.useStrict !== false
 		});
 
 		mod.body.trim()
@@ -1910,21 +1920,24 @@
 			}
 		}
 
-		mod.body.prepend( "'use strict';\n\n" ).trimLines();
+		if ( options.useStrict !== false ) {
+			mod.body.prepend( "'use strict';\n\n" ).trimLines();
+		}
 
 		return packageResult( mod, mod.body, options, 'toCjs' );
 	}
 
-	function umdIntro (strict) {var amdName = strict.amdName, name = strict.name, hasExports = strict.hasExports, imports = strict.imports, absolutePaths = strict.absolutePaths, externalDefaults = strict.externalDefaults, indentStr = strict.indentStr, strict = strict.strict;
+	function umdIntro (useStrict) {var amdName = useStrict.amdName, name = useStrict.name, hasExports = useStrict.hasExports, imports = useStrict.imports, absolutePaths = useStrict.absolutePaths, externalDefaults = useStrict.externalDefaults, indentStr = useStrict.indentStr, strict = useStrict.strict, useStrict = useStrict.useStrict;
+		var useStrictPragma = useStrict ? (" 'use strict';") : '';
 		var intro;
 
 		if ( !hasExports && !imports.length ) {
 			intro =
 				(("(function (factory) {\
 \n				!(typeof exports === 'object' && typeof module !== 'undefined') &&\
-\n				typeof define === 'function' && define.amd ? define(" + (processName(amdName))) + "factory) :\
+\n				typeof define === 'function' && define.amd ? define(" + (processName(amdName))) + ("factory) :\
 \n				factory()\
-\n			}(function () { 'use strict';\
+\n			}(function () {" + useStrictPragma) + "\
 \n\
 \n			");
 		}
@@ -1965,7 +1978,7 @@
 \n				typeof exports === 'object' && typeof module !== 'undefined' ? " + cjsExport) + (" :\
 \n				typeof define === 'function' && define.amd ? " + amdExport) + (" :\
 \n				" + globalExport) + ("\
-\n			}(this, function (" + (names.join( ', ' ))) + (") { 'use strict';\
+\n			}(this, function (" + (names.join( ', ' ))) + (") {" + useStrictPragma) + ("\
 \n\
 \n			" + defaultsBlock) + "");
 
@@ -2014,7 +2027,8 @@
 			amdName: options.amdName,
 			absolutePaths: options.absolutePaths,
 			name: options.name,
-			indentStr: mod.body.getIndentString()
+			indentStr: mod.body.getIndentString(),
+			useStrict: options.useStrict !== false
 		});
 
 		transformExportDeclaration( mod.exports[0], mod.body );
@@ -2363,7 +2377,8 @@
 			absolutePaths: options.absolutePaths,
 			imports: mod.imports,
 			indentStr: mod.body.getIndentString(),
-			hasExports: mod.exports.length
+			hasExports: mod.exports.length,
+			useStrict: options.useStrict !== false
 		});
 
 		transformBody( mod, mod.body, {
@@ -2396,7 +2411,9 @@
 			_evilES3SafeReExports: options._evilES3SafeReExports
 		});
 
-		mod.body.prepend( "'use strict';\n\n" ).trimLines();
+		if ( options.useStrict !== false ) {
+			mod.body.prepend( "'use strict';\n\n" ).trimLines();
+		}
 
 		return packageResult( mod, mod.body, options, 'toCjs' );
 	}
@@ -2411,7 +2428,8 @@
 			absolutePaths: options.absolutePaths,
 			name: options.name,
 			indentStr: mod.body.getIndentString(),
-			strict: true
+			strict: true,
+			useStrict: options.useStrict !== false
 		});
 
 		transformBody( mod, mod.body, {
@@ -2444,7 +2462,8 @@
 		var intro = amdIntro({
 			name: options.amdName,
 			imports: bundle.externalModules,
-			indentStr: bundle.body.getIndentString()
+			indentStr: bundle.body.getIndentString(),
+			useStrict: options.useStrict !== false
 		});
 
 		bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
@@ -2465,7 +2484,9 @@
 			bundle.body.append( (("\n\nmodule.exports = " + defaultName) + ";") );
 		}
 
-		bundle.body.prepend("'use strict';\n\n").trimLines();
+		if ( options.useStrict !== false ) {
+			bundle.body.prepend("'use strict';\n\n").trimLines();
+		}
 
 		return packageResult( bundle, bundle.body, options, 'toCjs', true );
 	}
@@ -2480,7 +2501,8 @@
 			imports: bundle.externalModules,
 			amdName: options.amdName,
 			name: options.name,
-			indentStr: bundle.body.getIndentString()
+			indentStr: bundle.body.getIndentString(),
+			useStrict: options.useStrict !== false
 		});
 
 		if ( entry.defaultExport ) {
@@ -2529,7 +2551,8 @@
 			name: options.amdName,
 			imports: bundle.externalModules,
 			hasExports: entry.exports.length,
-			indentStr: bundle.body.getIndentString()
+			indentStr: bundle.body.getIndentString(),
+			useStrict: options.useStrict !== false
 		});
 
 		bundle.body.indent().prepend( intro ).trimLines().append( '\n\n});' );
@@ -2563,7 +2586,9 @@
 			bundle.body.append( '\n\n' + getExportBlock( entry ) );
 		}
 
-		bundle.body.prepend("'use strict';\n\n").trimLines();
+		if ( options.useStrict !== false ) {
+			bundle.body.prepend("'use strict';\n\n").trimLines();
+		}
 
 		return packageResult( bundle, bundle.body, options, 'toCjs', true );
 	}
@@ -2580,7 +2605,8 @@
 			amdName: options.amdName,
 			name: options.name,
 			indentStr: bundle.body.getIndentString(),
-			strict: true
+			strict: true,
+			useStrict: options.useStrict !== false
 		});
 
 		if ( entry.defaultExport ) {

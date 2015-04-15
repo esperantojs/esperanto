@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.28
+
+* `resolvePath` option is not required to return a path (e.g. `esperanto.toAmd({ code, ast })`) ([#148](https://github.com/esperantojs/esperanto/issues/148))
+
 ## 0.6.27
 
 * AST can be supplied when doing one-to-one transformations (e.g. `esperanto.toAmd({ code, ast })`) ([#140](https://github.com/esperantojs/esperanto/issues/140))
