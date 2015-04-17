@@ -92,95 +92,97 @@ module.exports = function () {
 
 			profiles.forEach( function ( profile ) {
 				describe( profile.description + ':', function () {
-					sander.readdirSync( __dirname, 'input' ).forEach( function ( dir ) {
-						var config = require( './input/' + dir + '/_config' );
+					sander.readdirSync( __dirname, 'input' )
+						.filter( Number ) // filter out .DS_Store and assorted crap
+						.forEach( function ( dir ) {
+							var config = require( './input/' + dir + '/_config' );
 
-						( config.solo ? it.only : it )( dir + ': ' + config.description, function () {
-							return esperanto.bundle({
-								base: path.resolve( 'bundle/input', dir ),
-								entry: config.entry || 'main',
-								skip: config.skip,
-								names: config.names,
-								transform: config.transform,
-								resolvePath: config.resolvePath,
-								modules: config.modules
-							}).then( function ( bundle ) {
-								var options, transpiled, actual;
+							( config.solo ? it.only : it )( dir + ': ' + config.description, function () {
+								return esperanto.bundle({
+									base: path.resolve( 'bundle/input', dir ),
+									entry: config.entry || 'main',
+									skip: config.skip,
+									names: config.names,
+									transform: config.transform,
+									resolvePath: config.resolvePath,
+									modules: config.modules
+								}).then( function ( bundle ) {
+									var options, transpiled, actual;
 
-								options = profile.options || {};
+									options = profile.options || {};
 
-								if ( ( bundle.imports.length && !config.imports ) || ( bundle.exports.length && !config.exports ) ) {
-									throw new Error( 'config is missing imports/exports' );
-								}
-
-								if ( config.imports || bundle.imports.length ) {
-									assert.deepEqual( bundle.imports.sort(), config.imports.sort() );
-								}
-
-								if ( config.exports || bundle.exports.length ) {
-									assert.deepEqual( bundle.exports.sort(), config.exports.sort() );
-								}
-
-								transpiled = bundle[ profile.method ]({
-									strict: options.strict,
-									name: options.name,
-									amdName: config.amdName,
-									banner: config.banner,
-									footer: config.footer,
-									useStrict: config.useStrict,
-									sourceMap: config.sourceMap
-								});
-
-								if ( config.error ) {
-									throw new Error( 'Expected error but none was raised' );
-								}
-
-								actual = makeWhitespaceVisible( transpiled.code );
-
-								// necessary for CI
-								if ( config.sourceMap ) {
-									actual = actual.replace( /base64,.+/, 'base64,xyz' );
-								}
-
-								return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
-									var expected = makeWhitespaceVisible( str );
-
-									if ( config.strict && !options.strict ) {
-										throw new Error( 'Test should fail in non-strict mode' );
+									if ( ( bundle.imports.length && !config.imports ) || ( bundle.exports.length && !config.exports ) ) {
+										throw new Error( 'config is missing imports/exports' );
 									}
 
-									assert.equal( actual, expected, 'Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+									if ( config.imports || bundle.imports.length ) {
+										assert.deepEqual( bundle.imports.sort(), config.imports.sort() );
+									}
+
+									if ( config.exports || bundle.exports.length ) {
+										assert.deepEqual( bundle.exports.sort(), config.exports.sort() );
+									}
+
+									transpiled = bundle[ profile.method ]({
+										strict: options.strict,
+										name: options.name,
+										amdName: config.amdName,
+										banner: config.banner,
+										footer: config.footer,
+										useStrict: config.useStrict,
+										sourceMap: config.sourceMap
+									});
+
+									if ( config.error ) {
+										throw new Error( 'Expected error but none was raised' );
+									}
+
+									actual = makeWhitespaceVisible( transpiled.code );
+
+									// necessary for CI
+									if ( config.sourceMap ) {
+										actual = actual.replace( /base64,.+/, 'base64,xyz' );
+									}
+
+									return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
+										var expected = makeWhitespaceVisible( str );
+
+										if ( config.strict && !options.strict ) {
+											throw new Error( 'Test should fail in non-strict mode' );
+										}
+
+										assert.equal( actual, expected, 'Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+									}).catch( function ( err ) {
+										if ( err.code === 'ENOENT' ) {
+											assert.equal( actual, '', 'Expected\n>\n' + actual + '\n>\n\nto match non-existent file' );
+										} else {
+											throw err;
+										}
+									});
 								}).catch( function ( err ) {
-									if ( err.code === 'ENOENT' ) {
-										assert.equal( actual, '', 'Expected\n>\n' + actual + '\n>\n\nto match non-existent file' );
-									} else {
+									// strict mode tests should fail
+									if ( /strict mode/.test( err.message ) && config.strict ) {
+										return;
+									}
+
+									if ( /bundles that have no imports\/exports/.test( err.message ) && profile.method === 'concat' ) {
+										return;
+									}
+
+									if ( !config.error ) {
+										throw err;
+									}
+
+									if ( config.error instanceof RegExp ) {
+										if ( !config.error.test( err.message ) ) {
+											throw err;
+										}
+									} else if ( !config.error( err ) ) {
 										throw err;
 									}
 								});
-							}).catch( function ( err ) {
-								// strict mode tests should fail
-								if ( /strict mode/.test( err.message ) && config.strict ) {
-									return;
-								}
-
-								if ( /bundles that have no imports\/exports/.test( err.message ) && profile.method === 'concat' ) {
-									return;
-								}
-
-								if ( !config.error ) {
-									throw err;
-								}
-
-								if ( config.error instanceof RegExp ) {
-									if ( !config.error.test( err.message ) ) {
-										throw err;
-									}
-								} else if ( !config.error( err ) ) {
-									throw err;
-								}
 							});
 						});
-					});
 				});
 			});
 		});
