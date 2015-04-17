@@ -78,8 +78,6 @@ function processImport ( node, passthrough ) {
 
 		path: node.source.value,
 		specifiers: node.specifiers.map( s => {
-			var id;
-
 			if ( s.type === 'ImportNamespaceSpecifier' ) {
 				return {
 					isBatch: true,
@@ -93,7 +91,7 @@ function processImport ( node, passthrough ) {
 					isDefault: true,
 					name: 'default',
 					as: s.local.name
-				}
+				};
 			}
 
 			return {

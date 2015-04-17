@@ -1,7 +1,7 @@
 import hasOwnProp from 'utils/hasOwnProp';
 import walk from 'utils/ast/walk';
 
-export default function sortModules ( entry, moduleLookup, externalModuleLookup ) {
+export default function sortModules ( entry, moduleLookup ) {
 	let seen = {};
 	let ordered = [];
 	let swapPairs = [];

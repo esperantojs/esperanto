@@ -35,7 +35,7 @@ export default function rewriteExportAssignments ( body, node, parent, exports, 
 			let suffix = `, exports.${exportAs} = ${name}`;
 			if ( parent.type !== 'ExpressionStatement' ) {
 				if ( !node.prefix ) {
-					suffix += `, ${name} ${node.operator === '++' ? '-' : '+'} 1`
+					suffix += `, ${name} ${node.operator === '++' ? '-' : '+'} 1`;
 				}
 				prefix += `( `;
 				suffix += ` )`;

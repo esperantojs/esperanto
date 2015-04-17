@@ -28,7 +28,7 @@ export default function getBundle ( options ) {
 	return resolvePath( base, userModules, entry, null ).then( relativePath => {
 		return fetchModule( entry, relativePath ).then( () => {
 			let entryModule = moduleLookup[ entry ];
-			modules = sortModules( entryModule, moduleLookup, externalModuleLookup );
+			modules = sortModules( entryModule, moduleLookup );
 
 			let bundle = {
 				entry,
