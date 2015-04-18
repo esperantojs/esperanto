@@ -1,5 +1,10 @@
 # changelog
 
+## 0.6.29
+
+* Relative source URLs in sourcemaps are correct
+* `src` directory included in npm package
+
 ## 0.6.28
 
 * `resolvePath` option is not required to return a path (e.g. `esperanto.toAmd({ code, ast })`) ([#148](https://github.com/esperantojs/esperanto/issues/148))
