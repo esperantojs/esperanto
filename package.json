@@ -28,8 +28,9 @@
   },
   "files": [
     "esperanto.js",
-    "dist/*",
-    "bin/*",
+    "src",
+    "dist",
+    "bin",
     "README.md"
   ],
   "scripts": {
