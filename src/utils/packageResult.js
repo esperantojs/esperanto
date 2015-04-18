@@ -73,6 +73,10 @@ function getRelativePath ( from, to ) {
 
 	fromParts.pop(); // get dirname
 
+	while ( fromParts[0] === '.' ) {
+		fromParts.shift();
+	}
+
 	while ( fromParts[0] === toParts[0] ) {
 		fromParts.shift();
 		toParts.shift();
