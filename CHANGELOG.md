@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.30
+
+* Mutually dependent modules within a bundle are re-ordered based on whether one is referenced at the top level of the other ([#152](https://github.com/esperantojs/esperanto/issues/152))
+
 ## 0.6.29
 
 * Relative source URLs in sourcemaps are correct

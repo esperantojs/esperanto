@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.29 - 2015-04-18
+	esperanto.js v0.6.30 - 2015-04-25
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -357,8 +357,6 @@ function processImport ( node, passthrough ) {
 
 		path: node.source.value,
 		specifiers: node.specifiers.map( function(s ) {
-			var id;
-
 			if ( s.type === 'ImportNamespaceSpecifier' ) {
 				return {
 					isBatch: true,
@@ -372,7 +370,7 @@ function processImport ( node, passthrough ) {
 					isDefault: true,
 					name: 'default',
 					as: s.local.name
-				}
+				};
 			}
 
 			return {
@@ -754,20 +752,28 @@ function resolveAgainst ( importerPath ) {
 }
 
 function sortModules ( entry, moduleLookup ) {
-	var seen = {},
-		ordered = [];
+	var seen = {};
+	var ordered = [];
+	var swapPairs = [];
 
 	function visit ( mod ) {
-		// ignore external modules, and modules we've
-		// already included
-		if ( !mod || hasOwnProp.call( seen, mod.id ) ) {
-			return;
-		}
-
 		seen[ mod.id ] = true;
 
 		mod.imports.forEach( function(x ) {
-			visit( moduleLookup[ x.id ] );
+			var imported = moduleLookup[ x.id ];
+
+			if ( !imported ) return;
+
+			// ignore modules we've already included
+			if ( hasOwnProp.call( seen, imported.id ) ) {
+				if ( shouldSwap( imported, mod ) ) {
+					swapPairs.push([ imported, mod ]);
+				}
+
+				return;
+			}
+
+			visit( imported );
 		});
 
 		ordered.push( mod );
@@ -775,7 +781,64 @@ function sortModules ( entry, moduleLookup ) {
 
 	visit( entry );
 
+	swapPairs.forEach( function(b)  {var a = b[0], b = b[1];
+		var aIndex = ordered.indexOf( a );
+		var bIndex = ordered.indexOf( b );
+
+		ordered[ aIndex ] = b;
+		ordered[ bIndex ] = a;
+	});
+
 	return ordered;
+}
+
+function shouldSwap ( a, b ) {
+	// if these modules don't import each other, abort
+	if ( !( sortModules__imports( a, b ) && sortModules__imports( b, a ) ) ) return;
+
+	return usesAtTopLevel( b, a ) && !usesAtTopLevel( a, b );
+}
+
+function sortModules__imports ( a, b ) {
+	var i = a.imports.length;
+	while ( i-- ) {
+		if ( a.imports[i].id === b.id ) {
+			return true;
+		}
+	}
+}
+
+function usesAtTopLevel ( a, b ) {
+	var bindings = [];
+
+	// find out which bindings a imports from b
+	var i = a.imports.length;
+	while ( i-- ) {
+		if ( a.imports[i].id === b.id ) {
+			bindings.push.apply( bindings, a.imports[i].specifiers.map( function(x ) {return x.as} ) );
+		}
+	}
+
+	// see if any of those bindings are referenced at the top level
+	var referencedAtTopLevel = false;
+
+	walk( a.ast, {
+		enter: function ( node ) {
+			if ( referencedAtTopLevel ) {
+				return this.skip();
+			}
+
+			if ( /^Import/.test( node.type ) || ( node._scope && node._scope.parent ) ) {
+				return this.skip();
+			}
+
+			if ( node.type === 'Identifier' && ~bindings.indexOf( node.name ) ) {
+				referencedAtTopLevel = true;
+			}
+		}
+	});
+
+	return referencedAtTopLevel;
 }
 
 function resolveChains ( modules, moduleLookup ) {
@@ -1213,7 +1276,7 @@ function rewriteExportAssignments ( body, node, parent, exports, scope, captured
 			var suffix = ((", exports." + exportAs) + (" = " + name) + "");
 			if ( parent.type !== 'ExpressionStatement' ) {
 				if ( !node.prefix ) {
-					suffix += ((", " + name) + (" " + (node.operator === '++' ? '-' : '+')) + " 1")
+					suffix += ((", " + name) + (" " + (node.operator === '++' ? '-' : '+')) + " 1");
 				}
 				prefix += ("( ");
 				suffix += (" )");
@@ -1539,7 +1602,7 @@ function getBundle ( options ) {
 	return resolvePath( base, userModules, entry, null ).then( function(relativePath ) {
 		return fetchModule( entry, relativePath ).then( function()  {
 			var entryModule = moduleLookup[ entry ];
-			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
+			modules = sortModules( entryModule, moduleLookup );
 
 			var bundle = {
 				entry: entry,

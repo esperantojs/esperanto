@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.29 - 2015-04-18
+	esperanto.js v0.6.30 - 2015-04-25
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1253,8 +1253,6 @@
 
 			path: node.source.value,
 			specifiers: node.specifiers.map( function(s ) {
-				var id;
-
 				if ( s.type === 'ImportNamespaceSpecifier' ) {
 					return {
 						isBatch: true,
@@ -1268,7 +1266,7 @@
 						isDefault: true,
 						name: 'default',
 						as: s.local.name
-					}
+					};
 				}
 
 				return {
@@ -2189,7 +2187,7 @@
 				var suffix = ((", exports." + exportAs) + (" = " + name) + "");
 				if ( parent.type !== 'ExpressionStatement' ) {
 					if ( !node.prefix ) {
-						suffix += ((", " + name) + (" " + (node.operator === '++' ? '-' : '+')) + " 1")
+						suffix += ((", " + name) + (" " + (node.operator === '++' ? '-' : '+')) + " 1");
 					}
 					prefix += ("( ");
 					suffix += (" )");
