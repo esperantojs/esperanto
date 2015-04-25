@@ -28,7 +28,7 @@ export default function getBundle ( options ) {
 	return resolvePath( base, userModules, entry, null ).then( relativePath => {
 		return fetchModule( entry, relativePath ).then( () => {
 			let entryModule = moduleLookup[ entry ];
-			modules = sortModules( entryModule, moduleLookup ); // TODO is this necessary? surely it's already sorted because of the fetch order? or do we need to prevent parallel reads?
+			modules = sortModules( entryModule, moduleLookup );
 
 			let bundle = {
 				entry,
