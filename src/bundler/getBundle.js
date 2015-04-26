@@ -139,8 +139,10 @@ export default function getBundle ( options ) {
 }
 
 function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
-	return tryPath( base, moduleId + '.js', userModules )
-		.catch( () => tryPath( base, moduleId + path.sep + 'index.js', userModules ) )
+	const noExt = moduleId.replace( /\.js$/, '' );
+
+	return tryPath( base, noExt + '.js', userModules )
+		.catch( () => tryPath( base, noExt + path.sep + 'index.js', userModules ) )
 		.catch( function ( err ) {
 			const resolvedPromise = resolver && Promise.resolve( resolver( moduleId, importerPath ) );
 

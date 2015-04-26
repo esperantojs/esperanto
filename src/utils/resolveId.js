@@ -32,7 +32,7 @@ export default function resolveId ( importPath, importerPath ) {
 		resolved = importerParts.concat( importParts ).join( '/' );
 	}
 
-	return resolved.replace( /\.js$/, '' );
+	return resolved;
 }
 
 export function resolveAgainst ( importerPath ) {
