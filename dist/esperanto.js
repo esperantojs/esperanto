@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.30 - 2015-04-25
+	esperanto.js v0.6.30 - 2015-04-26
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -7,10 +7,10 @@
 
 'use strict';
 
-var path = require('path');
-var sander = require('sander');
 var acorn = require('acorn');
 var MagicString = require('magic-string');
+var path = require('path');
+var sander = require('sander');
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
@@ -742,7 +742,7 @@ function resolveId ( importPath, importerPath ) {
 		resolved = importerParts.concat( importParts ).join( '/' );
 	}
 
-	return resolved.replace( /\.js$/, '' );
+	return resolved;
 }
 
 function resolveAgainst ( importerPath ) {
@@ -1713,8 +1713,10 @@ function getBundle ( options ) {
 }
 
 function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
-	return tryPath( base, moduleId + '.js', userModules )
-		.catch( function()  {return tryPath( base, moduleId + path.sep + 'index.js', userModules )} )
+	var noExt = moduleId.replace( /\.js$/, '' );
+
+	return tryPath( base, noExt + '.js', userModules )
+		.catch( function()  {return tryPath( base, noExt + path.sep + 'index.js', userModules )} )
 		.catch( function ( err ) {
 			var resolvedPromise = resolver && getBundle__Promise.resolve( resolver( moduleId, importerPath ) );
 
