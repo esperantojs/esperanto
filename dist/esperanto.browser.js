@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.30 - 2015-04-25
+	esperanto.js v0.6.30 - 2015-04-26
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1794,7 +1794,7 @@
 			resolved = importerParts.concat( importParts ).join( '/' );
 		}
 
-		return resolved.replace( /\.js$/, '' );
+		return resolved;
 	}
 
 	function resolveAgainst ( importerPath ) {
