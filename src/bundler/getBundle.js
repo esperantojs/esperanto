@@ -36,14 +36,12 @@ export default function getBundle ( options ) {
 			modules = sortModules( entryModule, moduleLookup );
 
 			let bundle = {
-				entry,
+				entry, // TODO don't really need this
 				entryModule,
-				base,
 				modules,
 				moduleLookup,
 				externalModules,
 				externalModuleLookup,
-				skip,
 				names,
 				chains: resolveChains( modules, moduleLookup )
 			};

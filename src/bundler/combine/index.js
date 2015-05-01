@@ -41,7 +41,7 @@ export default function combine ( bundle ) {
 		});
 
 		bundle.body.addSource({
-			filename: path.resolve( bundle.base, mod.relativePath ),
+			filename: mod.path,
 			content: transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});
