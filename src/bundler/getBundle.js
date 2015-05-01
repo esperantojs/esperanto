@@ -25,8 +25,13 @@ export default function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return resolvePath( base, userModules, entry, null ).then( relativePath => {
-		return fetchModule( entry, relativePath ).then( () => {
+	// resolve user module paths
+	options.modules && Object.keys( options.modules ).forEach( relativePath => {
+		userModules[ path.resolve( base, relativePath ) ] = options.modules[ relativePath ];
+	});
+
+	return resolvePath( base, userModules, entry, null ).then( absolutePath => {
+		return fetchModule( entry, absolutePath ).then( () => {
 			let entryModule = moduleLookup[ entry ];
 			modules = sortModules( entryModule, moduleLookup );
 
@@ -55,13 +60,11 @@ export default function getBundle ( options ) {
 		throw err;
 	});
 
-	function fetchModule ( moduleId, relativePath ) {
-		let absolutePath = path.resolve( base, relativePath );
-
-		if ( !hasOwnProp.call( promiseByPath, relativePath ) ) {
-			promiseByPath[ relativePath ] = (
-				hasOwnProp.call( userModules, relativePath ) ?
-					Promise.resolve( userModules[ relativePath ] ) :
+	function fetchModule ( moduleId, absolutePath ) {
+		if ( !hasOwnProp.call( promiseByPath, absolutePath ) ) {
+			promiseByPath[ absolutePath ] = (
+				hasOwnProp.call( userModules, absolutePath ) ?
+					Promise.resolve( userModules[ absolutePath ] ) :
 					sander.readFile( absolutePath ).then( String )
 			).then( function ( source ) {
 				let code, ast;
@@ -88,7 +91,9 @@ export default function getBundle ( options ) {
 					path: absolutePath,
 					code,
 					ast,
-					relativePath
+
+					// TODO should not need this
+					relativePath: path.relative( base, absolutePath )
 				});
 
 				modules.push( module );
@@ -106,13 +111,13 @@ export default function getBundle ( options ) {
 						return;
 					}
 
-					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( relativePath => {
+					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( absolutePath => {
 						// short-circuit cycles
-						if ( hasOwnProp.call( promiseByPath, relativePath ) ) {
+						if ( hasOwnProp.call( promiseByPath, absolutePath ) ) {
 							return;
 						}
 
-						return fetchModule( x.id, relativePath );
+						return fetchModule( x.id, absolutePath );
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
@@ -134,7 +139,7 @@ export default function getBundle ( options ) {
 			});
 		}
 
-		return promiseByPath[ relativePath ];
+		return promiseByPath[ absolutePath ];
 	}
 }
 
@@ -155,7 +160,7 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 						throw err;
 					}
 
-					return sander.stat( resolvedPath ).then( () => resolvedPath );
+					return sander.stat( resolvedPath ).then( () => path.resolve( base, resolvedPath ) );
 				});
 			} else {
 				throw err;
@@ -164,10 +169,12 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 }
 
 function tryPath ( base, filename, userModules ) {
-	if ( hasOwnProp.call( userModules, filename ) ) {
-		return Promise.resolve( filename );
+	const absolutePath = path.resolve( base, filename );
+
+	if ( hasOwnProp.call( userModules, absolutePath ) ) {
+		return Promise.resolve( absolutePath );
 	}
-	return sander.stat( base, filename ).then( () => filename );
+	return sander.stat( absolutePath ).then( () => absolutePath );
 }
 
 function isThenable ( obj ) {
