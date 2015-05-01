@@ -1,10 +1,10 @@
 process.chdir( __dirname );
 
 var testModules = [
-	'fastMode',
-	'strictMode',
+	// 'fastMode',
+	// 'strictMode',
 	'bundle',
-	'sourcemaps'
+	// 'sourcemaps'
 ];
 
 var results = testModules.map( function ( mod ) {

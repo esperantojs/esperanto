@@ -31,8 +31,7 @@ export default function getBundle ( options ) {
 	});
 
 	return resolvePath( base, userModules, entry, null ).then( absolutePath => {
-		return fetchModule( entry, absolutePath ).then( () => {
-			let entryModule = moduleLookup[ entry ];
+		return fetchModule( entry, absolutePath ).then( entryModule => {
 			modules = sortModules( entryModule, moduleLookup );
 
 			let bundle = {
@@ -98,6 +97,7 @@ export default function getBundle ( options ) {
 				moduleLookup[ moduleId ] = module;
 
 				let promises = module.imports.map( x => {
+					// TODO remove this, use x.module instead. more flexible, no lookups involved
 					x.id = resolveId( x.path, module.relativePath );
 
 					if ( x.id === moduleId ) {
@@ -115,7 +115,11 @@ export default function getBundle ( options ) {
 							return;
 						}
 
-						return fetchModule( x.id, absolutePath );
+						const promise = fetchModule( x.id, absolutePath );
+
+						promise.then( module => x.module = module );
+
+						return promise;
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
@@ -133,7 +137,8 @@ export default function getBundle ( options ) {
 					} );
 				});
 
-				return Promise.all( promises );
+				return Promise.all( promises )
+					.then( () => module );
 			});
 		}
 
