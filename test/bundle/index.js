@@ -112,7 +112,7 @@ module.exports = function () {
 									options = profile.options || {};
 
 									if ( ( bundle.imports.length && !config.imports ) || ( bundle.exports.length && !config.exports ) ) {
-										throw new Error( 'config is missing imports/exports' );
+										throw new Error( 'config is missing imports/exports (expected ' + JSON.stringify( bundle.imports ) + ', ' + JSON.stringify( bundle.exports ) + ')' );
 									}
 
 									if ( config.imports || bundle.imports.length ) {
