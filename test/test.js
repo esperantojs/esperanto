@@ -1,3 +1,5 @@
+require( 'source-map-support' ).install();
+
 process.chdir( __dirname );
 
 var testModules = [
