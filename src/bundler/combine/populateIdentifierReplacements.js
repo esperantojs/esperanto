@@ -61,23 +61,15 @@ export default function populateIdentifierReplacements ( bundle ) {
 				}
 
 				else {
-					specifierName = s.name;
-
-					// If this is a chained import, get the origin
-					hash = `${moduleId}@${specifierName}`;
-					while ( hasOwnProp.call( bundle.chains, hash ) ) {
-						hash = bundle.chains[ hash ];
-						isChained = true;
+					if ( s.origin ) {
+						// chained bindings
+						mod = s.origin.module;
+						specifierName = s.origin.name;
+					} else {
+						mod = imported;
+						specifierName = s.name;
 					}
 
-					if ( isChained ) {
-						separatorIndex = hash.indexOf( '@' );
-						moduleId = hash.substr( 0, separatorIndex );
-						specifierName = hash.substring( separatorIndex + 1 );
-					}
-
-					// TODO handle chains without lookup?
-					mod = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] );
 					moduleName = mod && mod.name;
 
 					if ( specifierName === 'default' ) {
@@ -90,7 +82,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 						// TODO We currently need to check for the existence of `mod`, because modules
 						// can be skipped. Would be better to replace skipped modules with dummies
 						// - see https://github.com/Rich-Harris/esperanto/issues/32
-						else if ( mod ) {
+						else if ( mod && !mod.isSkipped ) {
 							replacement = mod.identifierReplacements.default;
 						}
 					} else if ( !imported.isExternal ) {

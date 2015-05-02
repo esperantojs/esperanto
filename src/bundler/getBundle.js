@@ -38,9 +38,7 @@ export default function getBundle ( options ) {
 				entry, // TODO don't really need this
 				entryModule,
 				modules,
-				moduleLookup,
 				externalModules,
-				externalModuleLookup,
 				names,
 				chains: resolveChains( modules, moduleLookup )
 			};
