@@ -26,8 +26,8 @@ export default function getUniqueNames ( bundle ) {
 	// infer names from default imports - e.g. with `import _ from './utils'`,
 	// use '_' instead of generating a name from 'utils'
 	function inferName ( x ) {
-		if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
-			names[ x.id ] = x.as;
+		if ( x.isDefault && !hasOwnProp.call( names, x.module.id ) && !hasOwnProp.call( used, x.as ) ) {
+			names[ x.module.id ] = x.as;
 			used[ x.as ] = true;
 		}
 	}

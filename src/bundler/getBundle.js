@@ -25,24 +25,23 @@ export default function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return resolvePath( base, userModules, entry, null ).then( relativePath => {
-		return fetchModule( entry, relativePath ).then( () => {
-			let entryModule = moduleLookup[ entry ];
-			modules = sortModules( entryModule, moduleLookup );
+	// resolve user module paths
+	options.modules && Object.keys( options.modules ).forEach( relativePath => {
+		userModules[ path.resolve( base, relativePath ) ] = options.modules[ relativePath ];
+	});
+
+	return resolvePath( base, userModules, entry, null ).then( absolutePath => {
+		return fetchModule( entry, absolutePath ).then( entryModule => {
+			modules = sortModules( entryModule );
 
 			let bundle = {
-				entry,
 				entryModule,
-				base,
 				modules,
-				moduleLookup,
 				externalModules,
-				externalModuleLookup,
-				skip,
-				names,
-				chains: resolveChains( modules, moduleLookup )
+				names
 			};
 
+			resolveChains( modules, moduleLookup );
 			combine( bundle );
 
 			return bundle;
@@ -55,13 +54,11 @@ export default function getBundle ( options ) {
 		throw err;
 	});
 
-	function fetchModule ( moduleId, relativePath ) {
-		let absolutePath = path.resolve( base, relativePath );
-
-		if ( !hasOwnProp.call( promiseByPath, relativePath ) ) {
-			promiseByPath[ relativePath ] = (
-				hasOwnProp.call( userModules, relativePath ) ?
-					Promise.resolve( userModules[ relativePath ] ) :
+	function fetchModule ( moduleId, absolutePath ) {
+		if ( !hasOwnProp.call( promiseByPath, absolutePath ) ) {
+			promiseByPath[ absolutePath ] = (
+				hasOwnProp.call( userModules, absolutePath ) ?
+					Promise.resolve( userModules[ absolutePath ] ) :
 					sander.readFile( absolutePath ).then( String )
 			).then( function ( source ) {
 				let code, ast;
@@ -88,41 +85,58 @@ export default function getBundle ( options ) {
 					path: absolutePath,
 					code,
 					ast,
-					relativePath
+
+					// TODO should not need this
+					relativePath: path.relative( base, absolutePath )
 				});
 
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
 				let promises = module.imports.map( x => {
-					x.id = resolveId( x.path, module.relativePath );
+					// TODO remove this, use x.module instead. more flexible, no lookups involved
+					const id = resolveId( x.path, module.relativePath );
 
-					if ( x.id === moduleId ) {
+					if ( id === moduleId ) {
 						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
 					}
 
 					// Some modules can be skipped
-					if ( skip && ~skip.indexOf( x.id ) ) {
-						return;
+					if ( skip && ~skip.indexOf( id ) ) {
+						const skippedModule = {
+							id,
+							isSkipped: true
+						};
+
+						x.module = skippedModule;
+						return skippedModule;
 					}
 
-					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( relativePath => {
+					return resolvePath( base, userModules, id, absolutePath, options.resolvePath ).then( absolutePath => {
+						let promise = hasOwnProp.call( promiseByPath, absolutePath ) && promiseByPath[ absolutePath ];
+						let cyclical = !!promise;
+
 						// short-circuit cycles
-						if ( hasOwnProp.call( promiseByPath, relativePath ) ) {
-							return;
+						if ( !cyclical ) {
+							promise = fetchModule( id, absolutePath );
 						}
 
-						return fetchModule( x.id, relativePath );
+						promise.then( module => x.module = module );
+
+						return cyclical || promise;
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
-							if ( !hasOwnProp.call( externalModuleLookup, x.id ) ) {
+							if ( !hasOwnProp.call( externalModuleLookup, id ) ) {
 								let externalModule = {
-									id: x.id
+									id,
+									isExternal: true
 								};
 
+								x.module = externalModule;
+
 								externalModules.push( externalModule );
-								externalModuleLookup[ x.id ] = externalModule;
+								externalModuleLookup[ id ] = externalModule;
 							}
 						} else {
 							throw err;
@@ -130,11 +144,12 @@ export default function getBundle ( options ) {
 					} );
 				});
 
-				return Promise.all( promises );
+				return Promise.all( promises )
+					.then( () => module );
 			});
 		}
 
-		return promiseByPath[ relativePath ];
+		return promiseByPath[ absolutePath ];
 	}
 }
 
@@ -155,7 +170,7 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 						throw err;
 					}
 
-					return sander.stat( resolvedPath ).then( () => resolvedPath );
+					return sander.stat( resolvedPath ).then( () => path.resolve( base, resolvedPath ) );
 				});
 			} else {
 				throw err;
@@ -164,10 +179,12 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 }
 
 function tryPath ( base, filename, userModules ) {
-	if ( hasOwnProp.call( userModules, filename ) ) {
-		return Promise.resolve( filename );
+	const absolutePath = path.resolve( base, filename );
+
+	if ( hasOwnProp.call( userModules, absolutePath ) ) {
+		return Promise.resolve( absolutePath );
 	}
-	return sander.stat( base, filename ).then( () => filename );
+	return sander.stat( absolutePath ).then( () => absolutePath );
 }
 
 function isThenable ( obj ) {

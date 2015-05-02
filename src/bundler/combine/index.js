@@ -1,4 +1,3 @@
-import path from 'path';
 import MagicString from 'magic-string';
 import populateModuleNames from './populateModuleNames';
 import populateExternalModuleImports from './populateExternalModuleImports';
@@ -27,21 +26,21 @@ export default function combine ( bundle ) {
 	bundle.modules.forEach( mod => {
 		// verify that this module doesn't import non-exported identifiers
 		mod.imports.forEach( x => {
-			let importedModule = bundle.moduleLookup[ x.id ];
+			const imported = x.module;
 
-			if ( !importedModule || x.isBatch ) {
+			if ( imported.isExternal || imported.isSkipped || x.isBatch ) {
 				return;
 			}
 
 			x.specifiers.forEach( s => {
-				if ( !importedModule.doesExport[ s.name ] ) {
-					throw new Error( `Module '${importedModule.id}' does not export '${s.name}' (imported by '${mod.id}')` );
+				if ( !imported.doesExport[ s.name ] ) {
+					throw new Error( `Module '${imported.id}' does not export '${s.name}' (imported by '${mod.id}')` );
 				}
 			});
 		});
 
 		bundle.body.addSource({
-			filename: path.resolve( bundle.base, mod.relativePath ),
+			filename: mod.path,
 			content: transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});

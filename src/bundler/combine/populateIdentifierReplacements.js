@@ -45,56 +45,48 @@ export default function populateIdentifierReplacements ( bundle ) {
 		});
 
 		mod.imports.forEach( x => {
-			var externalModule;
-
 			if ( x.passthrough ) {
 				return;
 			}
 
-			externalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id ) && bundle.externalModuleLookup[ x.id ];
+			const imported = x.module;
 
 			x.specifiers.forEach( s => {
-				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
-
-				moduleId = x.id;
+				let replacement;
 
 				if ( s.isBatch ) {
-					replacement = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] ).name;
+					replacement = x.module.name;
 				}
 
 				else {
-					specifierName = s.name;
+					let mod;
+					let specifierName;
 
-					// If this is a chained import, get the origin
-					hash = `${moduleId}@${specifierName}`;
-					while ( hasOwnProp.call( bundle.chains, hash ) ) {
-						hash = bundle.chains[ hash ];
-						isChained = true;
+					if ( s.origin ) {
+						// chained bindings
+						mod = s.origin.module;
+						specifierName = s.origin.name;
+					} else {
+						mod = imported;
+						specifierName = s.name;
 					}
 
-					if ( isChained ) {
-						separatorIndex = hash.indexOf( '@' );
-						moduleId = hash.substr( 0, separatorIndex );
-						specifierName = hash.substring( separatorIndex + 1 );
-					}
-
-					mod = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] );
-					moduleName = mod && mod.name;
+					const moduleName = mod && mod.name;
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default if the
 						// bundle also uses named imports
-						if ( !!externalModule ) {
-							replacement = externalModule.needsNamed ? `${moduleName}__default` : moduleName;
+						if ( imported.isExternal ) {
+							replacement = imported.needsNamed ? `${moduleName}__default` : moduleName;
 						}
 
 						// TODO We currently need to check for the existence of `mod`, because modules
 						// can be skipped. Would be better to replace skipped modules with dummies
 						// - see https://github.com/Rich-Harris/esperanto/issues/32
-						else if ( mod ) {
+						else if ( mod && !mod.isSkipped ) {
 							replacement = mod.identifierReplacements.default;
 						}
-					} else if ( !externalModule ) {
+					} else if ( !imported.isExternal ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							`${moduleName}__${specifierName}` :
 							specifierName;

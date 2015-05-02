@@ -1,4 +1,3 @@
-import hasOwnProp from 'utils/hasOwnProp';
 import hasNamedImports from 'utils/hasNamedImports';
 import hasNamedExports from 'utils/hasNamedExports';
 import getStandaloneModule from 'standalone/getModule';
@@ -81,7 +80,7 @@ export default {
 
 					bundle.modules.forEach( mod => {
 						mod.imports.forEach( x => {
-							if ( hasOwnProp.call( bundle.externalModuleLookup, x.id ) && ( !x.isDefault && !x.isBatch ) ) {
+							if ( x.module.isExternal && ( !x.isDefault && !x.isBatch ) ) {
 								throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
 							}
 						});

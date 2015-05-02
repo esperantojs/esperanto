@@ -8,18 +8,16 @@ export default function resolveChains ( modules, moduleLookup ) {
 		var origin = {};
 
 		mod.imports.forEach( x => {
+			const imported = x.module;
+
 			x.specifiers.forEach( s => {
 				if ( s.isBatch ) {
-					// if this is an internal module, we need to tell that module that
-					// it needs to export an object full of getters
-					if ( hasOwnProp.call( moduleLookup, x.id ) ) {
-						moduleLookup[ x.id ]._exportsNamespace = true;
-					}
-
+					// tell that module that it needs to export an object full of getters
+					imported._exportsNamespace = true;
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = `${x.id}@${s.name}`;
+				origin[ s.as ] = `${s.name}@${imported.id}`;
 			});
 		});
 
@@ -28,11 +26,46 @@ export default function resolveChains ( modules, moduleLookup ) {
 
 			x.specifiers.forEach( s => {
 				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ `${mod.id}@${s.name}` ] = origin[ s.name ];
+					chains[ `${s.name}@${mod.id}` ] = origin[ s.name ];
 				}
 			});
 		});
 	});
 
-	return chains;
+	// Second pass - assigning origins to specifiers
+	modules.forEach( mod => {
+		mod.imports.forEach( x => {
+			const imported = x.module;
+
+			x.specifiers.forEach( s => {
+				if ( s.isBatch ) {
+					return; // TODO can batch imports be chained?
+				}
+
+				setOrigin( s, `${s.name}@${imported.id}`, chains, moduleLookup );
+			});
+		});
+
+		mod.exports.forEach( x => {
+			if ( !x.specifiers ) return;
+
+			x.specifiers.forEach( s => {
+				setOrigin( s, `${s.name}@${mod.id}`, chains, moduleLookup );
+			});
+		});
+	});
+}
+
+function setOrigin ( specifier, hash, chains, moduleLookup ) {
+	let isChained;
+
+	while ( hasOwnProp.call( chains, hash ) ) {
+		hash = chains[ hash ];
+		isChained = true;
+	}
+
+	if ( isChained ) {
+		const [ name, moduleId ] = hash.split( '@' );
+		specifier.origin = { module: moduleLookup[ moduleId ], name };
+	}
 }
