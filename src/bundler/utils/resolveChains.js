@@ -17,7 +17,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = `${imported.id}@${s.name}`;
+				origin[ s.as ] = `${s.name}@${imported.id}`;
 			});
 		});
 
@@ -26,7 +26,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 
 			x.specifiers.forEach( s => {
 				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ `${mod.id}@${s.name}` ] = origin[ s.name ];
+					chains[ `${s.name}@${mod.id}` ] = origin[ s.name ];
 				}
 			});
 		});
@@ -42,18 +42,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 					return; // TODO can batch imports be chained?
 				}
 
-				let hash = `${imported.id}@${s.name}`;
-				let isChained;
-
-				while ( hasOwnProp.call( chains, hash ) ) {
-					hash = chains[ hash ];
-					isChained = true;
-				}
-
-				if ( isChained ) {
-					const [ moduleId, name ] = hash.split( '@' );
-					s.origin = { module: moduleLookup[ moduleId ], name };
-				}
+				setOrigin( s, `${s.name}@${imported.id}`, chains, moduleLookup );
 			});
 		});
 
@@ -61,19 +50,22 @@ export default function resolveChains ( modules, moduleLookup ) {
 			if ( !x.specifiers ) return;
 
 			x.specifiers.forEach( s => {
-				let hash = `${mod.id}@${s.name}`;
-				let isChained;
-
-				while ( hasOwnProp.call( chains, hash ) ) {
-					hash = chains[ hash ];
-					isChained = true;
-				}
-
-				if ( isChained ) {
-					const [ moduleId, name ] = hash.split( '@' );
-					s.origin = { module: moduleLookup[ moduleId ], name };
-				}
+				setOrigin( s, `${s.name}@${mod.id}`, chains, moduleLookup );
 			});
 		});
 	});
+}
+
+function setOrigin ( specifier, hash, chains, moduleLookup ) {
+	let isChained;
+
+	while ( hasOwnProp.call( chains, hash ) ) {
+		hash = chains[ hash ];
+		isChained = true;
+	}
+
+	if ( isChained ) {
+		const [ name, moduleId ] = hash.split( '@' );
+		specifier.origin = { module: moduleLookup[ moduleId ], name };
+	}
 }
