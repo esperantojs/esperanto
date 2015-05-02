@@ -56,7 +56,24 @@ export default function resolveChains ( modules, moduleLookup ) {
 				}
 			});
 		});
-	});
 
-	return chains;
+		mod.exports.forEach( x => {
+			if ( !x.specifiers ) return;
+
+			x.specifiers.forEach( s => {
+				let hash = `${mod.id}@${s.name}`;
+				let isChained;
+
+				while ( hasOwnProp.call( chains, hash ) ) {
+					hash = chains[ hash ];
+					isChained = true;
+				}
+
+				if ( isChained ) {
+					const [ moduleId, name ] = hash.split( '@' );
+					s.origin = { module: moduleLookup[ moduleId ], name };
+				}
+			});
+		});
+	});
 }

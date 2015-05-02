@@ -4,29 +4,32 @@ export default function resolveExports ( bundle ) {
 	bundle.entryModule.exports.forEach( x => {
 		if ( x.specifiers ) {
 			x.specifiers.forEach( s => {
-				let hash = `${bundle.entryModule.id}@${s.name}`;
+				let module;
+				let name;
 
-				while ( bundle.chains[ hash ] ) {
-					hash = bundle.chains[ hash ];
+				if ( s.origin ) {
+					module = s.origin.module;
+					name = s.origin.name;
+				} else {
+					module = bundle.entryModule;
+					name = s.name;
 				}
 
-				let [ moduleId, name ] = hash.split( '@' );
-
-				addExport( moduleId, name, s.name );
+				addExport( module, name, s.name );
 			});
 		}
 
 		else if ( !x.isDefault && x.name ) {
-			addExport( bundle.entry, x.name, x.name );
+			addExport( bundle.entryModule, x.name, x.name );
 		}
 	});
 
-	function addExport ( moduleId, name, as ) {
-		if ( !bundleExports[ moduleId ] ) {
-			bundleExports[ moduleId ] = {};
+	function addExport ( module, name, as ) {
+		if ( !bundleExports[ module.id ] ) {
+			bundleExports[ module.id ] = {};
 		}
 
-		bundleExports[ moduleId ][ name ] = as;
+		bundleExports[ module.id ][ name ] = as;
 	}
 
 	return bundleExports;
