@@ -1,9 +1,9 @@
 export default function populateExternalModuleImports ( bundle ) {
 	bundle.modules.forEach( mod => {
 		mod.imports.forEach( x => {
-			var externalModule = bundle.externalModuleLookup[ x.id ];
+			const externalModule = x.module;
 
-			if ( !externalModule ) {
+			if ( !externalModule.isExternal ) {
 				return;
 			}
 

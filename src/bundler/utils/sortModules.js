@@ -10,9 +10,9 @@ export default function sortModules ( entry, moduleLookup ) {
 		seen[ mod.id ] = true;
 
 		mod.imports.forEach( x => {
-			const imported = moduleLookup[ x.id ];
+			const imported = x.module;
 
-			if ( !imported ) return;
+			if ( imported.isExternal || imported.isSkipped ) return;
 
 			// ignore modules we've already included
 			if ( hasOwnProp.call( seen, imported.id ) ) {
@@ -52,7 +52,7 @@ function shouldSwap ( a, b ) {
 function imports ( a, b ) {
 	let i = a.imports.length;
 	while ( i-- ) {
-		if ( a.imports[i].id === b.id ) {
+		if ( a.imports[i].module === b ) {
 			return true;
 		}
 	}
@@ -64,7 +64,7 @@ function usesAtTopLevel ( a, b ) {
 	// find out which bindings a imports from b
 	let i = a.imports.length;
 	while ( i-- ) {
-		if ( a.imports[i].id === b.id ) {
+		if ( a.imports[i].module === b ) {
 			bindings.push.apply( bindings, a.imports[i].specifiers.map( x => x.as ) );
 		}
 	}

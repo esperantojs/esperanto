@@ -106,27 +106,37 @@ export default function getBundle ( options ) {
 
 					// Some modules can be skipped
 					if ( skip && ~skip.indexOf( x.id ) ) {
-						return;
+						const skippedModule = {
+							id: x.id,
+							isSkipped: true
+						};
+
+						x.module = skippedModule;
+						return skippedModule;
 					}
 
 					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( absolutePath => {
-						// short-circuit cycles
-						if ( hasOwnProp.call( promiseByPath, absolutePath ) ) {
-							return;
-						}
+						let promise = hasOwnProp.call( promiseByPath, absolutePath ) && promiseByPath[ absolutePath ];
+						let cyclical = !!promise;
 
-						const promise = fetchModule( x.id, absolutePath );
+						// short-circuit cycles
+						if ( !cyclical ) {
+							promise = fetchModule( x.id, absolutePath );
+						}
 
 						promise.then( module => x.module = module );
 
-						return promise;
+						return cyclical || promise;
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
 							if ( !hasOwnProp.call( externalModuleLookup, x.id ) ) {
 								let externalModule = {
-									id: x.id
+									id: x.id,
+									isExternal: true
 								};
+
+								x.module = externalModule;
 
 								externalModules.push( externalModule );
 								externalModuleLookup[ x.id ] = externalModule;

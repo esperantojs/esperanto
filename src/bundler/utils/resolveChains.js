@@ -8,18 +8,16 @@ export default function resolveChains ( modules, moduleLookup ) {
 		var origin = {};
 
 		mod.imports.forEach( x => {
+			const imported = x.module;
+
 			x.specifiers.forEach( s => {
 				if ( s.isBatch ) {
-					// if this is an internal module, we need to tell that module that
-					// it needs to export an object full of getters
-					if ( hasOwnProp.call( moduleLookup, x.id ) ) {
-						moduleLookup[ x.id ]._exportsNamespace = true;
-					}
-
+					// tell that module that it needs to export an object full of getters
+					imported._exportsNamespace = true;
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = `${x.id}@${s.name}`;
+				origin[ s.as ] = `${imported.id}@${s.name}`;
 			});
 		});
 
