@@ -45,21 +45,19 @@ export default function populateIdentifierReplacements ( bundle ) {
 		});
 
 		mod.imports.forEach( x => {
-			var externalModule;
-
 			if ( x.passthrough ) {
 				return;
 			}
 
-			externalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id ) && bundle.externalModuleLookup[ x.id ];
+			const imported = x.module;
 
 			x.specifiers.forEach( s => {
 				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
 
-				moduleId = x.id;
+				moduleId = imported.id;
 
 				if ( s.isBatch ) {
-					replacement = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] ).name;
+					replacement = x.module.name;
 				}
 
 				else {
@@ -78,14 +76,15 @@ export default function populateIdentifierReplacements ( bundle ) {
 						specifierName = hash.substring( separatorIndex + 1 );
 					}
 
+					// TODO handle chains without lookup?
 					mod = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] );
 					moduleName = mod && mod.name;
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default if the
 						// bundle also uses named imports
-						if ( !!externalModule ) {
-							replacement = externalModule.needsNamed ? `${moduleName}__default` : moduleName;
+						if ( imported.isExternal ) {
+							replacement = imported.needsNamed ? `${moduleName}__default` : moduleName;
 						}
 
 						// TODO We currently need to check for the existence of `mod`, because modules
@@ -94,7 +93,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 						else if ( mod ) {
 							replacement = mod.identifierReplacements.default;
 						}
-					} else if ( !externalModule ) {
+					} else if ( !imported.isExternal ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							`${moduleName}__${specifierName}` :
 							specifierName;

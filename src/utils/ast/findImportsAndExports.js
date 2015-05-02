@@ -70,7 +70,7 @@ export default function findImportsAndExports ( mod, source, ast ) {
  */
 function processImport ( node, passthrough ) {
 	var x = {
-		id: null, // used by bundler - filled in later
+		module: null, // used by bundler - filled in later
 		node: node,
 		start: node.start,
 		end: node.end,

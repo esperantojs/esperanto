@@ -98,16 +98,16 @@ export default function getBundle ( options ) {
 
 				let promises = module.imports.map( x => {
 					// TODO remove this, use x.module instead. more flexible, no lookups involved
-					x.id = resolveId( x.path, module.relativePath );
+					const id = resolveId( x.path, module.relativePath );
 
-					if ( x.id === moduleId ) {
+					if ( id === moduleId ) {
 						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
 					}
 
 					// Some modules can be skipped
-					if ( skip && ~skip.indexOf( x.id ) ) {
+					if ( skip && ~skip.indexOf( id ) ) {
 						const skippedModule = {
-							id: x.id,
+							id,
 							isSkipped: true
 						};
 
@@ -115,13 +115,13 @@ export default function getBundle ( options ) {
 						return skippedModule;
 					}
 
-					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( absolutePath => {
+					return resolvePath( base, userModules, id, absolutePath, options.resolvePath ).then( absolutePath => {
 						let promise = hasOwnProp.call( promiseByPath, absolutePath ) && promiseByPath[ absolutePath ];
 						let cyclical = !!promise;
 
 						// short-circuit cycles
 						if ( !cyclical ) {
-							promise = fetchModule( x.id, absolutePath );
+							promise = fetchModule( id, absolutePath );
 						}
 
 						promise.then( module => x.module = module );
@@ -130,16 +130,16 @@ export default function getBundle ( options ) {
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
-							if ( !hasOwnProp.call( externalModuleLookup, x.id ) ) {
+							if ( !hasOwnProp.call( externalModuleLookup, id ) ) {
 								let externalModule = {
-									id: x.id,
+									id,
 									isExternal: true
 								};
 
 								x.module = externalModule;
 
 								externalModules.push( externalModule );
-								externalModuleLookup[ x.id ] = externalModule;
+								externalModuleLookup[ id ] = externalModule;
 							}
 						} else {
 							throw err;
