@@ -1,4 +1,3 @@
-import path from 'path';
 import MagicString from 'magic-string';
 import populateModuleNames from './populateModuleNames';
 import populateExternalModuleImports from './populateExternalModuleImports';
@@ -41,7 +40,6 @@ export default function combine ( bundle ) {
 		});
 
 		bundle.body.addSource({
-			filename: mod.path,
 			content: transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});

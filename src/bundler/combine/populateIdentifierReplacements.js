@@ -52,15 +52,16 @@ export default function populateIdentifierReplacements ( bundle ) {
 			const imported = x.module;
 
 			x.specifiers.forEach( s => {
-				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
-
-				moduleId = imported.id;
+				let replacement;
 
 				if ( s.isBatch ) {
 					replacement = x.module.name;
 				}
 
 				else {
+					let mod;
+					let specifierName;
+
 					if ( s.origin ) {
 						// chained bindings
 						mod = s.origin.module;
@@ -70,7 +71,7 @@ export default function populateIdentifierReplacements ( bundle ) {
 						specifierName = s.name;
 					}
 
-					moduleName = mod && mod.name;
+					const moduleName = mod && mod.name;
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default if the

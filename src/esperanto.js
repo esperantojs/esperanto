@@ -1,4 +1,3 @@
-import hasOwnProp from 'utils/hasOwnProp';
 import hasNamedImports from 'utils/hasNamedImports';
 import hasNamedExports from 'utils/hasNamedExports';
 import getStandaloneModule from 'standalone/getModule';

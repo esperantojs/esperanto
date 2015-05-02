@@ -32,7 +32,7 @@ export default function getBundle ( options ) {
 
 	return resolvePath( base, userModules, entry, null ).then( absolutePath => {
 		return fetchModule( entry, absolutePath ).then( entryModule => {
-			modules = sortModules( entryModule, moduleLookup );
+			modules = sortModules( entryModule );
 
 			let bundle = {
 				entryModule,
