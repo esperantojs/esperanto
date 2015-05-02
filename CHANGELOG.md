@@ -1,5 +1,10 @@
 # changelog
 
+## 0.6.31
+
+* Preserve trailing `.js` in external module names (e.g. [highlight.js](https://www.npmjs.com/package/highlight.js)) ([#155](https://github.com/esperantojs/esperanto/issues/155))
+* Fix naming bug with modules imported via both `resolvePath` and normal import ([#156](https://github.com/esperantojs/esperanto/issues/156))
+
 ## 0.6.30
 
 * Mutually dependent modules within a bundle are re-ordered based on whether one is referenced at the top level of the other ([#152](https://github.com/esperantojs/esperanto/issues/152))
