@@ -30,21 +30,26 @@ export default function getBundle ( options ) {
 		userModules[ path.resolve( base, relativePath ) ] = options.modules[ relativePath ];
 	});
 
+	let cyclicalModules = [];
+
 	return resolvePath( base, userModules, entry, null ).then( absolutePath => {
 		return fetchModule( entry, absolutePath ).then( entryModule => {
-			modules = sortModules( entryModule );
+			return Promise.all( cyclicalModules ).then( () => {
+				modules = sortModules( entryModule );
 
-			let bundle = {
-				entryModule,
-				modules,
-				externalModules,
-				names
-			};
+				let bundle = {
+					entryModule,
+					modules,
+					externalModules,
+					names
+				};
 
-			resolveChains( modules, moduleLookup );
-			combine( bundle );
+				resolveChains( modules, moduleLookup );
+				combine( bundle );
 
-			return bundle;
+				return bundle;
+			});
+
 		});
 	}, function ( err ) {
 		if ( err.code === 'ENOENT' ) {
@@ -116,14 +121,18 @@ export default function getBundle ( options ) {
 						let promise = hasOwnProp.call( promiseByPath, absolutePath ) && promiseByPath[ absolutePath ];
 						let cyclical = !!promise;
 
-						// short-circuit cycles
-						if ( !cyclical ) {
-							promise = fetchModule( id, absolutePath );
+						if ( cyclical ) {
+							// ensure all modules are set before we
+							// create the bundle...
+							cyclicalModules.push(
+								promise.then( module => x.module = module )
+							);
+
+							// ...then short-circuit
+							return;
 						}
 
-						promise.then( module => x.module = module );
-
-						return cyclical || promise;
+						return fetchModule( id, absolutePath ).then( module => x.module = module );
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
