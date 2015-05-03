@@ -1,9 +1,14 @@
+let shouldSkip;
+let shouldAbort;
+
 export default function walk ( ast, { enter, leave }) {
+	shouldAbort = false;
 	visit( ast, null, enter, leave );
 }
 
 let context = {
-	skip: () => context.shouldSkip = true
+	skip: () => shouldSkip = true,
+	abort: () => shouldAbort = true
 };
 
 let childKeys = {};
@@ -15,12 +20,12 @@ function isArray ( thing ) {
 }
 
 function visit ( node, parent, enter, leave ) {
-	if ( !node ) return;
+	if ( !node || shouldAbort ) return;
 
 	if ( enter ) {
-		context.shouldSkip = false;
+		shouldSkip = false;
 		enter.call( context, node, parent );
-		if ( context.shouldSkip ) return;
+		if ( shouldSkip || shouldAbort ) return;
 	}
 
 	let keys = childKeys[ node.type ] || (
@@ -46,7 +51,7 @@ function visit ( node, parent, enter, leave ) {
 		}
 	}
 
-	if ( leave ) {
+	if ( leave && !shouldAbort ) {
 		leave( node, parent );
 	}
 }

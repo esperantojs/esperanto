@@ -17,7 +17,7 @@ export default function sortModules ( entry ) {
 		strongDeps[ id ] = [];
 		stronglyDependsOn[ id ] = {};
 
-		mod.imports.forEach( ( x, i ) => {
+		mod.imports.forEach( x => {
 			const imported = x.module;
 
 			if ( imported.isExternal || imported.isSkipped ) return;
@@ -100,16 +100,13 @@ function referencesAtTopLevel ( a, b ) {
 
 	walk( a.ast, {
 		enter ( node ) {
-			if ( referencedAtTopLevel ) {
-				return this.skip();
-			}
-
 			if ( /^Import/.test( node.type ) || ( node._scope && node._scope.parent ) ) {
 				return this.skip();
 			}
 
 			if ( node.type === 'Identifier' && ~bindings.indexOf( node.name ) ) {
 				referencedAtTopLevel = true;
+				this.abort();
 			}
 		}
 	});
