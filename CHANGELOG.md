@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.33
+
+* Fix a separate 0.6.31 regression with external modules ([#158](https://github.com/esperantojs/esperanto/issues/158))
+
 ## 0.6.32
 
 * Fix regression introduce in 0.6.31, whereby modules within a bundle are prevented from depending on the entry module

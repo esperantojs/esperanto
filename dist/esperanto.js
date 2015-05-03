@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.32 - 2015-05-02
+	esperanto.js v0.6.33 - 2015-05-03
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1738,17 +1738,19 @@ function getBundle ( options ) {
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
-							if ( !hasOwnProp.call( externalModuleLookup, id ) ) {
-								var externalModule = {
+							var externalModule = hasOwnProp.call( externalModuleLookup, id ) && externalModuleLookup[ id ];
+
+							if ( !externalModule ) {
+								externalModule = {
 									id: id,
 									isExternal: true
 								};
 
-								x.module = externalModule;
-
 								externalModules.push( externalModule );
 								externalModuleLookup[ id ] = externalModule;
 							}
+
+							x.module = externalModule;
 						} else {
 							throw err;
 						}
