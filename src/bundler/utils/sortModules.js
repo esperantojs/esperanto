@@ -3,25 +3,39 @@ import walk from 'utils/ast/walk';
 
 export default function sortModules ( entry ) {
 	let seen = {};
-	let unordered = [];
 	let ordered = [];
+	let hasCycles;
+
+	let strongDeps = {};
+	let stronglyDependsOn = {};
 
 	function visit ( mod ) {
-		seen[ mod.id ] = true;
+		const { id } = mod;
 
-		mod.strongDeps = [];
-		mod.stronglyDependsOn = {};
+		seen[ id ] = true;
+
+		strongDeps[ id ] = [];
+		stronglyDependsOn[ id ] = {};
 
 		mod.imports.forEach( ( x, i ) => {
 			const imported = x.module;
 
 			if ( imported.isExternal || imported.isSkipped ) return;
 
-			if ( stronglyDependsOn( mod, imported ) ) {
-				mod.strongDeps.push( imported );
+			// if `mod` references a binding from `imported` at the top
+			// level (i.e. outside function bodies), we say that `mod`
+			// strongly depends on `imported. If two modules depend on
+			// each other, this helps us order them such that if a
+			// strongly depends on b, and b weakly depends on a, b
+			// goes first
+			if ( referencesAtTopLevel( mod, imported ) ) {
+				strongDeps[ id ].push( imported );
 			}
 
 			if ( hasOwnProp.call( seen, imported.id ) ) {
+				// we need to prevent an infinite loop, and note that
+				// we need to check for strong/weak dependency relationships
+				hasCycles = true;
 				return;
 			}
 
@@ -30,43 +44,47 @@ export default function sortModules ( entry ) {
 
 		// add second (and third...) order dependencies
 		function addStrongDependencies ( dependency ) {
-			if ( hasOwnProp.call( mod.stronglyDependsOn, dependency.id ) ) return;
+			if ( hasOwnProp.call( stronglyDependsOn[ id ], dependency.id ) ) return;
 
-			mod.stronglyDependsOn[ dependency.id ] = true;
-			dependency.strongDeps.forEach( addStrongDependencies );
+			stronglyDependsOn[ id ][ dependency.id ] = true;
+			strongDeps[ dependency.id ].forEach( addStrongDependencies );
 		}
 
-		mod.strongDeps.forEach( addStrongDependencies );
+		strongDeps[ id ].forEach( addStrongDependencies );
 
-		unordered.push( mod );
+		ordered.push( mod );
 	}
 
-	seen = {};
 	visit( entry );
 
-	ordered = [];
+	let unordered;
 
-	// unordered is actually semi-ordered, as [ fewer dependencies ... more dependencies ]
-	unordered.forEach( x => {
-		// ensure strong dependencies of x that don't strongly depend on x go first
-		x.strongDeps.forEach( place );
+	if ( hasCycles ) {
+		unordered = ordered;
+		ordered = [];
 
-		function place ( dep ) {
-			if ( !dep.stronglyDependsOn[ x.id ] && !~ordered.indexOf( dep ) ) {
-				dep.strongDeps.forEach( place );
-				ordered.push( dep );
+		// unordered is actually semi-ordered, as [ fewer dependencies ... more dependencies ]
+		unordered.forEach( x => {
+			// ensure strong dependencies of x that don't strongly depend on x go first
+			strongDeps[ x.id ].forEach( place );
+
+			function place ( dep ) {
+				if ( !stronglyDependsOn[ dep.id ][ x.id ] && !~ordered.indexOf( dep ) ) {
+					strongDeps[ dep.id ].forEach( place );
+					ordered.push( dep );
+				}
 			}
-		}
 
-		if ( !~ordered.indexOf( x ) ) {
-			ordered.push( x );
-		}
-	});
+			if ( !~ordered.indexOf( x ) ) {
+				ordered.push( x );
+			}
+		});
+	}
 
 	return ordered;
 }
 
-function stronglyDependsOn ( a, b ) {
+function referencesAtTopLevel ( a, b ) {
 	let bindings = [];
 
 	// find out which bindings a imports from b
