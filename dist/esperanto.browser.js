@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.30 - 2015-04-26
+	esperanto.js v0.6.32 - 2015-05-02
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -10,8 +10,6 @@
 	typeof define === 'function' && define.amd ? define(['acorn'], factory) :
 	global.esperanto = factory(global.acorn)
 }(this, function (acorn) { 'use strict';
-
-	var hasOwnProp = Object.prototype.hasOwnProperty;
 
 	function hasNamedImports ( mod ) {
 		var i = mod.imports.length;
@@ -1245,7 +1243,7 @@
 	 */
 	function processImport ( node, passthrough ) {
 		var x = {
-			id: null, // used by bundler - filled in later
+			module: null, // used by bundler - filled in later
 			node: node,
 			start: node.start,
 			end: node.end,
@@ -1394,6 +1392,8 @@
 
 		return result;
 	}
+
+	var hasOwnProp = Object.prototype.hasOwnProperty;
 
 	function getUnscopedNames ( mod ) {
 		var unscoped = [], importedNames, scope;
@@ -2726,7 +2726,7 @@
 
 						bundle.modules.forEach( function(mod ) {
 							mod.imports.forEach( function(x ) {
-								if ( hasOwnProp.call( bundle.externalModuleLookup, x.id ) && ( !x.isDefault && !x.isBatch ) ) {
+								if ( x.module.isExternal && ( !x.isDefault && !x.isBatch ) ) {
 									throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
 								}
 							});
@@ -2766,3 +2766,4 @@
 	return esperanto;
 
 }));
+//# sourceMappingURL=/www/ESPERANTO/esperanto/test/.gobble-build/02-esperantoBundle/1/esperanto.browser.js.map

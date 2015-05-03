@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.6.30 - 2015-04-26
+	esperanto.js v0.6.32 - 2015-05-02
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -11,8 +11,6 @@ var acorn = require('acorn');
 var MagicString = require('magic-string');
 var path = require('path');
 var sander = require('sander');
-
-var hasOwnProp = Object.prototype.hasOwnProperty;
 
 function hasNamedImports ( mod ) {
 	var i = mod.imports.length;
@@ -349,7 +347,7 @@ function findImportsAndExports ( mod, source, ast ) {
  */
 function processImport ( node, passthrough ) {
 	var x = {
-		id: null, // used by bundler - filled in later
+		module: null, // used by bundler - filled in later
 		node: node,
 		start: node.start,
 		end: node.end,
@@ -498,6 +496,8 @@ function processExport ( node, source ) {
 
 	return result;
 }
+
+var hasOwnProp = Object.prototype.hasOwnProperty;
 
 function getUnscopedNames ( mod ) {
 	var unscoped = [], importedNames, scope;
@@ -751,7 +751,7 @@ function resolveAgainst ( importerPath ) {
 	};
 }
 
-function sortModules ( entry, moduleLookup ) {
+function sortModules ( entry ) {
 	var seen = {};
 	var ordered = [];
 	var swapPairs = [];
@@ -760,9 +760,9 @@ function sortModules ( entry, moduleLookup ) {
 		seen[ mod.id ] = true;
 
 		mod.imports.forEach( function(x ) {
-			var imported = moduleLookup[ x.id ];
+			var imported = x.module;
 
-			if ( !imported ) return;
+			if ( imported.isExternal || imported.isSkipped ) return;
 
 			// ignore modules we've already included
 			if ( hasOwnProp.call( seen, imported.id ) ) {
@@ -802,7 +802,7 @@ function shouldSwap ( a, b ) {
 function sortModules__imports ( a, b ) {
 	var i = a.imports.length;
 	while ( i-- ) {
-		if ( a.imports[i].id === b.id ) {
+		if ( a.imports[i].module === b ) {
 			return true;
 		}
 	}
@@ -814,7 +814,7 @@ function usesAtTopLevel ( a, b ) {
 	// find out which bindings a imports from b
 	var i = a.imports.length;
 	while ( i-- ) {
-		if ( a.imports[i].id === b.id ) {
+		if ( a.imports[i].module === b ) {
 			bindings.push.apply( bindings, a.imports[i].specifiers.map( function(x ) {return x.as} ) );
 		}
 	}
@@ -849,18 +849,16 @@ function resolveChains ( modules, moduleLookup ) {
 		var origin = {};
 
 		mod.imports.forEach( function(x ) {
+			var imported = x.module;
+
 			x.specifiers.forEach( function(s ) {
 				if ( s.isBatch ) {
-					// if this is an internal module, we need to tell that module that
-					// it needs to export an object full of getters
-					if ( hasOwnProp.call( moduleLookup, x.id ) ) {
-						moduleLookup[ x.id ]._exportsNamespace = true;
-					}
-
+					// tell that module that it needs to export an object full of getters
+					imported._exportsNamespace = true;
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[ s.as ] = (("" + (x.id)) + ("@" + (s.name)) + "");
+				origin[ s.as ] = (("" + (s.name)) + ("@" + (imported.id)) + "");
 			});
 		});
 
@@ -869,13 +867,48 @@ function resolveChains ( modules, moduleLookup ) {
 
 			x.specifiers.forEach( function(s ) {
 				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ (("" + (mod.id)) + ("@" + (s.name)) + "") ] = origin[ s.name ];
+					chains[ (("" + (s.name)) + ("@" + (mod.id)) + "") ] = origin[ s.name ];
 				}
 			});
 		});
 	});
 
-	return chains;
+	// Second pass - assigning origins to specifiers
+	modules.forEach( function(mod ) {
+		mod.imports.forEach( function(x ) {
+			var imported = x.module;
+
+			x.specifiers.forEach( function(s ) {
+				if ( s.isBatch ) {
+					return; // TODO can batch imports be chained?
+				}
+
+				setOrigin( s, (("" + (s.name)) + ("@" + (imported.id)) + ""), chains, moduleLookup );
+			});
+		});
+
+		mod.exports.forEach( function(x ) {
+			if ( !x.specifiers ) return;
+
+			x.specifiers.forEach( function(s ) {
+				setOrigin( s, (("" + (s.name)) + ("@" + (mod.id)) + ""), chains, moduleLookup );
+			});
+		});
+	});
+}
+
+function setOrigin ( specifier, hash, chains, moduleLookup ) {
+	var isChained;
+
+	while ( hasOwnProp.call( chains, hash ) ) {
+		hash = chains[ hash ];
+		isChained = true;
+	}
+
+	if ( isChained ) {
+		var name = (moduleId = hash.split( '@' ))[0], moduleId = moduleId[1];
+		specifier.origin = { module: moduleLookup[ moduleId ], name: name };
+	}
 }
 
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
@@ -906,8 +939,8 @@ function getUniqueNames ( bundle ) {
 	// infer names from default imports - e.g. with `import _ from './utils'`,
 	// use '_' instead of generating a name from 'utils'
 	function inferName ( x ) {
-		if ( x.isDefault && !hasOwnProp.call( names, x.id ) && !hasOwnProp.call( used, x.as ) ) {
-			names[ x.id ] = x.as;
+		if ( x.isDefault && !hasOwnProp.call( names, x.module.id ) && !hasOwnProp.call( used, x.as ) ) {
+			names[ x.module.id ] = x.as;
 			used[ x.as ] = true;
 		}
 	}
@@ -950,9 +983,9 @@ function getUniqueNames ( bundle ) {
 function populateExternalModuleImports ( bundle ) {
 	bundle.modules.forEach( function(mod ) {
 		mod.imports.forEach( function(x ) {
-			var externalModule = bundle.externalModuleLookup[ x.id ];
+			var externalModule = x.module;
 
-			if ( !externalModule ) {
+			if ( !externalModule.isExternal ) {
 				return;
 			}
 
@@ -1056,56 +1089,48 @@ function populateIdentifierReplacements ( bundle ) {
 		});
 
 		mod.imports.forEach( function(x ) {
-			var externalModule;
-
 			if ( x.passthrough ) {
 				return;
 			}
 
-			externalModule = hasOwnProp.call( bundle.externalModuleLookup, x.id ) && bundle.externalModuleLookup[ x.id ];
+			var imported = x.module;
 
 			x.specifiers.forEach( function(s ) {
-				var moduleId, mod, moduleName, specifierName, replacement, hash, isChained, separatorIndex;
-
-				moduleId = x.id;
+				var replacement;
 
 				if ( s.isBatch ) {
-					replacement = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] ).name;
+					replacement = x.module.name;
 				}
 
 				else {
-					specifierName = s.name;
+					var mod;
+					var specifierName;
 
-					// If this is a chained import, get the origin
-					hash = (("" + moduleId) + ("@" + specifierName) + "");
-					while ( hasOwnProp.call( bundle.chains, hash ) ) {
-						hash = bundle.chains[ hash ];
-						isChained = true;
+					if ( s.origin ) {
+						// chained bindings
+						mod = s.origin.module;
+						specifierName = s.origin.name;
+					} else {
+						mod = imported;
+						specifierName = s.name;
 					}
 
-					if ( isChained ) {
-						separatorIndex = hash.indexOf( '@' );
-						moduleId = hash.substr( 0, separatorIndex );
-						specifierName = hash.substring( separatorIndex + 1 );
-					}
-
-					mod = ( bundle.moduleLookup[ moduleId ] || bundle.externalModuleLookup[ moduleId ] );
-					moduleName = mod && mod.name;
+					var moduleName = mod && mod.name;
 
 					if ( specifierName === 'default' ) {
 						// if it's an external module, always use __default if the
 						// bundle also uses named imports
-						if ( !!externalModule ) {
-							replacement = externalModule.needsNamed ? (("" + moduleName) + "__default") : moduleName;
+						if ( imported.isExternal ) {
+							replacement = imported.needsNamed ? (("" + moduleName) + "__default") : moduleName;
 						}
 
 						// TODO We currently need to check for the existence of `mod`, because modules
 						// can be skipped. Would be better to replace skipped modules with dummies
 						// - see https://github.com/Rich-Harris/esperanto/issues/32
-						else if ( mod ) {
+						else if ( mod && !mod.isSkipped ) {
 							replacement = mod.identifierReplacements.default;
 						}
-					} else if ( !externalModule ) {
+					} else if ( !imported.isExternal ) {
 						replacement = hasOwnProp.call( conflicts, specifierName ) ?
 							(("" + moduleName) + ("__" + specifierName) + "") :
 							specifierName;
@@ -1145,29 +1170,32 @@ function resolveExports ( bundle ) {
 	bundle.entryModule.exports.forEach( function(x ) {
 		if ( x.specifiers ) {
 			x.specifiers.forEach( function(s ) {
-				var hash = (("" + (bundle.entryModule.id)) + ("@" + (s.name)) + "");
+				var module;
+				var name;
 
-				while ( bundle.chains[ hash ] ) {
-					hash = bundle.chains[ hash ];
+				if ( s.origin ) {
+					module = s.origin.module;
+					name = s.origin.name;
+				} else {
+					module = bundle.entryModule;
+					name = s.name;
 				}
 
-				var moduleId = (name = hash.split( '@' ))[0], name = name[1];
-
-				addExport( moduleId, name, s.name );
+				addExport( module, name, s.name );
 			});
 		}
 
 		else if ( !x.isDefault && x.name ) {
-			addExport( bundle.entry, x.name, x.name );
+			addExport( bundle.entryModule, x.name, x.name );
 		}
 	});
 
-	function addExport ( moduleId, name, as ) {
-		if ( !bundleExports[ moduleId ] ) {
-			bundleExports[ moduleId ] = {};
+	function addExport ( module, name, as ) {
+		if ( !bundleExports[ module.id ] ) {
+			bundleExports[ module.id ] = {};
 		}
 
-		bundleExports[ moduleId ][ name ] = as;
+		bundleExports[ module.id ][ name ] = as;
 	}
 
 	return bundleExports;
@@ -1493,21 +1521,21 @@ function combine ( bundle ) {
 	bundle.modules.forEach( function(mod ) {
 		// verify that this module doesn't import non-exported identifiers
 		mod.imports.forEach( function(x ) {
-			var importedModule = bundle.moduleLookup[ x.id ];
+			var imported = x.module;
 
-			if ( !importedModule || x.isBatch ) {
+			if ( imported.isExternal || imported.isSkipped || x.isBatch ) {
 				return;
 			}
 
 			x.specifiers.forEach( function(s ) {
-				if ( !importedModule.doesExport[ s.name ] ) {
-					throw new Error( (("Module '" + (importedModule.id)) + ("' does not export '" + (s.name)) + ("' (imported by '" + (mod.id)) + "')") );
+				if ( !imported.doesExport[ s.name ] ) {
+					throw new Error( (("Module '" + (imported.id)) + ("' does not export '" + (s.name)) + ("' (imported by '" + (mod.id)) + "')") );
 				}
 			});
 		});
 
 		bundle.body.addSource({
-			filename: path.resolve( bundle.base, mod.relativePath ),
+			filename: mod.path,
 			content: transformBody__transformBody( bundle, mod, mod.body ),
 			indentExclusionRanges: mod.ast._templateLiteralRanges
 		});
@@ -1599,27 +1627,31 @@ function getBundle ( options ) {
 		entry = entry.substring( base.length );
 	}
 
-	return resolvePath( base, userModules, entry, null ).then( function(relativePath ) {
-		return fetchModule( entry, relativePath ).then( function()  {
-			var entryModule = moduleLookup[ entry ];
-			modules = sortModules( entryModule, moduleLookup );
+	// resolve user module paths
+	options.modules && Object.keys( options.modules ).forEach( function(relativePath ) {
+		userModules[ path.resolve( base, relativePath ) ] = options.modules[ relativePath ];
+	});
 
-			var bundle = {
-				entry: entry,
-				entryModule: entryModule,
-				base: base,
-				modules: modules,
-				moduleLookup: moduleLookup,
-				externalModules: externalModules,
-				externalModuleLookup: externalModuleLookup,
-				skip: skip,
-				names: names,
-				chains: resolveChains( modules, moduleLookup )
-			};
+	var cyclicalModules = [];
 
-			combine( bundle );
+	return resolvePath( base, userModules, entry, null ).then( function(absolutePath ) {
+		return fetchModule( entry, absolutePath ).then( function(entryModule ) {
+			return getBundle__Promise.all( cyclicalModules ).then( function()  {
+				modules = sortModules( entryModule );
 
-			return bundle;
+				var bundle = {
+					entryModule: entryModule,
+					modules: modules,
+					externalModules: externalModules,
+					names: names
+				};
+
+				resolveChains( modules, moduleLookup );
+				combine( bundle );
+
+				return bundle;
+			});
+
 		});
 	}, function ( err ) {
 		if ( err.code === 'ENOENT' ) {
@@ -1629,13 +1661,11 @@ function getBundle ( options ) {
 		throw err;
 	});
 
-	function fetchModule ( moduleId, relativePath ) {
-		var absolutePath = path.resolve( base, relativePath );
-
-		if ( !hasOwnProp.call( promiseByPath, relativePath ) ) {
-			promiseByPath[ relativePath ] = (
-				hasOwnProp.call( userModules, relativePath ) ?
-					getBundle__Promise.resolve( userModules[ relativePath ] ) :
+	function fetchModule ( moduleId, absolutePath ) {
+		if ( !hasOwnProp.call( promiseByPath, absolutePath ) ) {
+			promiseByPath[ absolutePath ] = (
+				hasOwnProp.call( userModules, absolutePath ) ?
+					getBundle__Promise.resolve( userModules[ absolutePath ] ) :
 					sander.readFile( absolutePath ).then( String )
 			).then( function ( source ) {
 				var code, ast;
@@ -1662,41 +1692,62 @@ function getBundle ( options ) {
 					path: absolutePath,
 					code: code,
 					ast: ast,
-					relativePath: relativePath
+
+					// TODO should not need this
+					relativePath: path.relative( base, absolutePath )
 				});
 
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
 				var promises = module.imports.map( function(x ) {
-					x.id = resolveId( x.path, module.relativePath );
+					// TODO remove this, use x.module instead. more flexible, no lookups involved
+					var id = resolveId( x.path, module.relativePath );
 
-					if ( x.id === moduleId ) {
+					if ( id === moduleId ) {
 						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
 					}
 
 					// Some modules can be skipped
-					if ( skip && ~skip.indexOf( x.id ) ) {
-						return;
+					if ( skip && ~skip.indexOf( id ) ) {
+						var skippedModule = {
+							id: id,
+							isSkipped: true
+						};
+
+						x.module = skippedModule;
+						return skippedModule;
 					}
 
-					return resolvePath( base, userModules, x.id, absolutePath, options.resolvePath ).then( function(relativePath ) {
-						// short-circuit cycles
-						if ( hasOwnProp.call( promiseByPath, relativePath ) ) {
+					return resolvePath( base, userModules, id, absolutePath, options.resolvePath ).then( function(absolutePath ) {
+						var promise = hasOwnProp.call( promiseByPath, absolutePath ) && promiseByPath[ absolutePath ];
+						var cyclical = !!promise;
+
+						if ( cyclical ) {
+							// ensure all modules are set before we
+							// create the bundle...
+							cyclicalModules.push(
+								promise.then( function(module ) {return x.module = module} )
+							);
+
+							// ...then short-circuit
 							return;
 						}
 
-						return fetchModule( x.id, relativePath );
+						return fetchModule( id, absolutePath ).then( function(module ) {return x.module = module} );
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
-							if ( !hasOwnProp.call( externalModuleLookup, x.id ) ) {
+							if ( !hasOwnProp.call( externalModuleLookup, id ) ) {
 								var externalModule = {
-									id: x.id
+									id: id,
+									isExternal: true
 								};
 
+								x.module = externalModule;
+
 								externalModules.push( externalModule );
-								externalModuleLookup[ x.id ] = externalModule;
+								externalModuleLookup[ id ] = externalModule;
 							}
 						} else {
 							throw err;
@@ -1704,11 +1755,12 @@ function getBundle ( options ) {
 					} );
 				});
 
-				return getBundle__Promise.all( promises );
+				return getBundle__Promise.all( promises )
+					.then( function()  {return module} );
 			});
 		}
 
-		return promiseByPath[ relativePath ];
+		return promiseByPath[ absolutePath ];
 	}
 }
 
@@ -1729,7 +1781,7 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 						throw err;
 					}
 
-					return sander.stat( resolvedPath ).then( function()  {return resolvedPath} );
+					return sander.stat( resolvedPath ).then( function()  {return path.resolve( base, resolvedPath )} );
 				});
 			} else {
 				throw err;
@@ -1738,10 +1790,12 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 }
 
 function tryPath ( base, filename, userModules ) {
-	if ( hasOwnProp.call( userModules, filename ) ) {
-		return getBundle__Promise.resolve( filename );
+	var absolutePath = path.resolve( base, filename );
+
+	if ( hasOwnProp.call( userModules, absolutePath ) ) {
+		return getBundle__Promise.resolve( absolutePath );
 	}
-	return sander.stat( base, filename ).then( function()  {return filename} );
+	return sander.stat( absolutePath ).then( function()  {return absolutePath} );
 }
 
 function isThenable ( obj ) {
@@ -2641,7 +2695,7 @@ var esperanto = {
 
 					bundle.modules.forEach( function(mod ) {
 						mod.imports.forEach( function(x ) {
-							if ( hasOwnProp.call( bundle.externalModuleLookup, x.id ) && ( !x.isDefault && !x.isBatch ) ) {
+							if ( x.module.isExternal && ( !x.isDefault && !x.isBatch ) ) {
 								throw new Error( 'You can only have named external imports in strict mode (pass `strict: true`)' );
 							}
 						});
@@ -2679,3 +2733,4 @@ function flattenExports ( exports ) {
 }
 
 module.exports = esperanto;
+//# sourceMappingURL=/www/ESPERANTO/esperanto/test/.gobble-build/01-esperantoBundle/1/esperanto.js.map
