@@ -136,17 +136,19 @@ export default function getBundle ( options ) {
 					}, function handleError ( err ) {
 						if ( err.code === 'ENOENT' ) {
 							// Most likely an external module
-							if ( !hasOwnProp.call( externalModuleLookup, id ) ) {
-								let externalModule = {
+							let externalModule = hasOwnProp.call( externalModuleLookup, id ) && externalModuleLookup[ id ];
+
+							if ( !externalModule ) {
+								externalModule = {
 									id,
 									isExternal: true
 								};
 
-								x.module = externalModule;
-
 								externalModules.push( externalModule );
 								externalModuleLookup[ id ] = externalModule;
 							}
+
+							x.module = externalModule;
 						} else {
 							throw err;
 						}
