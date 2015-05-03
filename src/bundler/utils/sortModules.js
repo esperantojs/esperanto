@@ -3,62 +3,70 @@ import walk from 'utils/ast/walk';
 
 export default function sortModules ( entry ) {
 	let seen = {};
+	let unordered = [];
 	let ordered = [];
-	let swapPairs = [];
 
 	function visit ( mod ) {
 		seen[ mod.id ] = true;
 
-		mod.imports.forEach( x => {
+		mod.strongDeps = [];
+		mod.stronglyDependsOn = {};
+
+		mod.imports.forEach( ( x, i ) => {
 			const imported = x.module;
 
 			if ( imported.isExternal || imported.isSkipped ) return;
 
-			// ignore modules we've already included
-			if ( hasOwnProp.call( seen, imported.id ) ) {
-				if ( shouldSwap( imported, mod ) ) {
-					swapPairs.push([ imported, mod ]);
-				}
+			if ( stronglyDependsOn( mod, imported ) ) {
+				mod.strongDeps.push( imported );
+			}
 
+			if ( hasOwnProp.call( seen, imported.id ) ) {
 				return;
 			}
 
 			visit( imported );
 		});
 
-		ordered.push( mod );
+		// add second (and third...) order dependencies
+		function addStrongDependencies ( dependency ) {
+			if ( hasOwnProp.call( mod.stronglyDependsOn, dependency.id ) ) return;
+
+			mod.stronglyDependsOn[ dependency.id ] = true;
+			dependency.strongDeps.forEach( addStrongDependencies );
+		}
+
+		mod.strongDeps.forEach( addStrongDependencies );
+
+		unordered.push( mod );
 	}
 
+	seen = {};
 	visit( entry );
 
-	swapPairs.forEach( ([ a, b ]) => {
-		const aIndex = ordered.indexOf( a );
-		const bIndex = ordered.indexOf( b );
+	ordered = [];
 
-		ordered[ aIndex ] = b;
-		ordered[ bIndex ] = a;
+	// unordered is actually semi-ordered, as [ fewer dependencies ... more dependencies ]
+	unordered.forEach( x => {
+		// ensure strong dependencies of x that don't strongly depend on x go first
+		x.strongDeps.forEach( place );
+
+		function place ( dep ) {
+			if ( !dep.stronglyDependsOn[ x.id ] && !~ordered.indexOf( dep ) ) {
+				dep.strongDeps.forEach( place );
+				ordered.push( dep );
+			}
+		}
+
+		if ( !~ordered.indexOf( x ) ) {
+			ordered.push( x );
+		}
 	});
 
 	return ordered;
 }
 
-function shouldSwap ( a, b ) {
-	// if these modules don't import each other, abort
-	if ( !( imports( a, b ) && imports( b, a ) ) ) return;
-
-	return usesAtTopLevel( b, a ) && !usesAtTopLevel( a, b );
-}
-
-function imports ( a, b ) {
-	let i = a.imports.length;
-	while ( i-- ) {
-		if ( a.imports[i].module === b ) {
-			return true;
-		}
-	}
-}
-
-function usesAtTopLevel ( a, b ) {
+function stronglyDependsOn ( a, b ) {
 	let bindings = [];
 
 	// find out which bindings a imports from b
