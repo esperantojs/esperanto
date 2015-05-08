@@ -1,5 +1,9 @@
 # changelog
 
+## 0.6.34
+
+* Improve module sorting algorithm to handle tricky cyclical cases ([#159](https://github.com/esperantojs/esperanto/issues/159))
+
 ## 0.6.33
 
 * Fix a separate 0.6.31 regression with external modules ([#158](https://github.com/esperantojs/esperanto/issues/158))
