@@ -1,12 +1,14 @@
 /**
  * Inspects a module and discovers/categorises import & export declarations
- * @param {object} mod - the module object
- * @param {string} source - the module's original source code
  * @param {object} ast - the result of parsing `source` with acorn
- * @returns {array} - [ imports, exports ]
+ * @param {string} source - the module's original source code
+ * @returns {object} - { imports, exports, defaultExport }
  */
-export default function findImportsAndExports ( mod, source, ast ) {
-	var imports = [], exports = [], previousDeclaration;
+export default function findImportsAndExports ( ast, source ) {
+	let imports = [];
+	let exports = [];
+	let defaultExport;
+	let previousDeclaration;
 
 	ast.body.forEach( node => {
 		var passthrough, declaration;
@@ -28,10 +30,10 @@ export default function findImportsAndExports ( mod, source, ast ) {
 			declaration = processDefaultExport( node, source );
 			exports.push( declaration );
 
-			if ( mod.defaultExport ) {
+			if ( defaultExport ) {
 				throw new Error( 'Duplicate default exports' );
 			}
-			mod.defaultExport = declaration;
+			defaultExport = declaration;
 		}
 
 		else if ( node.type === 'ExportNamedDeclaration' ) {
@@ -59,7 +61,7 @@ export default function findImportsAndExports ( mod, source, ast ) {
 		previousDeclaration.isFinal = true;
 	}
 
-	return [ imports, exports ];
+	return { imports, exports, defaultExport };
 }
 
 /**

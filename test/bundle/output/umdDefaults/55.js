@@ -6,23 +6,17 @@
 
 	class A {
 		b () {
-			return new _B();
+			return new B();
 		}
 
 		c () {
-			return new _C();
+			return new C();
 		}
 	}
 
-	var _A = A;
+	class B extends A {}
 
-	class B extends _A {}
-
-	var _B = B;
-
-	class C extends _A {}
-
-	var _C = C;
+	class C extends A {}
 
 
 

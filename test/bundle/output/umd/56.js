@@ -4,8 +4,12 @@
 	factory()
 }(function () { 'use strict';
 
-	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var foo = 42;
+	var _foo = foo;
+	foo = 99;
+	foo += 1;
+	foo++;
 
-	console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
+	console.log( _foo ); // 42
 
 }));

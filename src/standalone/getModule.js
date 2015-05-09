@@ -37,17 +37,20 @@ export default function getStandaloneModule ( options ) {
 
 	toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 
-	let [ imports, exports ] = findImportsAndExports( mod, code, mod.ast );
+	let { imports, exports, defaultExport } = findImportsAndExports( mod.ast, code );
 
 	disallowConflictingImports( imports );
 
 	mod.imports = imports;
 	mod.exports = exports;
+	mod.defaultExport = defaultExport;
 
 	let conflicts = {};
 
 	if ( options.strict ) {
-		annotateAst( mod.ast );
+		annotateAst( mod.ast, {
+			trackAssignments: null
+		});
 
 		// TODO there's probably an easier way to get this array
 		Object.keys( mod.ast._declared ).concat( getUnscopedNames( mod ) ).forEach( n => {

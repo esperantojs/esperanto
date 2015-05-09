@@ -1,8 +1,8 @@
 'use strict';
 
-var moment = require('moment');
-moment = ('default' in moment ? moment['default'] : moment);
+var x = require('moment');
+x = ('default' in x ? x['default'] : x);
 
-var x = 'wut';
-var a = x;
+var a__x = 'wut';
+var a = a__x;
 
