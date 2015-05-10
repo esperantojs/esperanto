@@ -1,4 +1,3 @@
 module.exports = {
-	description: 'default exports are not live',
-	//solo: true
+	description: 'default exports are not live'
 };
