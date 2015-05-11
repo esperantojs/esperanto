@@ -34,7 +34,11 @@ export default function getBundle ( options ) {
 	return resolvePath( base, userModules, entry, null ).then( absolutePath => {
 		return fetchModule( entry, absolutePath ).then( entryModule => {
 			return Promise.all( cyclicalModules ).then( () => {
-				modules = sortModules( entryModule );
+				// if the bundle contains cyclical modules,
+				// we may need to sort it again
+				if ( cyclicalModules.length ) {
+					modules = sortModules( entryModule );
+				}
 
 				let bundle = {
 					entryModule,
@@ -94,7 +98,6 @@ export default function getBundle ( options ) {
 					relativePath: relative( base, absolutePath )
 				});
 
-				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
 				return promiseSequence( module.imports, x => {
@@ -151,7 +154,9 @@ export default function getBundle ( options ) {
 							throw err;
 						}
 					} );
-				}).then( () => module );
+				})
+				.then( () => modules.push( module ) )
+				.then( () => module );
 			});
 		}
 
