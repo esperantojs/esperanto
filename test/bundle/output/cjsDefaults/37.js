@@ -1,7 +1,7 @@
 'use strict';
 
-var moment = require('moment');
+var x = require('moment');
 
-var x = 'wut';
-var a = x;
+var a__x = 'wut';
+var a = a__x;
 

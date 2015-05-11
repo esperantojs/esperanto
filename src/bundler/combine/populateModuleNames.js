@@ -8,7 +8,19 @@ export default function getUniqueNames ( bundle ) {
 	let names = {};
 
 	let used = modules.reduce( ( declared, mod ) => {
-		Object.keys( mod.ast._declared ).forEach( x => declared[x] = true );
+		const defaultExport = mod.defaultExport;
+		const defaultExportName = defaultExport &&
+		                          !defaultExport.unsafe &&
+		                          defaultExport.type === 'expression' &&
+		                          defaultExport.node.declaration &&
+		                          defaultExport.node.declaration.type === 'Identifier' &&
+		                          defaultExport.node.declaration.name;
+
+		Object.keys( mod.ast._declared ).forEach( x => {
+			// special case - `export default foo`
+			if ( x === defaultExportName ) return;
+			declared[x] = true;
+		});
 		return declared;
 	}, {} );
 

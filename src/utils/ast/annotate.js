@@ -36,7 +36,9 @@ Scope.prototype = {
 	}
 };
 
-export default function annotateAst ( ast ) {
+export default function annotateAst ( ast, options ) {
+	const trackAssignments = options && options.trackAssignments;
+
 	let scope = new Scope();
 	let blockScope = new Scope();
 	let declared = {};
@@ -121,6 +123,14 @@ export default function annotateAst ( ast ) {
 						node._topLevel = true;
 					}
 					break;
+
+				case 'AssignmentExpression':
+					assignTo( node.left );
+					break;
+
+				case 'UpdateExpression':
+					assignTo( node.argument );
+					break;
 			}
 		},
 		leave ( node ) {
@@ -144,6 +154,17 @@ export default function annotateAst ( ast ) {
 			}
 		}
 	});
+
+	function assignTo ( node ) {
+		if ( trackAssignments && node.type === 'Identifier' && node.name === trackAssignments.name ) {
+			// This is possibly somewhat hacky. Open to alternative approaches...
+			// It will yield false positives if `foo` in `export default foo` is shadowed
+			( trackAssignments._assignments || ( trackAssignments._assignments = [] ) ).push({
+				scope,
+				node
+			});
+		}
+	}
 
 	function addToScope ( declarator ) {
 		var name = declarator.id.name;
