@@ -1,5 +1,10 @@
 # changelog
 
+## 0.7.0
+
+* Where possible, default exports are not renamed ([#166](https://github.com/esperantojs/esperanto/issues/166))
+* Some internal tidying up
+
 ## 0.6.34
 
 * Improve module sorting algorithm to handle tricky cyclical cases ([#159](https://github.com/esperantojs/esperanto/issues/159))
