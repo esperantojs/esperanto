@@ -187,7 +187,7 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 }
 
 function tryPath ( base, filename, userModules ) {
-	const absolutePath = path.resolve( base, filename );
+	const absolutePath = resolve( base, filename );
 
 	if ( hasOwnProp.call( userModules, absolutePath ) ) {
 		return Promise.resolve( absolutePath );
