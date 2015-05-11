@@ -1,6 +1,7 @@
-import { relative, resolve, step } from 'path';
+import { relative, resolve, sep } from 'path';
 import hasOwnProp from 'utils/hasOwnProp';
 import resolveId from 'utils/resolveId';
+import promiseSequence from 'utils/promiseSequence';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
 import combine from './combine';
@@ -96,7 +97,7 @@ export default function getBundle ( options ) {
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
-				let promises = module.imports.map( x => {
+				return promiseSequence( module.imports, x => {
 					// TODO remove this, use x.module instead. more flexible, no lookups involved
 					const id = resolveId( x.path, module.relativePath );
 
@@ -151,10 +152,7 @@ export default function getBundle ( options ) {
 							throw err;
 						}
 					} );
-				});
-
-				return Promise.all( promises )
-					.then( () => module );
+				}).then( () => module );
 			});
 		}
 
