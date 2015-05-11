@@ -1,13 +1,12 @@
 var assert = require( 'assert' );
 var sander = require( 'sander' );
 var makeWhitespaceVisible = require( '../utils/makeWhitespaceVisible' );
+var esperanto = require( '../../' );
 
 var Promise = sander.Promise;
 
 module.exports = function () {
 	return new Promise( function ( fulfil ) {
-		var esperanto;
-
 		describe( 'fast mode', function () {
 			var tests, start;
 
@@ -54,10 +53,7 @@ module.exports = function () {
 					this.timeout( parseInt( process.env.BUILD_TIMEOUT ) );
 				}
 
-				return require( '../utils/build' )().then( function ( lib ) {
-					esperanto = lib;
-					start = Date.now();
-				});
+				start = Date.now();
 			});
 
 			after( function () {

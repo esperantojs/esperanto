@@ -2,13 +2,14 @@ var path = require( 'path' );
 var assert = require( 'assert' );
 var sander = require( 'sander' );
 var makeWhitespaceVisible = require( '../utils/makeWhitespaceVisible' );
+var esperanto = require( '../../' );
 
 var Promise = sander.Promise;
 global.assert = assert;
 
 module.exports = function () {
 	return new Promise( function ( fulfil ) {
-		var esperanto, start;
+		var start;
 
 		describe( 'strict mode', function () {
 			this.timeout( 20000 );
@@ -36,15 +37,8 @@ module.exports = function () {
 					this.timeout( parseInt( process.env.BUILD_TIMEOUT ) );
 				}
 
-				return sander.Promise.all([
-					require( '../utils/build' )().then( function ( lib ) {
-						esperanto = lib;
-					}),
-
-					sander.rimraf( 'es6-module-transpiler-tests/output' )
-				]).then( function () {
-					start = Date.now();
-				});
+				sander.rimrafSync( 'es6-module-transpiler-tests/output' );
+				start = Date.now();
 			});
 
 			after( function () {
