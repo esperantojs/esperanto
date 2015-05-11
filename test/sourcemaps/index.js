@@ -1,12 +1,13 @@
 var path = require( 'path' );
 var assert = require( 'assert' );
 var SourceMapConsumer = require( 'source-map' ).SourceMapConsumer;
+var esperanto = require( '../../' );
 
 var Promise = require( 'sander' ).Promise;
 
 module.exports = function () {
 	return new Promise( function ( fulfil ) {
-		var esperanto, start;
+		var start;
 
 		describe( 'sourcemap', function () {
 			this.timeout( 20000 );
@@ -16,10 +17,7 @@ module.exports = function () {
 					this.timeout( parseInt( process.env.BUILD_TIMEOUT ) );
 				}
 
-				return require( '../utils/build' )().then( function ( lib ) {
-					esperanto = lib;
-					start = Date.now();
-				});
+				start = Date.now();
 			});
 
 			after( function () {
