@@ -92,19 +92,16 @@ export default function getBundle ( options ) {
 					id: moduleId,
 					path: absolutePath,
 					code,
-					ast,
-
-					// TODO should not need this
-					relativePath: relative( base, absolutePath )
+					ast
 				});
 
 				moduleLookup[ moduleId ] = module;
 
 				return promiseSequence( module.imports, x => {
-					const id = resolveId( x.path, module.relativePath );
+					const id = resolveId( x.path, module.path ).replace( base, '' );
 
 					if ( id === moduleId ) {
-						throw new Error( 'A module (' + moduleId + ') cannot import itself' );
+						throw new Error( `A module (${moduleId}) cannot import itself` );
 					}
 
 					// Some modules can be skipped
