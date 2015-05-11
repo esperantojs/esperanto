@@ -14,7 +14,8 @@ banner = require( 'fs' ).readFileSync( __dirname + '/src/banner.js', 'utf-8' )
 node = gobble( 'src' ).transform( 'esperanto-bundle', {
 	entry: 'esperanto',
 	type: 'cjs',
-	banner: banner
+	banner: banner,
+	strict: true
 });
 
 browser = gobble( 'src' ).transform( 'esperanto-bundle', {
@@ -24,6 +25,7 @@ browser = gobble( 'src' ).transform( 'esperanto-bundle', {
 	name: 'esperanto',
 	skip: [ 'bundler/getBundle' ],
 	banner: banner,
+	strict: true,
 
 	// bundle magic-string and its dependency, vlq
 	resolvePath: function ( importee, importer ) {

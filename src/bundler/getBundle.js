@@ -1,13 +1,12 @@
-import path from 'path';
+import { relative, resolve, sep } from 'path';
 import hasOwnProp from 'utils/hasOwnProp';
 import resolveId from 'utils/resolveId';
+import promiseSequence from 'utils/promiseSequence';
 import sortModules from './utils/sortModules';
 import resolveChains from './utils/resolveChains';
 import combine from './combine';
-import sander from 'sander';
+import { readFile, stat, Promise } from 'sander';
 import getModule from './getModule';
-
-const Promise = sander.Promise;
 
 export default function getBundle ( options ) {
 	let entry = options.entry.replace( /\.js$/, '' );
@@ -17,7 +16,7 @@ export default function getBundle ( options ) {
 	let promiseByPath = {};
 	let skip = options.skip;
 	let names = options.names;
-	let base = ( options.base ? path.resolve( options.base ) : process.cwd() ) + '/';
+	let base = ( options.base ? resolve( options.base ) : process.cwd() ) + '/';
 	let externalModules = [];
 	let externalModuleLookup = {};
 
@@ -27,7 +26,7 @@ export default function getBundle ( options ) {
 
 	// resolve user module paths
 	options.modules && Object.keys( options.modules ).forEach( relativePath => {
-		userModules[ path.resolve( base, relativePath ) ] = options.modules[ relativePath ];
+		userModules[ resolve( base, relativePath ) ] = options.modules[ relativePath ];
 	});
 
 	let cyclicalModules = [];
@@ -64,7 +63,7 @@ export default function getBundle ( options ) {
 			promiseByPath[ absolutePath ] = (
 				hasOwnProp.call( userModules, absolutePath ) ?
 					Promise.resolve( userModules[ absolutePath ] ) :
-					sander.readFile( absolutePath ).then( String )
+					readFile( absolutePath ).then( String )
 			).then( function ( source ) {
 				let code, ast;
 
@@ -92,13 +91,13 @@ export default function getBundle ( options ) {
 					ast,
 
 					// TODO should not need this
-					relativePath: path.relative( base, absolutePath )
+					relativePath: relative( base, absolutePath )
 				});
 
 				modules.push( module );
 				moduleLookup[ moduleId ] = module;
 
-				let promises = module.imports.map( x => {
+				return promiseSequence( module.imports, x => {
 					// TODO remove this, use x.module instead. more flexible, no lookups involved
 					const id = resolveId( x.path, module.relativePath );
 
@@ -153,10 +152,7 @@ export default function getBundle ( options ) {
 							throw err;
 						}
 					} );
-				});
-
-				return Promise.all( promises )
-					.then( () => module );
+				}).then( () => module );
 			});
 		}
 
@@ -168,7 +164,7 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 	const noExt = moduleId.replace( /\.js$/, '' );
 
 	return tryPath( base, noExt + '.js', userModules )
-		.catch( () => tryPath( base, noExt + path.sep + 'index.js', userModules ) )
+		.catch( () => tryPath( base, noExt + sep + 'index.js', userModules ) )
 		.catch( function ( err ) {
 			const resolvedPromise = resolver && Promise.resolve( resolver( moduleId, importerPath ) );
 
@@ -181,7 +177,7 @@ function resolvePath ( base, userModules, moduleId, importerPath, resolver ) {
 						throw err;
 					}
 
-					return sander.stat( resolvedPath ).then( () => path.resolve( base, resolvedPath ) );
+					return stat( resolvedPath ).then( () => resolve( base, resolvedPath ) );
 				});
 			} else {
 				throw err;
@@ -195,7 +191,7 @@ function tryPath ( base, filename, userModules ) {
 	if ( hasOwnProp.call( userModules, absolutePath ) ) {
 		return Promise.resolve( absolutePath );
 	}
-	return sander.stat( absolutePath ).then( () => absolutePath );
+	return stat( absolutePath ).then( () => absolutePath );
 }
 
 function isThenable ( obj ) {
