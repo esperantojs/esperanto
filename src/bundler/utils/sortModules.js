@@ -1,6 +1,12 @@
 import hasOwnProp from 'utils/hasOwnProp';
 import walk from 'utils/ast/walk';
 
+/**
+ * Sorts an array of modules such that dependencies come before
+   their dependents, handling complex cases of cyclical dependencies
+ * @param {object} entry - the bundle's 'entry module'
+ * @returns {array} - the sorted module list
+ */
 export default function sortModules ( entry ) {
 	let seen = {};
 	let ordered = [];

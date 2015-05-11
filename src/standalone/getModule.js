@@ -1,4 +1,4 @@
-import acorn from 'acorn';
+import { parse } from 'acorn';
 import MagicString from 'magic-string';
 import annotateAst from 'utils/ast/annotate';
 import findImportsAndExports from 'utils/ast/findImportsAndExports';
@@ -23,7 +23,7 @@ export default function getStandaloneModule ( options ) {
 
 	let mod = {
 		body: new MagicString( code ),
-		ast: ast || ( acorn.parse( code, {
+		ast: ast || ( parse( code, {
 			ecmaVersion: 6,
 			sourceType: 'module',
 			onComment ( block, text, start, end ) {

@@ -84,7 +84,8 @@ function processImport ( node, passthrough ) {
 				return {
 					isBatch: true,
 					name: s.local.name, // TODO is this line necessary?
-					as: s.local.name
+					as: s.local.name,
+					origin: null // filled in later by bundler
 				};
 			}
 
@@ -92,13 +93,15 @@ function processImport ( node, passthrough ) {
 				return {
 					isDefault: true,
 					name: 'default',
-					as: s.local.name
+					as: s.local.name,
+					origin: null
 				};
 			}
 
 			return {
 				name: ( !!passthrough ? s.exported : s.imported ).name,
-				as: s.local.name
+				as: s.local.name,
+				origin: null
 			};
 		})
 	};
@@ -213,6 +216,7 @@ function processExport ( node, source ) {
 		result.type = 'named';
 		result.specifiers = node.specifiers.map( s => {
 			return {
+				origin: null, // filled in later by bundler
 				name: s.local.name,
 				as: s.exported.name
 			};
