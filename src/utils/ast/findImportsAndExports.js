@@ -124,48 +124,41 @@ function processImport ( node, passthrough ) {
 }
 
 function processDefaultExport ( node, source ) {
+	const d = node.declaration;
+
 	let result = {
+		node,
 		isDefault: true,
-		node: node,
 		start: node.start,
-		end: node.end
+		end: node.end,
+		value: source.slice( d.start, d.end ),
+		valueStart: d.start,
+		hasDeclaration: null,
+		type: null,
+		name: null
 	};
 
-	let d = node.declaration;
+	// possible declaration types:
+	//   * FunctionExpression  - `export default function () {...}`
+	//   * FunctionDeclaration - `export default function foo () {...}`
+	//   * ClassExpression     - `export default class {...}`
+	//   * ClassDeclaration    - `export default class Foo {...}`
+	const match = /^(Function|Class)(Declaration)?/.exec( d.type );
 
-	if ( d.type === 'FunctionExpression' ) {
-		// Case 1: `export default function () {...}`
-		result.hasDeclaration = true; // TODO remove in favour of result.type
-		result.type = 'anonFunction';
+	if ( match ) {
+		result.hasDeclaration = true;
+		result.type = ( match[2] ? 'named' : 'anon' ) + match[1];
+
+		if ( match[2] ) {
+			result.name = d.id.name;
+		}
 	}
 
-	else if ( d.type === 'FunctionDeclaration' ) {
-		// Case 2: `export default function foo () {...}`
-		result.hasDeclaration = true; // TODO remove in favour of result.type
-		result.type = 'namedFunction';
-		result.name = d.id.name;
-	}
-
-	else if ( d.type === 'ClassExpression' ) {
-		// Case 3: `export default class {...}`
-		result.hasDeclaration = true; // TODO remove in favour of result.type
-		result.type = 'anonClass';
-	}
-
-	else if ( d.type === 'ClassDeclaration' ) {
-		// Case 4: `export default class Foo {...}`
-		result.hasDeclaration = true; // TODO remove in favour of result.type
-		result.type = 'namedClass';
-		result.name = d.id.name;
-	}
-
+	// if no match, we have an expression like `export default whatever`
 	else {
 		result.type = 'expression';
 		result.name = 'default';
 	}
-
-	result.value = source.slice( d.start, d.end );
-	result.valueStart = d.start;
 
 	return result;
 }
@@ -177,35 +170,39 @@ function processDefaultExport ( node, source ) {
  * @returns {object}
  */
 function processExport ( node, source ) {
-	var result, d;
-
-	result = {
-		node: node,
+	let result = {
+		node,
 		start: node.start,
-		end: node.end
+		end: node.end,
+		value: null,
+		valueStart: null,
+		hasDeclaration: null,
+		type: null,
+		name: null,
+		specifiers: null
 	};
 
-	if ( d = node.declaration ) {
+	const d = node.declaration;
+
+	if ( d ) {
+		result.hasDeclaration = true;
 		result.value = source.slice( d.start, d.end );
 		result.valueStart = d.start;
 
 		// Case 1: `export var foo = 'bar'`
 		if ( d.type === 'VariableDeclaration' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'varDeclaration';
 			result.name = d.declarations[0].id.name;
 		}
 
 		// Case 2: `export function foo () {...}`
 		else if ( d.type === 'FunctionDeclaration' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedFunction';
 			result.name = d.id.name;
 		}
 
 		// Case 3: `export class Foo {...}`
 		else if ( d.type === 'ClassDeclaration' ) {
-			result.hasDeclaration = true; // TODO remove in favour of result.type
 			result.type = 'namedClass';
 			result.name = d.id.name;
 		}

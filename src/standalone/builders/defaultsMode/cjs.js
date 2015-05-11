@@ -23,7 +23,7 @@ export default function cjs ( mod, options ) {
 			case 'namedFunction':
 			case 'namedClass':
 				mod.body.remove( exportDeclaration.start, exportDeclaration.valueStart );
-				mod.body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.node.declaration.id.name};` );
+				mod.body.replace( exportDeclaration.end, exportDeclaration.end, `\nmodule.exports = ${exportDeclaration.name};` );
 				break;
 
 			default:

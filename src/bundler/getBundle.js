@@ -98,7 +98,6 @@ export default function getBundle ( options ) {
 				moduleLookup[ moduleId ] = module;
 
 				return promiseSequence( module.imports, x => {
-					// TODO remove this, use x.module instead. more flexible, no lookups involved
 					const id = resolveId( x.path, module.relativePath );
 
 					if ( id === moduleId ) {
