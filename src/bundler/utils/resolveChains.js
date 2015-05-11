@@ -1,7 +1,15 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
+/**
+ * Discovers 'chains' within a bundle - e.g. `import { foo } from 'foo'`
+   may be equivalent to `import { bar } from 'bar'`, if foo.js imports `bar`
+   and re-exports it as `foo`. Where applicable, import/export specifiers
+   are augmented with an `origin: { module, name }` property
+ * @param {array} modules - the bundle's array of modules
+ * @param {object} moduleLookup - modules indexed by their ID
+ */
 export default function resolveChains ( modules, moduleLookup ) {
-	var chains = {};
+	let chains = {};
 
 	// First pass - resolving intra-module chains
 	modules.forEach( mod => {

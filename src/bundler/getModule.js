@@ -1,4 +1,4 @@
-import acorn from 'acorn';
+import { parse } from 'acorn';
 import MagicString from 'magic-string';
 import findImportsAndExports from 'utils/ast/findImportsAndExports';
 import annotateAst from 'utils/ast/annotate';
@@ -10,7 +10,7 @@ export default function getModule ( mod ) {
 	let toRemove = [];
 
 	try {
-		mod.ast = mod.ast || ( acorn.parse( mod.code, {
+		mod.ast = mod.ast || ( parse( mod.code, {
 			ecmaVersion: 6,
 			sourceType: 'module',
 			onComment ( block, text, start, end ) {

@@ -1,5 +1,5 @@
 export default function getRenamedImports ( mod ) {
-	var renamed = [];
+	let renamed = [];
 
 	mod.imports.forEach( x => {
 		if ( x.specifiers ) {
