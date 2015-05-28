@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.0 - 2015-05-11
+	esperanto.js v0.7.1 - 2015-05-27
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -340,17 +340,15 @@
 	}
 
 	function encode ( value ) {
-		var result;
+		var result, i;
 
 		if ( typeof value === 'number' ) {
 			result = encodeInteger( value );
-		} else if ( Array.isArray( value ) ) {
-			result = '';
-			value.forEach( function ( num ) {
-				result += encodeInteger( num );
-			});
 		} else {
-			throw new Error( 'vlq.encode accepts an integer or an array of integers' );
+			result = '';
+			for ( i = 0; i < value.length; i += 1 ) {
+				result += encodeInteger( value[i] );
+			}
 		}
 
 		return result;

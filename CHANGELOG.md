@@ -1,5 +1,10 @@
 # changelog
 
+## 0.7.1
+
+* Fix `export { x as y }` namespace imports within a bundle ([#169](https://github.com/esperantojs/esperanto/issues/169))
+* Lock magic-string version to 0.4.9 pending investigation of bug
+
 ## 0.7.0
 
 * Where possible, default exports are not renamed ([#166](https://github.com/esperantojs/esperanto/issues/166))

@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.0 - 2015-05-11
+	esperanto.js v0.7.1 - 2015-05-27
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1599,7 +1599,8 @@ function transformBody__transformBody(bundle, mod, body) {
 					namespaceExports.push(indentStr + ('get default () { return ' + identifierReplacements['default'] + '; }'));
 				} else {
 					x.specifiers.forEach(function (s) {
-						namespaceExports.push(indentStr + ('get ' + s.name + ' () { return ' + s.name + '; }'));
+						var original = hasOwnProp.call(identifierReplacements, s.name) ? identifierReplacements[s.name] : s.name;
+						namespaceExports.push(indentStr + ('get ' + s.as + ' () { return ' + original + '; }'));
 					});
 				}
 			});
