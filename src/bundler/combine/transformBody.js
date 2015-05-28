@@ -86,7 +86,8 @@ export default function transformBody ( bundle, mod, body ) {
 
 			else {
 				x.specifiers.forEach( s => {
-					namespaceExports.push( indentStr + `get ${s.as} () { return ${s.name}; }` );
+					let original = hasOwnProp.call( identifierReplacements, s.name ) ? identifierReplacements[ s.name ] : s.name;
+					namespaceExports.push( indentStr + `get ${s.as} () { return ${original}; }` );
 				});
 			}
 		});
