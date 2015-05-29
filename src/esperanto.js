@@ -108,7 +108,7 @@ function flattenExports ( exports ) {
 		}
 
 		else if ( x.specifiers ) {
-			flattened.push.apply( flattened, x.specifiers.map( getName ) );
+			flattened.push.apply( flattened, x.specifiers.map( x => x.as ) );
 		}
 	});
 
