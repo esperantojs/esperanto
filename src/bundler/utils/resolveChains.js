@@ -34,7 +34,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 
 			x.specifiers.forEach( s => {
 				if ( hasOwnProp.call( origin, s.name ) ) {
-					chains[ `${s.name}@${mod.id}` ] = origin[ s.name ];
+					chains[ `${s.as}@${mod.id}` ] = origin[ s.name ];
 				}
 			});
 		});
@@ -58,7 +58,7 @@ export default function resolveChains ( modules, moduleLookup ) {
 			if ( !x.specifiers ) return;
 
 			x.specifiers.forEach( s => {
-				setOrigin( s, `${s.name}@${mod.id}`, chains, moduleLookup );
+				setOrigin( s, `${s.as}@${mod.id}`, chains, moduleLookup );
 			});
 		});
 	});

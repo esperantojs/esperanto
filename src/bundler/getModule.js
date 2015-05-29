@@ -90,7 +90,7 @@ export default function getModule ( mod ) {
 
 		else if ( x.specifiers ) {
 			x.specifiers.forEach( s => {
-				mod.doesExport[ s.name ] = true;
+				mod.doesExport[ s.as ] = true;
 			});
 		}
 
