@@ -15,7 +15,7 @@ export default function resolveExports ( bundle ) {
 					name = s.name;
 				}
 
-				addExport( module, name, s.name );
+				addExport( module, name, s.as );
 			});
 		}
 
