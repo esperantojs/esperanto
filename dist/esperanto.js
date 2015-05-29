@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.1 - 2015-05-27
+	esperanto.js v0.7.2 - 2015-05-29
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -987,7 +987,9 @@ function resolveChains(modules, moduleLookup) {
 
 			x.specifiers.forEach(function (s) {
 				if (hasOwnProp.call(origin, s.name)) {
-					chains['' + s.name + '@' + mod.id] = origin[s.name];
+					chains['' + s.as + '@' + mod.id] = origin[s.name];
+				} else if (s.as !== s.name) {
+					chains['' + s.as + '@' + mod.id] = '' + s.name + '@' + mod.id;
 				}
 			});
 		});
@@ -1011,7 +1013,7 @@ function resolveChains(modules, moduleLookup) {
 			if (!x.specifiers) return;
 
 			x.specifiers.forEach(function (s) {
-				setOrigin(s, '' + s.name + '@' + mod.id, chains, moduleLookup);
+				setOrigin(s, '' + s.as + '@' + mod.id, chains, moduleLookup);
 			});
 		});
 	});
@@ -1310,7 +1312,7 @@ function resolveExports(bundle) {
 					name = s.name;
 				}
 
-				addExport(module, name, s.name);
+				addExport(module, name, s.as);
 			});
 		} else if (!x.isDefault && x.name) {
 			addExport(bundle.entryModule, x.name, x.name);
@@ -1760,7 +1762,7 @@ function getModule(mod) {
 			mod.doesExport[x.name] = true;
 		} else if (x.specifiers) {
 			x.specifiers.forEach(function (s) {
-				mod.doesExport[s.name] = true;
+				mod.doesExport[s.as] = true;
 			});
 		} else {
 			throw new Error('Unexpected export type');
@@ -2924,7 +2926,9 @@ function flattenExports(exports) {
 		} else if (x.name) {
 			flattened.push(x.name);
 		} else if (x.specifiers) {
-			flattened.push.apply(flattened, x.specifiers.map(getName));
+			flattened.push.apply(flattened, x.specifiers.map(function (x) {
+				return x.as;
+			}));
 		}
 	});
 

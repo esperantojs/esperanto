@@ -1,5 +1,9 @@
 # changelog
 
+## 0.7.2
+
+* Fix two bugs with renamed exports ([#170](https://github.com/esperantojs/esperanto/issues/170))
+
 ## 0.7.1
 
 * Fix `export { x as y }` namespace imports within a bundle ([#169](https://github.com/esperantojs/esperanto/issues/169))

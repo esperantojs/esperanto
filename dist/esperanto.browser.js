@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.1 - 2015-05-27
+	esperanto.js v0.7.2 - 2015-05-29
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -2842,7 +2842,9 @@
 			} else if (x.name) {
 				flattened.push(x.name);
 			} else if (x.specifiers) {
-				flattened.push.apply(flattened, x.specifiers.map(getName));
+				flattened.push.apply(flattened, x.specifiers.map(function (x) {
+					return x.as;
+				}));
 			}
 		});
 
