@@ -35,6 +35,8 @@ export default function resolveChains ( modules, moduleLookup ) {
 			x.specifiers.forEach( s => {
 				if ( hasOwnProp.call( origin, s.name ) ) {
 					chains[ `${s.as}@${mod.id}` ] = origin[ s.name ];
+				} else if ( s.as !== s.name ) {
+					chains[ `${s.as}@${mod.id}` ] = `${s.name}@${mod.id}`;
 				}
 			});
 		});
