@@ -1,5 +1,9 @@
 # changelog
 
+## 0.7.3
+
+* `this` at the top-level is no longer treated as a syntax error ([#151](https://github.com/esperantojs/esperanto/issues/151))
+
 ## 0.7.2
 
 * Fix two bugs with renamed exports ([#170](https://github.com/esperantojs/esperanto/issues/170))
