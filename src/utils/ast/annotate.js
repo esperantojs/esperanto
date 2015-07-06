@@ -104,9 +104,6 @@ export default function annotateAst ( ast, options ) {
 					break;
 
 				case 'MemberExpression':
-					if ( envDepth === 0 && node.object.type === 'ThisExpression' ) {
-						throw new Error('`this` at the top level is undefined');
-					}
 					!node.computed && ( node.property._skip = true );
 					break;
 
