@@ -68,7 +68,8 @@ export default function transformBody ( mod, body, options ) {
 			if ( !options._evilES3SafeReExports ) {
 				earlyExports.push( `Object.defineProperty(exports, '${exportAs}', { enumerable: true, get: function () { return ${chains[name]}; }});` );
 			} else {
-				lateExports.push( `exports.${exportAs} = ${chains[name]};` );
+				let exportSegment = exportAs === 'default' ? "['default']" : `.${exportAs}`;
+				lateExports.push( `exports${exportSegment} = ${chains[name]};` );
 			}
 		} else if ( ~mod.ast._topLevelFunctionNames.indexOf( name ) ) {
 			// functions should be exported early, in
