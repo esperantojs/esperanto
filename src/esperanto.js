@@ -67,22 +67,21 @@ export function bundle ( options ) {
 
 			return bundle.generate({
 				format,
-				exports: options.strict ? 'named' : 'default'
+				exports: bundle.imports.length || bundle.exports.length ?
+					( options.strict ? 'named' : 'default' ) :
+					'none'
 			});
 		}
 
 		return {
-			imports: [ 'TK imports' ],
-			exports: [ 'TK exports' ],
+			imports: bundle.imports,
+			exports: bundle.exports,
 
 			toAmd: options => transpile( 'amd', options ),
 			toCjs: options => transpile( 'cjs', options ),
 			toUmd: options => transpile( 'umd', options ),
 
-			concat: options => {
-				throw new Error( 'TK concat' );
-				//return concat( bundle, options || {} );
-			}
+			concat: options => transpile( 'iife', options )
 		};
 	});
 
