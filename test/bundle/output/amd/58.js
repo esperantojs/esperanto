@@ -1,6 +1,4 @@
-define(['exports'], function (exports) {
-
-	'use strict';
+define(['exports'], function (exports) { 'use strict';
 
 	var x = 42;
 

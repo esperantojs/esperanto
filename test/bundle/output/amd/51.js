@@ -1,6 +1,4 @@
-define(['highlight.js'], function (highlight) {
-
-	'use strict';
+define(['highlight.js'], function (highlight) { 'use strict';
 
 	highlight = ('default' in highlight ? highlight['default'] : highlight);
 

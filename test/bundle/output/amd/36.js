@@ -1,6 +1,4 @@
-define(function () {
-
-	'use strict';
+define(function () { 'use strict';
 
 	function dependsOnExternal () {
 		console.log( external.message );

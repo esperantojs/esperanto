@@ -1,6 +1,4 @@
-define(function () {
-
-	'use strict';
+define(function () { 'use strict';
 
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
 
