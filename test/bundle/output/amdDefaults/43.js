@@ -1,6 +1,4 @@
-define(['bar'], function (Bar) {
-
-	'use strict';
+define(['bar'], function (Bar) { 'use strict';
 
 	class Foo extends Bar {
 		constructor() {

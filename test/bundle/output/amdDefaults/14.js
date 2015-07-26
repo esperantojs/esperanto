@@ -1,6 +1,4 @@
-define(['external'], function (foo) {
-
-	'use strict';
+define(['external'], function (foo) { 'use strict';
 
 	foo();
 

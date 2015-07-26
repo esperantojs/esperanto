@@ -1,5 +1,3 @@
-define(['external'], function (ImplicitlyNamed) {
-
-	'use strict';
+define(['external'], function (ImplicitlyNamed) { 'use strict';
 
 });
