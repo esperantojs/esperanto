@@ -1,3 +1,4 @@
 module.exports = {
-	entry: 'importer',	expectedError: 'Cannot reassign imported binding of namespace `exp`'
+	entry: 'importer'
+	expectedError: 'Illegal reassignment to import `exp`'
 };
