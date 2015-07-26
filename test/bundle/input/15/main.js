@@ -1,2 +1,2 @@
-import { foo } from './external';
+import { foo } from 'external';
 foo();

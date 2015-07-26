@@ -1,4 +1,4 @@
-define(['utils/external'], function (external) { 'use strict';
+(function (external) { 'use strict';
 
 	external = 'default' in external ? external['default'] : external;
 
@@ -6,4 +6,4 @@ define(['utils/external'], function (external) { 'use strict';
 
 	console.log( external( message ) );
 
-});
+})(external);

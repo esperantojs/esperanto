@@ -1,10 +1,10 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('moment')) :
 	typeof define === 'function' && define.amd ? define(['moment'], factory) :
-	factory(global.x)
+	factory(global.x);
 }(this, function (x) { 'use strict';
 
-	x = ('default' in x ? x['default'] : x);
+	x = 'default' in x ? x['default'] : x;
 
 	var a__x = 'wut';
 	var a = a__x;
