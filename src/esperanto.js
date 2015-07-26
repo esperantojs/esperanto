@@ -53,19 +53,31 @@ export const toCjs = transpileMethod( 'cjs' );
 export const toUmd = transpileMethod( 'umd' );
 
 export function bundle ( options ) {
+	if ( options.skip ) {
+		throw new Error( 'options.skip is no longer supported' );
+	}
+
 	const base = options.base || process.cwd();
 	const entry = resolve( base, options.entry ).replace( /\.js$/, '' ) + '.js';
+
+	let resolvedModules = {};
+	if ( options.modules ) {
+		Object.keys( options.modules ).forEach( file => {
+			resolvedModules[ resolve( base, file ) ] = options.modules[ file ];
+		});
+	}
 
 	return rollup({
 		entry,
 
-		resolveId ( importee, importer, options ) {
+		resolveId ( importee, importer ) {
 			const noExt = importee.replace( /\.js$/, '' );
 			let resolved;
 
 			if ( importee[0] === '.' ) {
 				const dir = dirname( importer );
-				resolved = resolve( dir, noExt + '.js' )
+				resolved = resolve( dir, noExt + '.js' );
+				if ( resolved in resolvedModules ) return resolved;
 
 				try {
 					statSync( resolved );
@@ -73,6 +85,7 @@ export function bundle ( options ) {
 				} catch ( err ) {}
 
 				resolved = resolve( dir, noExt + '/index.js' );
+				if ( resolved in resolvedModules ) return resolved;
 
 				try {
 					statSync( resolved );
@@ -83,6 +96,7 @@ export function bundle ( options ) {
 			}
 
 			resolved = resolve( base, noExt + '.js' );
+			if ( resolved in resolvedModules ) return resolved;
 
 			try {
 				statSync( resolved );
@@ -90,6 +104,7 @@ export function bundle ( options ) {
 			} catch ( err ) {}
 
 			resolved = resolve( base, noExt + '/index.js' );
+			if ( resolved in resolvedModules ) return resolved;
 
 			try {
 				statSync( resolved );
@@ -100,13 +115,18 @@ export function bundle ( options ) {
 				return options.resolvePath( importee, importer );
 			}
 
-			console.log( 'returning null for %s', importee )
-
 			return null;
-		}
+		},
+
+		load ( id ) {
+			if ( id in resolvedModules ) return resolvedModules[ id ];
+			return fs.readFileSync( id, 'utf-8' );
+		},
+
+		transform: options.transform
 	}).then( bundle => {
-		function transpile ( format, options ) {
-			if ( 'defaultOnly' in options && !alreadyWarned ) {
+		function transpile ( format, bundleOptions ) {
+			if ( 'defaultOnly' in bundleOptions && !alreadyWarned ) {
 				// TODO link to a wiki page explaining this, or something
 				console.log( deprecateMessage );
 				alreadyWarned = true;
@@ -114,8 +134,11 @@ export function bundle ( options ) {
 
 			return bundle.generate({
 				format,
-				moduleName: options.name,
-				exports: bundle.exports.length ? ( options.strict ? 'named' : 'default' ) : 'none'
+				moduleName: bundleOptions.name,
+				moduleId: bundleOptions.amdName,
+				globals: options.names,
+				exports: bundle.exports.length ? ( bundleOptions.strict ? 'named' : 'default' ) : 'none',
+				useStrict: !!bundleOptions.useStrict
 			});
 		}
 
