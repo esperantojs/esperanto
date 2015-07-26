@@ -1,5 +1,6 @@
 import { rollup } from 'rollup';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { statSync } from 'fs';
 import hasNamedImports from 'utils/hasNamedImports';
 import hasNamedExports from 'utils/hasNamedExports';
 import getStandaloneModule from 'standalone/getModule';
@@ -56,7 +57,53 @@ export function bundle ( options ) {
 	const entry = resolve( base, options.entry ).replace( /\.js$/, '' ) + '.js';
 
 	return rollup({
-		entry
+		entry,
+
+		resolveId ( importee, importer, options ) {
+			const noExt = importee.replace( /\.js$/, '' );
+			let resolved;
+
+			if ( importee[0] === '.' ) {
+				const dir = dirname( importer );
+				resolved = resolve( dir, noExt + '.js' )
+
+				try {
+					statSync( resolved );
+					return resolved;
+				} catch ( err ) {}
+
+				resolved = resolve( dir, noExt + '/index.js' );
+
+				try {
+					statSync( resolved );
+					return resolved;
+				} catch ( err ) {}
+
+				throw new Error( `Could not resolve ${importee} from ${importer}` );
+			}
+
+			resolved = resolve( base, noExt + '.js' );
+
+			try {
+				statSync( resolved );
+				return resolved;
+			} catch ( err ) {}
+
+			resolved = resolve( base, noExt + '/index.js' );
+
+			try {
+				statSync( resolved );
+				return resolved;
+			} catch ( err ) {}
+
+			if ( options.resolvePath ) {
+				return options.resolvePath( importee, importer );
+			}
+
+			console.log( 'returning null for %s', importee )
+
+			return null;
+		}
 	}).then( bundle => {
 		function transpile ( format, options ) {
 			if ( 'defaultOnly' in options && !alreadyWarned ) {
@@ -67,9 +114,8 @@ export function bundle ( options ) {
 
 			return bundle.generate({
 				format,
-				exports: bundle.imports.length || bundle.exports.length ?
-					( options.strict ? 'named' : 'default' ) :
-					'none'
+				moduleName: options.name,
+				exports: bundle.exports.length ? ( options.strict ? 'named' : 'default' ) : 'none'
 			});
 		}
 
