@@ -1,3 +1,7 @@
-define(['external'], function (Correct) { 'use strict';
+define(['external'], function (ExplicitlyNamed) { 'use strict';
+
+	ExplicitlyNamed = 'default' in ExplicitlyNamed ? ExplicitlyNamed['default'] : ExplicitlyNamed;
+
+	new ExplicitlyNamed();
 
 });

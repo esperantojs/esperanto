@@ -1,18 +1,19 @@
 'use strict';
 
-function _a__a () {
-	console.log( 'a' );
-}
-
-function c__a () {
+function _a () {
 	console.log( 'a but actually c' );
 }
 
-var b = function () {
+function b () {
 	// a but actually c
-	c__a();
+	_a();
+}
+
+function a () {
+	console.log( 'a' );
 }
 
 function foo () {
-	_a__a();
+	a();
+	b();
 }

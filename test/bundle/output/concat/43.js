@@ -1,4 +1,4 @@
-define(['bar'], function (Bar) { 'use strict';
+(function (Bar) { 'use strict';
 
 	Bar = 'default' in Bar ? Bar['default'] : Bar;
 
@@ -9,4 +9,4 @@ define(['bar'], function (Bar) { 'use strict';
 		}
 	}
 
-});
+})(Bar);

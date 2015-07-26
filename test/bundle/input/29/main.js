@@ -1,4 +1,4 @@
-import foo, { bar } from './foo';
+import foo, { bar } from 'foo';
 
 foo();
 bar();

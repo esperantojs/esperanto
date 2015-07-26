@@ -1,9 +1,5 @@
 'use strict';
 
-function a () {
-	console.log( 'I am module a' );
-}
-
 function c () {
 	console.log( 'I am module c' );
 }
@@ -11,6 +7,10 @@ function c () {
 function b () {
 	console.log( 'I am module b' );
 	c();
+}
+
+function a () {
+	console.log( 'I am module a' );
 }
 
 function external () {

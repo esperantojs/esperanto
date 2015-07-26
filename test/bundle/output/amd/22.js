@@ -4,8 +4,10 @@ define(['exports'], function (exports) { 'use strict';
 		console.log( 'fooing' );
 	}
 
-	exports.foo = foo;
 
+	// foo
 	foo();
+
+	exports.foo = foo;
 
 });

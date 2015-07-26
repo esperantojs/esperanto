@@ -1,4 +1,4 @@
-define(['exports'], function (exports) { 'use strict';
+var myModule = (function () { 'use strict';
 
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -6,6 +6,6 @@ define(['exports'], function (exports) { 'use strict';
 		console.log( hasOwnProperty.call({ foo: 'bar' }, 'foo' ) );
 	}
 
-	exports['default'] = main;
+	return main;
 
-});
+})();

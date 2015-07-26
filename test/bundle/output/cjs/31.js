@@ -1,7 +1,7 @@
 'use strict';
 
-function someOtherName () {}
+function _x () {}
 
-function x () {}
+function someOtherName () {}
 
 someOtherName();

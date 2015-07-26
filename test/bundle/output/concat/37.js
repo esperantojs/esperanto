@@ -1,4 +1,4 @@
-define(['moment'], function (x) { 'use strict';
+(function (x) { 'use strict';
 
 	x = 'default' in x ? x['default'] : x;
 
@@ -8,4 +8,4 @@ define(['moment'], function (x) { 'use strict';
 	x();
 	console.log( a );
 
-});
+})(moment);

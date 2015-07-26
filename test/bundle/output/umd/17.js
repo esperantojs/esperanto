@@ -4,14 +4,14 @@
 	factory();
 }(this, function () { 'use strict';
 
-	function foo__a ( message ) {
+	function a ( message ) {
 		console.log( message );
 	}
 
-	foo__a();
+	a();
 	(function () {
-		var a = 'c';
-		foo__a( a );
+		var a$$ = 'c';
+		a( a$$ );
 	}());
 
 }));
