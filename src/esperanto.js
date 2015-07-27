@@ -132,14 +132,22 @@ export function bundle ( options ) {
 				alreadyWarned = true;
 			}
 
-			return bundle.generate({
+			const result = bundle.generate({
 				format,
 				moduleName: bundleOptions.name,
 				moduleId: bundleOptions.amdName,
 				globals: options.names,
 				exports: bundle.exports.length ? ( bundleOptions.strict ? 'named' : 'default' ) : 'none',
-				useStrict: !!bundleOptions.useStrict
+				useStrict: bundleOptions.useStrict,
+				sourceMap: bundleOptions.sourceMap
 			});
+
+			if ( bundleOptions.sourceMap === 'inline' ) {
+				result.code += '\n//# sourceMappingURL=' + result.map.toUrl();
+				result.map = null;
+			}
+
+			return result;
 		}
 
 		return {
