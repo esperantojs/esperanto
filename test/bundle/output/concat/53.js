@@ -1,4 +1,4 @@
-define(function () { 'use strict';
+var myModule = (function () { 'use strict';
 
 	function foo () {
 		console.log( 'foo' );
@@ -12,4 +12,4 @@ define(function () { 'use strict';
 
 	return main;
 
-});
+})();

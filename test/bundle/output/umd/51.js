@@ -8,6 +8,6 @@
 
 	var foo = 42;
 
-
+	highlight( foo );
 
 }));

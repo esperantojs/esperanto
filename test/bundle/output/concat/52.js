@@ -1,13 +1,11 @@
 (function () { 'use strict';
 
-	var not_baz = function () {
+	function baz () {
 		// baz.js
-	};
+	}
 
 
-
-	console.log( 'baz', not_baz );
-
-
+	// bar.js
+	console.log( 'baz', baz );
 
 })();

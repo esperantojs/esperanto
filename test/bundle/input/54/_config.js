@@ -1,4 +1,7 @@
 module.exports = {
 	description: 'allows multiple modules to share an external package',
-	imports: [ 'bluebird' ]
+	imports: [ 'bluebird' ],
+	names: {
+		bluebird: 'Promise'
+	}
 };

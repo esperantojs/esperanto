@@ -1,4 +1,4 @@
-define(['bluebird'], function (_Promise) { 'use strict';
+(function (_Promise) { 'use strict';
 
 	_Promise = 'default' in _Promise ? _Promise['default'] : _Promise;
 
@@ -8,4 +8,4 @@ define(['bluebird'], function (_Promise) { 'use strict';
 		console.log( foo );
 	});
 
-});
+})(Promise);

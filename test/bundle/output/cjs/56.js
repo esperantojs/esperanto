@@ -6,4 +6,4 @@ foo = 99;
 foo += 1;
 foo++;
 
-console.log( _foo ); // 42
+console.log( _foo );

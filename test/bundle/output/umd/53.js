@@ -1,16 +1,16 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	factory((global.myModule = {}))
+	factory((global.myModule = {}));
 }(this, function (exports) { 'use strict';
 
-	var foo = function () {
+	function foo () {
 		console.log( 'foo' );
 	}
 
 	foo();
 
-	var main = function () {
+	function main () {
 		console.log( 'main' );
 	}
 
