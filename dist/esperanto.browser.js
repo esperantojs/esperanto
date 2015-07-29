@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.2 - 2015-05-29
+	esperanto.js v0.7.4 - 2015-07-29
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -1119,9 +1119,6 @@
 						break;
 
 					case 'MemberExpression':
-						if (envDepth === 0 && node.object.type === 'ThisExpression') {
-							throw new Error('`this` at the top level is undefined');
-						}
 						!node.computed && (node.property._skip = true);
 						break;
 
@@ -1209,8 +1206,6 @@
 	 * @param {string} source - the module's original source code
 	 * @returns {object} - { imports, exports, defaultExport }
 	 */
-
-
 	function findImportsAndExports(ast, source) {
 		var imports = [];
 		var exports = [];
@@ -1247,6 +1242,15 @@
 					// it's both an import and an export, e.g.
 					// `export { foo } from './bar';
 					passthrough = processImport(node, true);
+
+					passthrough.specifiers.forEach(function (e) {
+						// the import in `export { default } from 'foo';`
+						// is a default import
+						if (e.name === 'default') {
+							e.isDefault = true;
+						}
+					});
+
 					imports.push(passthrough);
 
 					declaration.passthrough = passthrough;
@@ -1498,16 +1502,15 @@
 		}
 	}
 
+	var RESERVED = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split(' ');
+	var INVALID_CHAR = /[^a-zA-Z0-9_$]/g;
+	var INVALID_LEADING_CHAR = /[^a-zA-Z_$]/;
+
 	/**
 	 * Generates a sanitized (i.e. valid identifier) name from a module ID
 	 * @param {string} id - a module ID, or part thereof
 	 * @returns {string}
 	 */
-
-
-	var RESERVED = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split(' ');
-	var INVALID_CHAR = /[^a-zA-Z0-9_$]/g;
-	var INVALID_LEADING_CHAR = /[^a-zA-Z_$]/;
 	function sanitize(name) {
 		name = name.replace(INVALID_CHAR, '_');
 
@@ -1807,14 +1810,6 @@
 			}
 		});
 	}
-
-	/**
-	 * Resolves an importPath relative to the module that is importing it
-	 * @param {string} importPath - the (possibly relative) path of an imported module
-	 * @param {string} importerPath - the (relative to `base`) path of the importing module
-	 * @returns {string}
-	 */
-
 
 	function resolveId(importPath, importerPath) {
 		var resolved, importerParts, importParts;
@@ -2151,8 +2146,6 @@
 	 * @param {array} imports - the array of imports
 	 * @returns {array} [ importedBindings, importedNamespaces ]
 	 */
-
-
 	function getReadOnlyIdentifiers(imports) {
 		var importedBindings = {},
 		    importedNamespaces = {};
@@ -2403,7 +2396,8 @@
 				if (!options._evilES3SafeReExports) {
 					earlyExports.push('Object.defineProperty(exports, \'' + exportAs + '\', { enumerable: true, get: function () { return ' + chains[name] + '; }});');
 				} else {
-					lateExports.push('exports.' + exportAs + ' = ' + chains[name] + ';');
+					var exportSegment = exportAs === 'default' ? '[\'default\']' : '.' + exportAs;
+					lateExports.push('exports' + exportSegment + ' = ' + chains[name] + ';');
 				}
 			} else if (~mod.ast._topLevelFunctionNames.indexOf(name)) {
 				// functions should be exported early, in
@@ -2857,4 +2851,4 @@
 	exports.toUmd = toUmd;
 
 }));
-//# sourceMappingURL=/www/ESPERANTO/esperanto/.gobble-build/03-esperantoBundle/1/esperanto.browser.js.map
+//# sourceMappingURL=/Users/stefanpenner/src/esperanto/.gobble-build/03-esperantoBundle/1/esperanto.browser.js.map
