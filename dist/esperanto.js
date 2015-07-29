@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.2 - 2015-05-29
+	esperanto.js v0.7.4 - 2015-07-29
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -226,9 +226,6 @@ function annotateAst(ast, options) {
 					break;
 
 				case 'MemberExpression':
-					if (envDepth === 0 && node.object.type === 'ThisExpression') {
-						throw new Error('`this` at the top level is undefined');
-					}
 					!node.computed && (node.property._skip = true);
 					break;
 
@@ -316,8 +313,6 @@ function annotateAst(ast, options) {
  * @param {string} source - the module's original source code
  * @returns {object} - { imports, exports, defaultExport }
  */
-
-
 function findImportsAndExports(ast, source) {
 	var imports = [];
 	var exports = [];
@@ -354,6 +349,15 @@ function findImportsAndExports(ast, source) {
 				// it's both an import and an export, e.g.
 				// `export { foo } from './bar';
 				passthrough = processImport(node, true);
+
+				passthrough.specifiers.forEach(function (e) {
+					// the import in `export { default } from 'foo';`
+					// is a default import
+					if (e.name === 'default') {
+						e.isDefault = true;
+					}
+				});
+
 				imports.push(passthrough);
 
 				declaration.passthrough = passthrough;
@@ -605,16 +609,15 @@ function disallowConflictingImports(imports) {
 	}
 }
 
+var RESERVED = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split(' ');
+var INVALID_CHAR = /[^a-zA-Z0-9_$]/g;
+var INVALID_LEADING_CHAR = /[^a-zA-Z_$]/;
+
 /**
  * Generates a sanitized (i.e. valid identifier) name from a module ID
  * @param {string} id - a module ID, or part thereof
  * @returns {string}
  */
-
-
-var RESERVED = 'break case class catch const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield'.split(' ');
-var INVALID_CHAR = /[^a-zA-Z0-9_$]/g;
-var INVALID_LEADING_CHAR = /[^a-zA-Z_$]/;
 function sanitize(name) {
 	name = name.replace(INVALID_CHAR, '_');
 
@@ -760,14 +763,6 @@ function determineImportNames(imports, userFn, usedNames) {
 	});
 }
 
-/**
- * Resolves an importPath relative to the module that is importing it
- * @param {string} importPath - the (possibly relative) path of an imported module
- * @param {string} importerPath - the (relative to `base`) path of the importing module
- * @returns {string}
- */
-
-
 function resolveId(importPath, importerPath) {
 	var resolved, importerParts, importParts;
 
@@ -827,14 +822,6 @@ function promiseSequence(arr, callback) {
 		return results;
 	});
 }
-
-/**
- * Sorts an array of modules such that dependencies come before
-   their dependents, handling complex cases of cyclical dependencies
- * @param {object} entry - the bundle's 'entry module'
- * @returns {array} - the sorted module list
- */
-
 
 function sortModules(entry) {
 	var seen = {};
@@ -950,16 +937,6 @@ function referencesAtTopLevel(a, b) {
 
 	return referencedAtTopLevel;
 }
-
-/**
- * Discovers 'chains' within a bundle - e.g. `import { foo } from 'foo'`
-   may be equivalent to `import { bar } from 'bar'`, if foo.js imports `bar`
-   and re-exports it as `foo`. Where applicable, import/export specifiers
-   are augmented with an `origin: { module, name }` property
- * @param {array} modules - the bundle's array of modules
- * @param {object} moduleLookup - modules indexed by their ID
- */
-
 
 function resolveChains(modules, moduleLookup) {
 	var chains = {};
@@ -1185,13 +1162,6 @@ function topLevelScopeConflicts(bundle) {
 	return conflicts;
 }
 
-/**
- * Figures out which identifiers need to be rewritten within
-   a bundle to avoid conflicts
- * @param {object} bundle - the bundle
- * @returns {object}
- */
-
 function populateIdentifierReplacements(bundle) {
 	// first, discover conflicts
 	var conflicts = topLevelScopeConflicts(bundle);
@@ -1338,8 +1308,6 @@ function resolveExports(bundle) {
  * @param {array} imports - the array of imports
  * @returns {array} [ importedBindings, importedNamespaces ]
  */
-
-
 function getReadOnlyIdentifiers(imports) {
 	var importedBindings = {},
 	    importedNamespaces = {};
@@ -2487,7 +2455,8 @@ function utils_transformBody__transformBody(mod, body, options) {
 			if (!options._evilES3SafeReExports) {
 				earlyExports.push('Object.defineProperty(exports, \'' + exportAs + '\', { enumerable: true, get: function () { return ' + chains[name] + '; }});');
 			} else {
-				lateExports.push('exports.' + exportAs + ' = ' + chains[name] + ';');
+				var exportSegment = exportAs === 'default' ? '[\'default\']' : '.' + exportAs;
+				lateExports.push('exports' + exportSegment + ' = ' + chains[name] + ';');
 			}
 		} else if (~mod.ast._topLevelFunctionNames.indexOf(name)) {
 			// functions should be exported early, in
@@ -2939,4 +2908,4 @@ exports.bundle = bundle;
 exports.toAmd = toAmd;
 exports.toCjs = toCjs;
 exports.toUmd = toUmd;
-//# sourceMappingURL=/www/ESPERANTO/esperanto/.gobble-build/02-esperantoBundle/1/esperanto.js.map
+//# sourceMappingURL=/Users/stefanpenner/src/esperanto/.gobble-build/02-esperantoBundle/1/esperanto.js.map
