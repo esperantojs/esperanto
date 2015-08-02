@@ -20,6 +20,7 @@ export default function getStandaloneModule ( options ) {
 	}
 
 	let toRemove = [];
+	let comments = [];
 
 	let mod = {
 		body: new MagicString( code ),
@@ -30,6 +31,8 @@ export default function getStandaloneModule ( options ) {
 				// sourceMappingURL comments should be removed
 				if ( !block && SOURCEMAPPINGURL_REGEX.test( text ) ) {
 					toRemove.push({ start, end });
+				} else {
+					comments.push({ start, end });
 				}
 			}
 		}))
@@ -37,7 +40,7 @@ export default function getStandaloneModule ( options ) {
 
 	toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 
-	let { imports, exports, defaultExport } = findImportsAndExports( mod.ast, code );
+	let { imports, exports, defaultExport } = findImportsAndExports( mod.ast, code, comments );
 
 	disallowConflictingImports( imports );
 

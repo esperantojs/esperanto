@@ -6,5 +6,6 @@ var not_baz = function () {
 
 
 
+// bar.js
 console.log( 'baz', not_baz );
 

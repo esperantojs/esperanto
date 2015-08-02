@@ -8,6 +8,7 @@ export default function getModule ( mod ) {
 	mod.body = new MagicString( mod.code );
 
 	let toRemove = [];
+	let comments = [];
 
 	try {
 		mod.ast = mod.ast || ( parse( mod.code, {
@@ -17,6 +18,8 @@ export default function getModule ( mod ) {
 				// sourceMappingURL comments should be removed
 				if ( !block && /^# sourceMappingURL=/.test( text ) ) {
 					toRemove.push({ start, end });
+				} else {
+					comments.push({ start, end });
 				}
 			}
 		}));
@@ -33,7 +36,7 @@ export default function getModule ( mod ) {
 	// remove sourceMappingURL comments
 	toRemove.forEach( ({ start, end }) => mod.body.remove( start, end ) );
 
-	let { imports, exports, defaultExport } = findImportsAndExports( mod.ast, mod.code );
+	let { imports, exports, defaultExport } = findImportsAndExports( mod.ast, mod.code, comments );
 
 	disallowConflictingImports( imports );
 
