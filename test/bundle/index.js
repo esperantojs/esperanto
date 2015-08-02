@@ -141,7 +141,7 @@ module.exports = function () {
 									return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
 										var expected = makeWhitespaceVisible( str );
 
-										if ( config.strict && !options.strict ) {
+										if ( config.strict && config.exports && config.exports.length && !options.strict ) {
 											throw new Error( 'Test should fail in non-strict mode' );
 										}
 
