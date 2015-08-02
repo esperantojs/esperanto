@@ -1,12 +1,11 @@
-define(['foo', 'bar'], function (foo, _bar) { 'use strict';
+define(['foo', 'bar'], function (foo, _foo) { 'use strict';
 
-
+	foo = 'default' in foo ? foo['default'] : foo;
+	_foo = 'default' in _foo ? _foo['default'] : _foo;
 
 	(function () {
 		var bar = 'nope';
-		_bar();
+		_foo();
 	})();
-
-
 
 });

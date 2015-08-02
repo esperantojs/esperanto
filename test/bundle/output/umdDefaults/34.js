@@ -4,12 +4,12 @@
 	global.myModule = factory();
 }(this, function () { 'use strict';
 
-	var foo__exports = {};
-	foo__exports.bar = function () {
+	var exports = {};
+	exports.bar = function () {
 		console.log( 'exports should be renamed' );
 	};
 
-	var foo = foo__exports;
+	var foo = exports;
 
 	foo.bar();
 

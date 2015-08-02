@@ -2,13 +2,12 @@
 
 var foo = require('foo');
 foo = 'default' in foo ? foo['default'] : foo;
-var _bar = require('bar');
-_bar = 'default' in _bar ? _bar['default'] : _bar;
+var _foo = require('bar');
+_foo = 'default' in _foo ? _foo['default'] : _foo;
 
-
+var a = foo;
 
 (function () {
 	var bar = 'nope';
-	_bar();
+	_foo();
 })();
-

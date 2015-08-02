@@ -1,15 +1,13 @@
-define(['foo', 'bar'], function (foo, _bar) { 'use strict';
+define(['foo', 'bar'], function (foo, _foo) { 'use strict';
 
-	foo = ('default' in foo ? foo['default'] : foo);
-	_bar = ('default' in _bar ? _bar['default'] : _bar);
+	foo = 'default' in foo ? foo['default'] : foo;
+	_foo = 'default' in _foo ? _foo['default'] : _foo;
 
-
+	var a = foo;
 
 	(function () {
 		var bar = 'nope';
-		_bar();
+		_foo();
 	})();
-
-
 
 });
