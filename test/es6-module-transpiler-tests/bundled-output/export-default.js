@@ -7,7 +7,7 @@ function change() {
 }
 
 assert.equal(a, 42);
-var value = a;
+var exporter = a;
 
 // Any replacement for the `export default` above needs to happen in the same
 // location. It cannot be done, say, at the end of the file. Otherwise the new
@@ -15,11 +15,11 @@ var value = a;
 a = 0;
 assert.equal(a, 0);
 
-assert.equal(value, 42);
+assert.equal(exporter, 42);
 
 change();
 assert.equal(
-  value,
+  exporter,
   42,
   'default export should not be bound'
 );

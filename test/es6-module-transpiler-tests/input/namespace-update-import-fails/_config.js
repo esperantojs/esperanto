@@ -1,4 +1,4 @@
 module.exports = {
-	entry: 'importer'
-	expectedError: 'Illegal reassignment to import `exp`'
+	entry: 'importer',
+	expectedError: 'Illegal reassignment to import \'exp\''
 };

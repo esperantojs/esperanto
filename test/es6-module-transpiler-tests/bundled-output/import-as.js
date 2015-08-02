@@ -1,9 +1,9 @@
 'use strict';
 
-var exporter__a = 'a';
-var exporter__b = 'b';
-var exporter = 'DEF';
+var a = 'a';
+var b = 'b';
+var def = 'DEF';
 
-assert.equal(exporter__a, 'a');
-assert.equal(exporter__b, 'b');
-assert.equal(exporter, 'DEF');
+assert.equal(a, 'a');
+assert.equal(b, 'b');
+assert.equal(def, 'DEF');
