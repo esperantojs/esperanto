@@ -1,11 +1,11 @@
 define(['exports'], function (exports) { 'use strict';
 
-	var foo__exports = {};
-	foo__exports.bar = function () {
+	var _exports = {};
+	_exports.bar = function () {
 		console.log( 'exports should be renamed' );
 	};
 
-	var foo = foo__exports;
+	var foo = _exports;
 
 	foo.bar();
 
