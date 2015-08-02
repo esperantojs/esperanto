@@ -8,7 +8,6 @@
 		console.log( 'fooing' );
 	}
 
-
 	// foo
 	foo();
 

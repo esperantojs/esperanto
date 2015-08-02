@@ -4,7 +4,6 @@ define(['exports'], function (exports) { 'use strict';
 		console.log( 'fooing' );
 	}
 
-
 	// foo
 	foo();
 

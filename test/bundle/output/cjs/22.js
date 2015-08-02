@@ -4,7 +4,6 @@ function foo () {
 	console.log( 'fooing' );
 }
 
-
 // foo
 foo();
 

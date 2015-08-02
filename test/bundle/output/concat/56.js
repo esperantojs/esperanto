@@ -6,6 +6,6 @@
 	foo += 1;
 	foo++;
 
-	console.log( _foo );
+	console.log( _foo ); // 42
 
 })();
