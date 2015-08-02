@@ -134,6 +134,8 @@ export function bundle ( options ) {
 
 			const result = bundle.generate({
 				format,
+				banner: bundleOptions.banner ? bundleOptions.banner.replace( /\n$/, '' ) : null,
+				footer: bundleOptions.footer ? bundleOptions.footer.replace( /^\n/, '' ) : null,
 				moduleName: bundleOptions.name,
 				moduleId: bundleOptions.amdName,
 				globals: options.names,
