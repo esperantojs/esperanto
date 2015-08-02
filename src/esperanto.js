@@ -120,10 +120,12 @@ export function bundle ( options ) {
 
 		load ( id ) {
 			if ( id in resolvedModules ) return resolvedModules[ id ];
-			return fs.readFileSync( id, 'utf-8' );
-		},
+			var source = fs.readFileSync( id, 'utf-8' );
 
-		transform: options.transform
+			return options.transform ?
+				options.transform( source ) :
+				source;
+		}
 	}).then( bundle => {
 		function transpile ( format, bundleOptions ) {
 			if ( 'defaultOnly' in bundleOptions && !alreadyWarned ) {
