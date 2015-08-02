@@ -143,7 +143,8 @@ export function bundle ( options ) {
 				globals: options.names,
 				exports: bundle.exports.length ? ( bundleOptions.strict ? 'named' : 'default' ) : 'none',
 				useStrict: bundleOptions.useStrict,
-				sourceMap: bundleOptions.sourceMap
+				sourceMap: bundleOptions.sourceMap,
+				sourceMapFile: bundleOptions.sourceMapFile
 			});
 
 			if ( bundleOptions.sourceMap === 'inline' ) {
