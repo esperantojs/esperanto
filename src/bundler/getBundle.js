@@ -98,7 +98,7 @@ export default function getBundle ( options ) {
 				moduleLookup[ moduleId ] = module;
 
 				return promiseSequence( module.imports, x => {
-					const id = resolveId( x.path, module.path ).replace( base, '' );
+					const id = resolveId( x.path, module.path ).replace( base.replace(/\\/g, '/'), '' );
 
 					if ( id === moduleId ) {
 						throw new Error( `A module (${moduleId}) cannot import itself` );
