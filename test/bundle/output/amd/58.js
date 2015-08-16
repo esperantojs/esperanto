@@ -1,9 +1,5 @@
-define(['exports'], function (exports) {
+define(['exports'], function (exports) { 'use strict';
 
-	'use strict';
-
-	var x = 42;
-
-	exports.y = x;
+	exports.y = 42;
 
 });

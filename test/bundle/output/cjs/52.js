@@ -1,11 +1,12 @@
 'use strict';
 
-var not_baz = function () {
+// foo.js
+
+function baz () {
 	// baz.js
-};
-
-
+}
 
 // bar.js
-console.log( 'baz', not_baz );
+console.log( 'baz', baz );
 
+// main.js

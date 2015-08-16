@@ -1,10 +1,10 @@
-define(['moment'], function (x) {
+define(['moment'], function (x) { 'use strict';
 
-	'use strict';
+	x = 'default' in x ? x['default'] : x;
 
-	var a__x = 'wut';
-	var a = a__x;
+	var _x = 'wut';
 
-
+	x();
+	console.log( _x );
 
 });

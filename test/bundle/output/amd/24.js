@@ -1,7 +1,5 @@
 /* this is a banner */
-define(function () {
-
-	'use strict';
+define(function () { 'use strict';
 
 	function foo () {
 		console.log( 'fooing' );

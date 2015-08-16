@@ -1,12 +1,12 @@
 'use strict';
 
-var foo = function () {
+function foo () {
 	console.log( 'foo' );
 }
 
 foo();
 
-var main = function () {
+function main () {
 	console.log( 'main' );
 }
 

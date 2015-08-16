@@ -1,6 +1,10 @@
 'use strict';
 
-var bluebird = require('bluebird');
+var _Promise = require('bluebird');
+_Promise = 'default' in _Promise ? _Promise['default'] : _Promise;
 
 var foo = 'foo';
 
+_Promise.resolve( foo ).then( function ( foo ) {
+	console.log( foo );
+});

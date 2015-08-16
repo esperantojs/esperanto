@@ -1,7 +1,5 @@
 'use strict';
 
-var first__a = 1;
+var a = 1;
 
-assert.equal(typeof a, 'undefined');
-
-assert.equal(first__a, 1);
+assert.equal(a, 1);

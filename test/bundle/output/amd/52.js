@@ -1,16 +1,14 @@
-define(function () {
+define(function () { 'use strict';
 
-	'use strict';
+	// foo.js
 
-	var not_baz = function () {
+	function baz () {
 		// baz.js
-	};
-
-
+	}
 
 	// bar.js
-	console.log( 'baz', not_baz );
+	console.log( 'baz', baz );
 
-
+	// main.js
 
 });

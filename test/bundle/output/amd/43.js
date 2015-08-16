@@ -1,8 +1,6 @@
-define(['bar'], function (Bar) {
+define(['bar'], function (Bar) { 'use strict';
 
-	'use strict';
-
-	Bar = ('default' in Bar ? Bar['default'] : Bar);
+	Bar = 'default' in Bar ? Bar['default'] : Bar;
 
 	class Foo extends Bar {
 		constructor() {

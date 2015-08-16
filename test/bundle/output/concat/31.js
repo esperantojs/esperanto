@@ -1,8 +1,8 @@
 (function () { 'use strict';
 
-	function someOtherName () {}
-
 	function x () {}
+
+	function someOtherName () {}
 
 	someOtherName();
 

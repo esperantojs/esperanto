@@ -1,5 +1,5 @@
-define(function () {
+define(function () { 'use strict';
 
-	'use strict';
+
 
 });

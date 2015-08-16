@@ -1,6 +1,4 @@
-define(function () {
-
-	'use strict';
+define(function () { 'use strict';
 
 	var foo = 42;
 	var _foo = foo;

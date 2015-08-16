@@ -1,4 +1,7 @@
 module.exports = {
 	description: 'Clashes with external dependency names are handled',
-	imports: [ 'moment' ]
+	imports: [ 'moment' ],
+	names: {
+		moment: 'moment'
+	}
 };

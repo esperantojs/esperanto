@@ -1,6 +1,4 @@
-define(function () {
-
-	'use strict';
+define(function () { 'use strict';
 
 	class A {
 		b () {
@@ -12,10 +10,10 @@ define(function () {
 		}
 	}
 
-	class B extends A {}
-
 	class C extends A {}
 
+	class B extends A {}
 
+	new A();
 
 });

@@ -1,8 +1,6 @@
-define('myModule', function () {
+define('myModule', function () { 'use strict';
 
-	'use strict';
-
-	var foo = function () {
+	function foo () {
 		console.log( 'fooing' );
 	}
 

@@ -1,7 +1,7 @@
 {
   "name": "esperanto",
   "description": "An easier way to convert ES6 modules to AMD and CommonJS",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "author": "Rich Harris",
   "repository": "https://github.com/esperantojs/esperanto",
   "license": "MIT",
@@ -10,6 +10,7 @@
     "chalk": "^1.0.0",
     "magic-string": "^0.4.9",
     "minimist": "^1.1.0",
+    "rollup": "^0.14.0",
     "sander": "^0.2.1"
   },
   "main": "dist/esperanto.js",
@@ -24,7 +25,7 @@
     "gobble-esperanto-bundle": "^0.2.0",
     "gobble-uglifyjs": "^0.1.0",
     "magic-string": "^0.6.0",
-    "mocha": "^2.1.0",
+    "mocha": "^2.2.5",
     "resolve": "^1.1.0",
     "source-map": "^0.1.40",
     "source-map-support": "^0.2.10"

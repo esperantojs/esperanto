@@ -1,6 +1,4 @@
-define(['foo'], function (foo) {
-
-	'use strict';
+define(['foo'], function (foo) { 'use strict';
 
 	foo.bar();
 

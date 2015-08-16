@@ -1,12 +1,13 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('external')) :
 	typeof define === 'function' && define.amd ? define(['external'], factory) :
-	factory(global.external)
+	factory(global.external);
 }(this, function (external) { 'use strict';
 
-	var bar = 'yes';
-	var foo = bar;
+	external = 'default' in external ? external['default'] : external;
 
-	console.log( external( foo ) );
+	var bar = 'yes';
+
+	console.log( external( bar ) );
 
 }));

@@ -1,21 +1,21 @@
 'use strict';
 
-var exporter = {
-	get a () { return a; },
-	get b () { return b; },
-	get default () { return exporter__default; }
+var foo = {
+  get a () { return a; },
+  get b () { return b; },
+  get default () { return foo__default; }
 };
 
 var a = 'a';
 var b = 'b';
-var exporter__default = 'DEF';
+var foo__default = 'DEF';
 
-assert.equal(exporter['default'], 'DEF');
-assert.equal(exporter.b, 'b');
-assert.equal(exporter.a, 'a');
+assert.equal(foo['default'], 'DEF');
+assert.equal(foo.b, 'b');
+assert.equal(foo.a, 'a');
 
 var keys = [];
-for (var key in exporter) {
+for (var key in foo) {
   keys.push(key);
 }
 assert.deepEqual(keys.sort(), ['a', 'b', 'default']);

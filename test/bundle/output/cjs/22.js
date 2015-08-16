@@ -4,7 +4,7 @@ function foo () {
 	console.log( 'fooing' );
 }
 
-exports.foo = foo;
-
 // foo
 foo();
+
+exports.foo = foo;

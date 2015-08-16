@@ -1,8 +1,8 @@
-(function (factory) {
-	!(typeof exports === 'object' && typeof module !== 'undefined') &&
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	factory()
-}(function () { 'use strict';
+	factory();
+}(this, function () { 'use strict';
 
 	function bar () {
 		console.log( 'baring' );

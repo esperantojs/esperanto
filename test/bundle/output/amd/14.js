@@ -1,8 +1,6 @@
-define(['external'], function (foo) {
+define(['external'], function (foo) { 'use strict';
 
-	'use strict';
-
-	foo = ('default' in foo ? foo['default'] : foo);
+	foo = 'default' in foo ? foo['default'] : foo;
 
 	foo();
 

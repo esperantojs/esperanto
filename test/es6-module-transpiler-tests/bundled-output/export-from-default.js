@@ -1,7 +1,5 @@
 'use strict';
 
-var first = 1;
+var a = 1;
 
-
-
-assert.equal(first, 1);
+assert.equal(a, 1);

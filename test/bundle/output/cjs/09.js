@@ -1,4 +1,6 @@
 'use strict';
 
-var Correct = require('external');
-Correct = ('default' in Correct ? Correct['default'] : Correct);
+var ExplicitlyNamed = require('external');
+ExplicitlyNamed = 'default' in ExplicitlyNamed ? ExplicitlyNamed['default'] : ExplicitlyNamed;
+
+new ExplicitlyNamed();

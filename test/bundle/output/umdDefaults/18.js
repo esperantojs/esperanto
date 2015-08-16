@@ -1,18 +1,18 @@
-(function (factory) {
-	!(typeof exports === 'object' && typeof module !== 'undefined') &&
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	factory()
-}(function () { 'use strict';
+	factory();
+}(this, function () { 'use strict';
 
-	var _doThing = function () {
+	function _doThing () {
 		console.log( 'doing foo thing' );
 	}
 
-	var foo = function () {
+	function foo () {
 		_doThing();
 	}
 
-	var bar = function () {
+	function bar () {
 		doThing();
 	}
 
@@ -20,6 +20,7 @@
 		console.log( 'doing bar thing' );
 	}
 
-
+	foo();
+	bar();
 
 }));

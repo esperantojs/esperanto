@@ -1,7 +1,5 @@
 (function () { 'use strict';
 
-	var _foo = notActuallyFoo;
-
 	function notActuallyFoo () {
 		foo();
 	}
@@ -10,6 +8,6 @@
 		console.log( 'actually foo' );
 	}
 
-	_foo();
+	notActuallyFoo();
 
 })();

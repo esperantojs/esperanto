@@ -1,6 +1,6 @@
 'use strict';
 
-var foo = function () {
+function foo () {
 	console.log( 'fooing' );
 }
 

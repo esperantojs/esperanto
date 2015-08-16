@@ -1,12 +1,10 @@
-(function (factory) {
-	!(typeof exports === 'object' && typeof module !== 'undefined') &&
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	factory()
-}(function () { 'use strict';
+	factory();
+}(this, function () { 'use strict';
 
 	var foo = 'foo';
-
-	var bar = 'bar';
 
 	// Preserve comments after imports
 

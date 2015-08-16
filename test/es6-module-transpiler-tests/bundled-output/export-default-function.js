@@ -1,6 +1,6 @@
 'use strict';
 
-var fn1 = function () {
+function fn1 () {
   return 1;
 }
 

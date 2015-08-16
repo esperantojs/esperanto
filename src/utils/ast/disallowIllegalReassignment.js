@@ -1,8 +1,5 @@
 import hasOwnProp from 'utils/hasOwnProp';
 
-var bindingMessage = 'Cannot reassign imported binding ',
-	namespaceMessage = 'Cannot reassign imported binding of namespace ';
-
 export default function disallowIllegalReassignment ( node, importedBindings, importedNamespaces, scope ) {
 	let assignee, isNamespaceAssignment;
 
@@ -26,6 +23,6 @@ export default function disallowIllegalReassignment ( node, importedBindings, im
 	let name = assignee.name;
 
 	if ( hasOwnProp.call( isNamespaceAssignment ? importedNamespaces : importedBindings, name ) && !scope.contains( name ) ) {
-		throw new Error( ( isNamespaceAssignment ? namespaceMessage : bindingMessage ) + '`' + name + '`' );
+		throw new Error( `Illegal reassignment to import '${name}'` );
 	}
 }

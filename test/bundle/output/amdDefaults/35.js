@@ -1,10 +1,4 @@
-define(function () {
-
-	'use strict';
-
-	function a () {
-		console.log( 'I am module a' );
-	}
+define(function () { 'use strict';
 
 	function c () {
 		console.log( 'I am module c' );
@@ -13,6 +7,10 @@ define(function () {
 	function b () {
 		console.log( 'I am module b' );
 		c();
+	}
+
+	function a () {
+		console.log( 'I am module a' );
 	}
 
 	function external () {

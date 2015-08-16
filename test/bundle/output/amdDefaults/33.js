@@ -1,19 +1,15 @@
-define(function () {
-
-	'use strict';
-
-	var _Promise__Promise = function () {};
-
-	_Promise__Promise.prototype = {
-		keep () { this.state = 'kept'; },
-		break () { this.state = 'broken'; }
-	};
-
-	var _Promise = _Promise__Promise;
+define(function () { 'use strict';
 
 	var _Math = {
 		get add () { return add; },
 		get multiply () { return multiply; }
+	};
+
+	var _Promise = function () {};
+
+	_Promise.prototype = {
+		keep () { this.state = 'kept'; },
+		break () { this.state = 'broken'; }
 	};
 
 	function add ( a, b ) {
@@ -35,5 +31,9 @@ define(function () {
 	promise.keep();
 
 	console.log( _Math.add( 40, 2 ) );
+
+	foo().then( function ( num ) {
+		console.log( num );
+	});
 
 });

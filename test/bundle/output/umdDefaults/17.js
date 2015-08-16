@@ -1,17 +1,17 @@
-(function (factory) {
-	!(typeof exports === 'object' && typeof module !== 'undefined') &&
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	factory()
-}(function () { 'use strict';
+	factory();
+}(this, function () { 'use strict';
 
-	function foo__a ( message ) {
+	function a ( message ) {
 		console.log( message );
 	}
 
-	foo__a();
+	a();
 	(function () {
-		var a = 'c';
-		foo__a( a );
+		var a$$ = 'c';
+		a( a$$ );
 	}());
 
 }));

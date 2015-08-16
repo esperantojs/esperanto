@@ -1,5 +1,5 @@
 module.exports = function makeWhitespaceVisible ( str ) {
-	return str.replace( /\r?\n/g, '¶\n' ).replace( /^\t+/gm, function ( match ) {
+	return str.trim().replace( /\r?\n/g, '¶\n' ).replace( /^\t+/gm, function ( match ) {
 		// replace leading tabs
 		return match.replace( /\t/g, '--->' );
 	}).replace( /^( +)/gm, function ( match, $1 ) {

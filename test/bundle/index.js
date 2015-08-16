@@ -75,7 +75,7 @@ module.exports = function () {
 			});
 
 			profiles = [
-				{ description: 'bundle.concat()', method: 'concat', outputdir: 'concat' },
+				{ description: 'bundle.concat()', method: 'concat', outputdir: 'concat', options: { name: 'myModule' } },
 				{ description: 'bundle.toAmd()', method: 'toAmd', outputdir: 'amdDefaults' },
 				{ description: 'bundle.toUmd()', method: 'toUmd', outputdir: 'umdDefaults', options: { name: 'myModule' } },
 				{ description: 'bundle.toCjs()', method: 'toCjs', outputdir: 'cjsDefaults' },
@@ -141,11 +141,11 @@ module.exports = function () {
 									return sander.readFile( 'bundle/output/', profile.outputdir, dir + '.js' ).then( String ).then( function ( str ) {
 										var expected = makeWhitespaceVisible( str );
 
-										if ( config.strict && !options.strict ) {
+										if ( config.strict && config.exports && config.exports.length && !options.strict ) {
 											throw new Error( 'Test should fail in non-strict mode' );
 										}
 
-										assert.equal( actual, expected, 'Expected\n>\n' + actual + '\n>\n\nto match\n\n>\n' + expected + '\n>' );
+										assert.equal( actual, expected );
 									}).catch( function ( err ) {
 										if ( err.code === 'ENOENT' ) {
 											assert.equal( actual, '', 'Expected\n>\n' + actual + '\n>\n\nto match non-existent file' );
@@ -155,7 +155,7 @@ module.exports = function () {
 									});
 								}).catch( function ( err ) {
 									// strict mode tests should fail
-									if ( /strict mode/.test( err.message ) && config.strict ) {
+									if ( /was specified/.test( err.message ) && config.strict ) {
 										return;
 									}
 
