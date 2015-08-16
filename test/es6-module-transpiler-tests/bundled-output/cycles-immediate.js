@@ -15,6 +15,11 @@ var isOdd = (function(isEven) {
   };
 })(isEven);
 
+/**
+ * We go through these gymnastics to eager-bind to nextOdd. This is done to
+ * ensure that both this module and the 'odds' module eagerly use something
+ * from the other.
+ */
 var nextEven = (function() {
   return function(n) {
     var no = nextOdd(n);
