@@ -1,15 +1,17 @@
 /*
-	esperanto.js v0.7.4 - 2015-07-29
+	esperanto.js v0.7.5 - 2015-08-16
 	http://esperantojs.org
 
 	Released under the MIT License.
 */
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('acorn')) :
-	typeof define === 'function' && define.amd ? define(['exports', 'acorn'], factory) :
-	factory((global.esperanto = {}), global.acorn)
-}(this, function (exports, acorn) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('chalk'), require('acorn')) :
+	typeof define === 'function' && define.amd ? define(['exports', 'chalk', 'acorn'], factory) :
+	factory((global.esperanto = {}), global.chalk, global.acorn)
+}(this, function (exports, chalk, acorn) { 'use strict';
+
+	chalk = ('default' in chalk ? chalk['default'] : chalk);
 
 	function hasNamedImports(mod) {
 		var i = mod.imports.length;
@@ -36,242 +38,38 @@
 	if ( typeof window !== 'undefined' && typeof window.btoa === 'function' ) {
 		_btoa = window.btoa;
 	} else if ( typeof Buffer === 'function' ) {
-		_btoa = function ( str ) {
-			return new Buffer( str ).toString( 'base64' );
-		};
+		_btoa = str => new Buffer( str ).toString( 'base64' );
 	} else {
 		throw new Error( 'Unsupported environment: `window.btoa` or `Buffer` should be supported.' );
 	}
 
 	var btoa = _btoa;
 
-	var SourceMap = function ( properties ) {
-		this.version = 3;
+	class SourceMap {
+		constructor ( properties ) {
+			this.version = 3;
 
-		this.file           = properties.file;
-		this.sources        = properties.sources;
-		this.sourcesContent = properties.sourcesContent;
-		this.names          = properties.names;
-		this.mappings       = properties.mappings;
-	};
+			this.file           = properties.file;
+			this.sources        = properties.sources;
+			this.sourcesContent = properties.sourcesContent;
+			this.names          = properties.names;
+			this.mappings       = properties.mappings;
+		}
 
-	SourceMap.prototype = {
-		toString: function () {
+		toString () {
 			return JSON.stringify( this );
-		},
+		}
 
-		toUrl: function () {
+		toUrl () {
 			return 'data:application/json;charset=utf-8;base64,' + btoa( this.toString() );
 		}
-	};
-
-	function utils_getRelativePath__getRelativePath ( from, to ) {
-		var fromParts, toParts, i;
-
-		fromParts = from.split( /[\/\\]/ );
-		toParts = to.split( /[\/\\]/ );
-
-		fromParts.pop(); // get dirname
-
-		while ( fromParts[0] === toParts[0] ) {
-			fromParts.shift();
-			toParts.shift();
-		}
-
-		if ( fromParts.length ) {
-			i = fromParts.length;
-			while ( i-- ) fromParts[i] = '..';
-		}
-
-		return fromParts.concat( toParts ).join( '/' );
-	}
-
-	var Bundle = function ( options ) {
-		options = options || {};
-
-		this.intro = options.intro || '';
-		this.outro = options.outro || '';
-		this.separator = 'separator' in options ? options.separator : '\n';
-
-		this.sources = [];
-	};
-
-	Bundle.prototype = {
-		addSource: function ( source ) {
-			if ( typeof source !== 'object' || !source.content ) {
-				throw new Error( 'bundle.addSource() takes an object with a `content` property, which should be an instance of MagicString, and an optional `filename`' );
-			}
-
-			this.sources.push( source );
-			return this;
-		},
-
-		append: function ( str ) {
-			this.outro += str;
-			return this;
-		},
-
-		clone: function () {
-			var bundle = new Bundle({
-				intro: this.intro,
-				outro: this.outro,
-				separator: this.separator
-			});
-
-			this.sources.forEach( function ( source ) {
-				bundle.addSource({
-					filename: source.filename,
-					content: source.content.clone()
-				});
-			});
-
-			return bundle;
-		},
-
-		generateMap: function ( options ) {
-			var offsets = {}, encoded, encodingSeparator;
-
-			encodingSeparator = getSemis( this.separator );
-
-			encoded = (
-				getSemis( this.intro ) +
-				this.sources.map( function ( source, sourceIndex) {
-					return source.content.getMappings( options.hires, sourceIndex, offsets );
-				}).join( encodingSeparator ) +
-				getSemis( this.outro )
-			);
-
-			return new SourceMap({
-				file: ( options.file ? options.file.split( /[\/\\]/ ).pop() : null ),
-				sources: this.sources.map( function ( source ) {
-					return options.file ? utils_getRelativePath__getRelativePath( options.file, source.filename ) : source.filename;
-				}),
-				sourcesContent: this.sources.map( function ( source ) {
-					return options.includeContent ? source.content.original : null;
-				}),
-				names: [],
-				mappings: encoded
-			});
-		},
-
-		getIndentString: function () {
-			var indentStringCounts = {};
-
-			this.sources.forEach( function ( source ) {
-				var indentStr = source.content.indentStr;
-
-				if ( indentStr === null ) return;
-
-				if ( !indentStringCounts[ indentStr ] ) indentStringCounts[ indentStr ] = 0;
-				indentStringCounts[ indentStr ] += 1;
-			});
-
-			return ( Object.keys( indentStringCounts ).sort( function ( a, b ) {
-				return indentStringCounts[a] - indentStringCounts[b];
-			})[0] ) || '\t';
-		},
-
-		indent: function ( indentStr ) {
-			if ( !indentStr ) {
-				indentStr = this.getIndentString();
-			}
-
-			this.sources.forEach( function ( source ) {
-				source.content.indent( indentStr, { exclude: source.indentExclusionRanges });
-			});
-
-			this.intro = this.intro.replace( /^[^\n]/gm, indentStr + '$&' );
-			this.outro = this.outro.replace( /^[^\n]/gm, indentStr + '$&' );
-
-			return this;
-		},
-
-		prepend: function ( str ) {
-			this.intro = str + this.intro;
-			return this;
-		},
-
-		toString: function () {
-			return this.intro + this.sources.map( stringify ).join( this.separator ) + this.outro;
-		},
-
-		trimLines: function () {
-			return this.trim('[\\r\\n]');
-		},
-
-		trim: function (charType) {
-			return this.trimStart(charType).trimEnd(charType);
-		},
-
-		trimStart: function (charType) {
-			var rx = new RegExp('^' + (charType || '\\s') + '+');
-			this.intro = this.intro.replace( rx, '' );
-
-			if ( !this.intro ) {
-				var source;
-				var i = 0;
-				do {
-					source = this.sources[i];
-
-					if ( !source ) {
-						this.outro = this.outro.replace( rx, '' );
-						break;
-					}
-
-					source.content.trimStart();
-					i += 1;
-				} while ( source.content.str === '' );
-			}
-
-			return this;
-		},
-
-		trimEnd: function(charType) {
-			var rx = new RegExp((charType || '\\s') + '+$');
-			this.outro = this.outro.replace( rx, '' );
-
-			if ( !this.outro ) {
-				var source;
-				var i = this.sources.length - 1;
-				do {
-					source = this.sources[i];
-
-					if ( !source ) {
-						this.intro = this.intro.replace( rx, '' );
-						break;
-					}
-
-					source.content.trimEnd(charType);
-					i -= 1;
-				} while ( source.content.str === '' );
-			}
-
-			return this;
-		}
-	};
-
-
-
-	function stringify ( source ) {
-		return source.content.toString();
-	}
-
-	function getSemis ( str ) {
-		return new Array( str.split( '\n' ).length ).join( ';' );
 	}
 
 	function guessIndent ( code ) {
-		var lines, tabbed, spaced, min;
+		const lines = code.split( '\n' );
 
-		lines = code.split( '\n' );
-
-		tabbed = lines.filter( function ( line ) {
-			return /^\t+/.test( line );
-		});
-
-		spaced = lines.filter( function ( line ) {
-			return /^ {2,}/.test( line );
-		});
+		const tabbed = lines.filter( line => /^\t+/.test( line ) );
+		const spaced = lines.filter( line => /^ {2,}/.test( line ) );
 
 		if ( tabbed.length === 0 && spaced.length === 0 ) {
 			return null;
@@ -285,7 +83,7 @@
 		}
 
 		// Otherwise, we need to guess the multiple
-		min = spaced.reduce( function ( previous, current ) {
+		const min = spaced.reduce( ( previous, current ) => {
 			var numSpaces = /^ +/.exec( current )[0].length;
 			return Math.min( numSpaces, previous );
 		}, Infinity );
@@ -377,34 +175,30 @@
 		return result;
 	}
 
-	var utils_encode = encode;
-
 	function encodeMappings ( original, str, mappings, hires, sourcemapLocations, sourceIndex, offsets ) {
-		var lineStart,
-			locations,
-			lines,
-			encoded,
-			inverseMappings,
-			charOffset = 0,
-			firstSegment = true;
-
 		// store locations, for fast lookup
-		lineStart = 0;
-		locations = original.split( '\n' ).map( function ( line ) {
+		let lineStart = 0;
+		const locations = original.split( '\n' ).map( line => {
 			var start = lineStart;
 			lineStart += line.length + 1; // +1 for the newline
 
 			return start;
 		});
 
-		inverseMappings = invert( str, mappings );
+		const inverseMappings = invert( str, mappings );
 
-		lines = str.split( '\n' ).map( function ( line ) {
-			var segments, len, char, origin, lastOrigin, i, location;
+		let charOffset = 0;
+		const lines = str.split( '\n' ).map( line => {
+			let segments = [];
 
-			segments = [];
+			let char; // TODO put these inside loop, once we've determined it's safe to do so transpilation-wise
+			let origin;
+			let lastOrigin;
+			let location;
 
-			len = line.length;
+			let i;
+
+			const len = line.length;
 			for ( i = 0; i < len; i += 1 ) {
 				char = i + charOffset;
 				origin = inverseMappings[ char ];
@@ -450,11 +244,11 @@
 		offsets.sourceCodeLine = offsets.sourceCodeLine || 0;
 		offsets.sourceCodeColumn = offsets.sourceCodeColumn || 0;
 
-		encoded = lines.map( function ( segments ) {
+		const encoded = lines.map( segments => {
 			var generatedCodeColumn = 0;
 
-			return segments.map( function ( segment ) {
-				var arr = [
+			return segments.map( segment => {
+				const arr = [
 					segment.generatedCodeColumn - generatedCodeColumn,
 					segment.sourceIndex - offsets.sourceIndex,
 					segment.sourceCodeLine - offsets.sourceCodeLine,
@@ -466,9 +260,7 @@
 				offsets.sourceCodeLine = segment.sourceCodeLine;
 				offsets.sourceCodeColumn = segment.sourceCodeColumn;
 
-				firstSegment = false;
-
-				return utils_encode( arr );
+				return encode( arr );
 			}).join( ',' );
 		}).join( ';' );
 
@@ -512,33 +304,57 @@
 		throw new Error( 'Character out of bounds' );
 	}
 
-	var MagicString = function ( string ) {
-		this.original = this.str = string;
-		this.mappings = initMappings( string.length );
+	function utils_getRelativePath__getRelativePath ( from, to ) {
+		let fromParts = from.split( /[\/\\]/ );
+		let toParts = to.split( /[\/\\]/ );
 
-		this.sourcemapLocations = {};
+		fromParts.pop(); // get dirname
 
-		this.indentStr = guessIndent( string );
-	};
+		while ( fromParts[0] === toParts[0] ) {
+			fromParts.shift();
+			toParts.shift();
+		}
 
-	MagicString.prototype = {
-		addSourcemapLocation: function ( char ) {
+		if ( fromParts.length ) {
+			let i = fromParts.length;
+			while ( i-- ) fromParts[i] = '..';
+		}
+
+		return fromParts.concat( toParts ).join( '/' );
+	}
+
+	let MagicString__warned = false;
+
+	class MagicString {
+		constructor ( string, options = {} ) {
+			this.original = this.str = string;
+			this.mappings = initMappings( string.length );
+
+			this.filename = options.filename;
+			this.indentExclusionRanges = options.indentExclusionRanges;
+
+			this.sourcemapLocations = {};
+
+			this.indentStr = guessIndent( string );
+		}
+
+		addSourcemapLocation ( char ) {
 			this.sourcemapLocations[ char ] = true;
-		},
+		}
 
-		append: function ( content ) {
+		append ( content ) {
 			if ( typeof content !== 'string' ) {
 				throw new TypeError( 'appended content must be a string' );
 			}
 
 			this.str += content;
 			return this;
-		},
+		}
 
-		clone: function () {
+		clone () {
 			var clone, i;
 
-			clone = new MagicString( this.original );
+			clone = new MagicString( this.original, { filename: this.filename });
 			clone.str = this.str;
 
 			i = clone.mappings.length;
@@ -546,10 +362,20 @@
 				clone.mappings[i] = this.mappings[i];
 			}
 
-			return clone;
-		},
+			if ( this.indentExclusionRanges ) {
+				clone.indentExclusionRanges = typeof this.indentExclusionRanges[0] === 'number' ?
+					[ this.indentExclusionRanges[0], this.indentExclusionRanges[1] ] :
+					this.indentExclusionRanges.map( ([ start, end ]) => [ start, end ] );
+			}
 
-		generateMap: function ( options ) {
+			Object.keys( this.sourcemapLocations ).forEach( loc => {
+				clone.sourcemapLocations[ loc ] = true;
+			});
+
+			return clone;
+		}
+
+		generateMap ( options ) {
 			options = options || {};
 
 			return new SourceMap({
@@ -559,17 +385,17 @@
 				names: [],
 				mappings: this.getMappings( options.hires, 0 )
 			});
-		},
+		}
 
-		getIndentString: function () {
+		getIndentString () {
 			return this.indentStr === null ? '\t' : this.indentStr;
-		},
+		}
 
-		getMappings: function ( hires, sourceIndex, offsets ) {
+		getMappings ( hires, sourceIndex, offsets ) {
 			return encodeMappings( this.original, this.str, this.mappings, hires, this.sourcemapLocations, sourceIndex, offsets );
-		},
+		}
 
-		indent: function ( indentStr, options ) {
+		indent ( indentStr, options ) {
 			var self = this,
 				mappings = this.mappings,
 				reverseMappings = reverse( mappings, this.str.length ),
@@ -587,6 +413,8 @@
 			}
 
 			indentStr = indentStr !== undefined ? indentStr : ( this.indentStr || '\t' );
+
+			if ( indentStr === '' ) return this; // noop
 
 			options = options || {};
 
@@ -622,21 +450,25 @@
 				});
 			}
 
+			const indentStart = options.indentStart !== false;
+
 			if ( !exclusions ) {
-				while ( match = pattern.exec( this.str ) ) {
-					inserts.push( match.index );
-				}
-
-				this.str = this.str.replace( pattern, indentStr + '$&' );
-			} else {
-				while ( match = pattern.exec( this.str ) ) {
-					if ( !isExcluded( match.index - 1 ) ) {
-						inserts.push( match.index );
+				this.str = this.str.replace( pattern, ( match, index ) => {
+					if ( !indentStart && index === 0 ) {
+						return match;
 					}
-				}
 
-				this.str = this.str.replace( pattern, function ( match, index ) {
-					return isExcluded( index - 1 ) ? match : indentStr + match;
+					inserts.push( index );
+					return indentStr + match;
+				});
+			} else {
+				this.str = this.str.replace( pattern, ( match, index ) => {
+					if ( ( !indentStart && index === 0 ) || isExcluded( index - 1 ) ) {
+						return match;
+					}
+
+					inserts.push( index );
+					return indentStr + match;
 				});
 			}
 
@@ -674,9 +506,9 @@
 					}
 				}
 			}
-		},
+		}
 
-		insert: function ( index, content ) {
+		insert ( index, content ) {
 			if ( typeof content !== 'string' ) {
 				throw new TypeError( 'inserted content must be a string' );
 			}
@@ -695,10 +527,10 @@
 			}
 
 			return this;
-		},
+		}
 
 		// get current location of character in original string
-		locate: function ( character ) {
+		locate ( character ) {
 			var loc;
 
 			if ( character < 0 || character > this.mappings.length ) {
@@ -707,9 +539,9 @@
 
 			loc = this.mappings[ character ];
 			return ~loc ? loc : null;
-		},
+		}
 
-		locateOrigin: function ( character ) {
+		locateOrigin ( character ) {
 			var i;
 
 			if ( character < 0 || character >= this.str.length ) {
@@ -724,15 +556,45 @@
 			}
 
 			return null;
-		},
+		}
 
-		prepend: function ( content ) {
+		overwrite ( start, end, content ) {
+			if ( typeof content !== 'string' ) {
+				throw new TypeError( 'replacement content must be a string' );
+			}
+
+			var firstChar, lastChar, d;
+
+			firstChar = this.locate( start );
+			lastChar = this.locate( end - 1 );
+
+			if ( firstChar === null || lastChar === null ) {
+				throw new Error( `Cannot overwrite the same content twice: '${this.original.slice(start, end).replace(/\n/g, '\\n')}'` );
+			}
+
+			if ( firstChar > lastChar + 1 ) {
+				throw new Error(
+					'BUG! First character mapped to a position after the last character: ' +
+					'[' + start + ', ' + end + '] -> [' + firstChar + ', ' + ( lastChar + 1 ) + ']'
+				);
+			}
+
+			this.str = this.str.substr( 0, firstChar ) + content + this.str.substring( lastChar + 1 );
+
+			d = content.length - ( lastChar + 1 - firstChar );
+
+			blank( this.mappings, start, end );
+			adjust( this.mappings, end, this.mappings.length, d );
+			return this;
+		}
+
+		prepend ( content ) {
 			this.str = content + this.str;
 			adjust( this.mappings, 0, this.mappings.length, content.length );
 			return this;
-		},
+		}
 
-		remove: function ( start, end ) {
+		remove ( start, end ) {
 			var loc, d, i, currentStart, currentEnd;
 
 			if ( start < 0 || end > this.mappings.length ) {
@@ -761,40 +623,22 @@
 
 			adjust( this.mappings, end, this.mappings.length, -d );
 			return this;
-		},
+		}
 
-		replace: function ( start, end, content ) {
-			if ( typeof content !== 'string' ) {
-				throw new TypeError( 'replacement content must be a string' );
+		replace ( start, end, content ) {
+			if ( !MagicString__warned ) {
+				console.warn( 'magicString.replace(...) is deprecated. Use magicString.overwrite(...) instead' );
+				MagicString__warned = true;
 			}
 
-			var firstChar, lastChar, d;
+			return this.overwrite( start, end, content );
+		}
 
-			firstChar = this.locate( start );
-			lastChar = this.locate( end - 1 );
-
-			if ( firstChar === null || lastChar === null ) {
-				throw new Error( 'Cannot replace the same content twice' );
-			}
-
-			if ( firstChar > lastChar + 1 ) {
-				throw new Error(
-					'BUG! First character mapped to a position after the last character: ' +
-					'[' + start + ', ' + end + '] -> [' + firstChar + ', ' + ( lastChar + 1 ) + ']'
-				);
-			}
-
-			this.str = this.str.substr( 0, firstChar ) + content + this.str.substring( lastChar + 1 );
-
-			d = content.length - ( lastChar + 1 - firstChar );
-
-			blank( this.mappings, start, end );
-			adjust( this.mappings, end, this.mappings.length, d );
-			return this;
-		},
-
-		slice: function ( start, end ) {
+		slice ( start, end = this.original.length ) {
 			var firstChar, lastChar;
+
+			while ( start < 0 ) start += this.original.length;
+			while ( end < 0 ) end += this.original.length;
 
 			firstChar = this.locate( start );
 			lastChar = this.locate( end - 1 ) + 1;
@@ -804,21 +648,29 @@
 			}
 
 			return this.str.slice( firstChar, lastChar );
-		},
+		}
 
-		toString: function () {
+		snip ( start, end ) {
+			const clone = this.clone();
+			clone.remove( 0, start );
+			clone.remove( end, clone.original.length );
+
+			return clone;
+		}
+
+		toString () {
 			return this.str;
-		},
+		}
 
-		trimLines: function() {
+		trimLines() {
 			return this.trim('[\\r\\n]');
-		},
+		}
 
-		trim: function (charType) {
+		trim (charType) {
 			return this.trimStart(charType).trimEnd(charType);
-		},
+		}
 
-		trimEnd: function (charType) {
+		trimEnd (charType) {
 			var self = this;
 			var rx = new RegExp((charType || '\\s') + '+$');
 
@@ -844,9 +696,9 @@
 			});
 
 			return this;
-		},
+		}
 
-		trimStart: function (charType) {
+		trimStart (charType) {
 			var self = this;
 			var rx = new RegExp('^' + (charType || '\\s') + '+');
 
@@ -873,9 +725,7 @@
 
 			return this;
 		}
-	};
-
-	MagicString.Bundle = Bundle;
+	}
 
 	function adjust ( mappings, start, end, d ) {
 		var i = end;
@@ -947,10 +797,10 @@
 
 	var childKeys = {};
 
-	var toString = Object.prototype.toString;
+	var walk__toString = Object.prototype.toString;
 
 	function isArray(thing) {
-		return toString.call(thing) === '[object Array]';
+		return walk__toString.call(thing) === '[object Array]';
 	}
 
 	function visit(node, parent, enter, leave) {
@@ -1009,7 +859,7 @@
 
 	function globalify(name) {
 		if (/^__dep\d+__$/.test(name)) {
-			return "undefined";
+			return 'undefined';
 		} else {
 			return "global." + name;
 		}
@@ -1362,9 +1212,9 @@
 
 		// if no match, we have an expression like `export default whatever`
 		else {
-			result.type = 'expression';
-			result.name = 'default';
-		}
+				result.type = 'expression';
+				result.name = 'default';
+			}
 
 		return result;
 	}
@@ -1403,28 +1253,28 @@
 
 			// Case 2: `export function foo () {...}`
 			else if (d.type === 'FunctionDeclaration') {
-				result.type = 'namedFunction';
-				result.name = d.id.name;
-			}
+					result.type = 'namedFunction';
+					result.name = d.id.name;
+				}
 
-			// Case 3: `export class Foo {...}`
-			else if (d.type === 'ClassDeclaration') {
-				result.type = 'namedClass';
-				result.name = d.id.name;
-			}
+				// Case 3: `export class Foo {...}`
+				else if (d.type === 'ClassDeclaration') {
+						result.type = 'namedClass';
+						result.name = d.id.name;
+					}
 		}
 
 		// Case 9: `export { foo, bar };`
 		else {
-			result.type = 'named';
-			result.specifiers = node.specifiers.map(function (s) {
-				return {
-					origin: null, // filled in later by bundler
-					name: s.local.name,
-					as: s.exported.name
-				};
-			});
-		}
+				result.type = 'named';
+				result.specifiers = node.specifiers.map(function (s) {
+					return {
+						origin: null, // filled in later by bundler
+						name: s.local.name,
+						as: s.exported.name
+					};
+				});
+			}
 
 		return result;
 	}
@@ -1704,7 +1554,7 @@
 
 	var ABSOLUTE_PATH = /^(?:[A-Z]:)?[\/\\]/i;
 
-	var warned = {};
+	var packageResult__warned = {};
 	function packageResult(bundleOrModule, body, options, methodName, isBundle) {
 		// wrap output
 		if (options.banner) body.prepend(options.banner);
@@ -1755,9 +1605,9 @@
 			code: code,
 			map: map,
 			toString: function () {
-				if (!warned[methodName]) {
+				if (!packageResult__warned[methodName]) {
 					console.log('Warning: esperanto.' + methodName + '() returns an object with a \'code\' property. You should use this instead of using the returned value directly');
-					warned[methodName] = true;
+					packageResult__warned[methodName] = true;
 				}
 
 				return code;
@@ -1912,10 +1762,10 @@
 			names.unshift('exports');
 		}
 
-		var intro = '\ndefine(' + processName(name) + '' + processIds(ids) + 'function (' + names.join(', ') + ') {\n\n';
+		var intro = '\ndefine(' + processName(name) + processIds(ids) + 'function (' + names.join(', ') + ') {\n\n';
 
 		if (useStrict) {
-			intro += '' + indentStr + '\'use strict\';\n\n';
+			intro += indentStr + '\'use strict\';\n\n';
 		}
 
 		return intro;
@@ -1948,7 +1798,7 @@
 
 		mod.imports.forEach(function (x) {
 			if (!hasOwnProp.call(seen, x.path)) {
-				var replacement = x.isEmpty ? '' + req(x.path) + ';' : 'var ' + x.as + ' = ' + req(x.path) + ';';
+				var replacement = x.isEmpty ? req(x.path) + ';' : 'var ' + x.as + ' = ' + req(x.path) + ';';
 				mod.body.replace(x.start, x.end, replacement);
 
 				seen[x.path] = true;
@@ -1974,7 +1824,7 @@
 		}
 
 		if (options.useStrict !== false) {
-			mod.body.prepend('\'use strict\';\n\n').trimLines();
+			mod.body.prepend("'use strict';\n\n").trimLines();
 		}
 
 		return packageResult(mod, mod.body, options, 'toCjs');
@@ -2018,7 +1868,7 @@
 					names.unshift('exports');
 				}
 
-				amdExport = 'define(' + processName(amdName) + '' + processIds(ids) + 'factory)';
+				amdExport = 'define(' + processName(amdName) + processIds(ids) + 'factory)';
 				defaultsBlock = '';
 				if (externalDefaults && externalDefaults.length > 0) {
 					defaultsBlock = externalDefaults.map(function (x) {
@@ -2026,7 +1876,7 @@
 					}).join('\n') + '\n\n';
 				}
 			} else {
-				amdExport = 'define(' + processName(amdName) + '' + processIds(ids) + 'factory)';
+				amdExport = 'define(' + processName(amdName) + processIds(ids) + 'factory)';
 				cjsExport = (hasExports ? 'module.exports = ' : '') + ('factory(' + paths.map(req).join(', ') + ')');
 				globalExport = (hasExports ? 'global.' + name + ' = ' : '') + ('factory(' + names.map(globalify).join(', ') + ')');
 
@@ -2335,10 +2185,9 @@
 
 		var _getReadOnlyIdentifiers = getReadOnlyIdentifiers(mod.imports);
 
+		// ensure no conflict with `exports`
 		var importedBindings = _getReadOnlyIdentifiers[0];
 		var importedNamespaces = _getReadOnlyIdentifiers[1];
-
-		// ensure no conflict with `exports`
 		identifierReplacements.exports = deconflict('exports', mod.ast._declared);
 
 		traverseAst(mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames);
@@ -2396,7 +2245,7 @@
 				if (!options._evilES3SafeReExports) {
 					earlyExports.push('Object.defineProperty(exports, \'' + exportAs + '\', { enumerable: true, get: function () { return ' + chains[name] + '; }});');
 				} else {
-					var exportSegment = exportAs === 'default' ? '[\'default\']' : '.' + exportAs;
+					var exportSegment = exportAs === 'default' ? "['default']" : '.' + exportAs;
 					lateExports.push('exports' + exportSegment + ' = ' + chains[name] + ';');
 				}
 			} else if (~mod.ast._topLevelFunctionNames.indexOf(name)) {
@@ -2461,7 +2310,7 @@
 				seen[x.path] = true;
 
 				if (x.isEmpty) {
-					return '' + req(x.path) + ';';
+					return req(x.path) + ';';
 				}
 
 				return 'var ' + x.name + ' = ' + req(x.path) + ';';
@@ -2474,7 +2323,7 @@
 		});
 
 		if (options.useStrict !== false) {
-			mod.body.prepend('\'use strict\';\n\n').trimLines();
+			mod.body.prepend("'use strict';\n\n").trimLines();
 		}
 
 		return packageResult(mod, mod.body, options, 'toCjs');
@@ -2550,7 +2399,7 @@
 		}
 
 		if (options.useStrict !== false) {
-			bundle.body.prepend('\'use strict\';\n\n').trimLines();
+			bundle.body.prepend("'use strict';\n\n").trimLines();
 		}
 
 		return packageResult(bundle, bundle.body, options, 'toCjs', true);
@@ -2601,7 +2450,7 @@
 			var defaultsBlock = externalDefaults.map(function (x) {
 				// Case 1: default is used, and named is not
 				if (!x.needsNamed) {
-					return '' + x.name + ' = (\'default\' in ' + x.name + ' ? ' + x.name + '[\'default\'] : ' + x.name + ');';
+					return x.name + ' = (\'default\' in ' + x.name + ' ? ' + x.name + '[\'default\'] : ' + x.name + ');';
 				}
 
 				// Case 2: both default and named are used
@@ -2654,7 +2503,7 @@
 		}
 
 		if (options.useStrict !== false) {
-			bundle.body.prepend('\'use strict\';\n\n').trimLines();
+			bundle.body.prepend("'use strict';\n\n").trimLines();
 		}
 
 		return packageResult(bundle, bundle.body, options, 'toCjs', true);
@@ -2727,12 +2576,26 @@
 		return packageResult(bundle, bundle.body, options, 'toString', true);
 	}
 
-	var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
-	var alreadyWarned = false;
+	var deprecateMessages = {
+		defaultOnly: 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
+		standalone: chalk.red.bold('[DEPRECATION NOTICE] Esperanto is no longer under active development. To convert an ES6 module to another format, consider using Babel (https://babeljs.io)'),
+		bundle: chalk.red.bold('[DEPRECATION NOTICE] Esperanto is no longer under active development. To bundle ES6 modules, consider using Rollup (https://github.com/rollup/rollup)')
+	};
+
+	var alreadyWarned = {
+		defaultOnly: false,
+		standalone: false,
+		bundle: false
+	};
 
 	function transpileMethod(format) {
+		if (!alreadyWarned.standalone) {
+			console.error(deprecateMessages.standalone);
+			alreadyWarned.standalone = true;
+		}
+
 		return function (source) {
-			var options = arguments[1] === undefined ? {} : arguments[1];
+			var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 			var mod = getStandaloneModule({
 				source: source,
@@ -2740,10 +2603,10 @@
 				strict: options.strict
 			});
 
-			if ('defaultOnly' in options && !alreadyWarned) {
+			if ('defaultOnly' in options && !alreadyWarned.defaultOnly) {
 				// TODO link to a wiki page explaining this, or something
-				console.log(deprecateMessage);
-				alreadyWarned = true;
+				console.error(deprecateMessages.defaultOnly);
+				alreadyWarned.defaultOnly = true;
 			}
 
 			if (options.absolutePaths && !options.amdName) {
@@ -2770,6 +2633,11 @@
 	var toAmd = transpileMethod('amd');
 	var toCjs = transpileMethod('cjs');
 	var toUmd = transpileMethod('umd');function bundle(options) {
+		if (!alreadyWarned.bundle) {
+			console.error(deprecateMessages.bundle);
+			alreadyWarned.bundle = true;
+		}
+
 		return getBundle(options).then(function (bundle) {
 			return {
 				imports: bundle.externalModules.map(function (mod) {
@@ -2793,12 +2661,12 @@
 			};
 
 			function transpile(format) {
-				var options = arguments[1] === undefined ? {} : arguments[1];
+				var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-				if ('defaultOnly' in options && !alreadyWarned) {
+				if ('defaultOnly' in options && !alreadyWarned.defaultOnly) {
 					// TODO link to a wiki page explaining this, or something
-					console.log(deprecateMessage);
-					alreadyWarned = true;
+					console.error(deprecateMessages.defaultOnly);
+					alreadyWarned.defaultOnly = true;
 				}
 
 				var builder = undefined;
@@ -2851,4 +2719,4 @@
 	exports.toUmd = toUmd;
 
 }));
-//# sourceMappingURL=/Users/stefanpenner/src/esperanto/.gobble-build/03-esperantoBundle/1/esperanto.browser.js.map
+//# sourceMappingURL=/www/ESPERANTO/esperanto/.gobble-build/03-esperantoBundle/1/esperanto.browser.js.map

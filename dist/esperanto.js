@@ -1,5 +1,5 @@
 /*
-	esperanto.js v0.7.4 - 2015-07-29
+	esperanto.js v0.7.5 - 2015-08-16
 	http://esperantojs.org
 
 	Released under the MIT License.
@@ -7,6 +7,8 @@
 
 'use strict';
 
+var chalk = require('chalk');
+chalk = ('default' in chalk ? chalk['default'] : chalk);
 var acorn = require('acorn');
 var MagicString = require('magic-string');
 MagicString = ('default' in MagicString ? MagicString['default'] : MagicString);
@@ -116,7 +118,7 @@ function req(path) {
 
 function globalify(name) {
 	if (/^__dep\d+__$/.test(name)) {
-		return "undefined";
+		return 'undefined';
 	} else {
 		return "global." + name;
 	}
@@ -469,9 +471,9 @@ function processDefaultExport(node, source) {
 
 	// if no match, we have an expression like `export default whatever`
 	else {
-		result.type = 'expression';
-		result.name = 'default';
-	}
+			result.type = 'expression';
+			result.name = 'default';
+		}
 
 	return result;
 }
@@ -510,28 +512,28 @@ function processExport(node, source) {
 
 		// Case 2: `export function foo () {...}`
 		else if (d.type === 'FunctionDeclaration') {
-			result.type = 'namedFunction';
-			result.name = d.id.name;
-		}
+				result.type = 'namedFunction';
+				result.name = d.id.name;
+			}
 
-		// Case 3: `export class Foo {...}`
-		else if (d.type === 'ClassDeclaration') {
-			result.type = 'namedClass';
-			result.name = d.id.name;
-		}
+			// Case 3: `export class Foo {...}`
+			else if (d.type === 'ClassDeclaration') {
+					result.type = 'namedClass';
+					result.name = d.id.name;
+				}
 	}
 
 	// Case 9: `export { foo, bar };`
 	else {
-		result.type = 'named';
-		result.specifiers = node.specifiers.map(function (s) {
-			return {
-				origin: null, // filled in later by bundler
-				name: s.local.name,
-				as: s.exported.name
-			};
-		});
-	}
+			result.type = 'named';
+			result.specifiers = node.specifiers.map(function (s) {
+				return {
+					origin: null, // filled in later by bundler
+					name: s.local.name,
+					as: s.exported.name
+				};
+			});
+		}
 
 	return result;
 }
@@ -955,7 +957,7 @@ function resolveChains(modules, moduleLookup) {
 					return; // TODO can batch imports be chained?
 				}
 
-				origin[s.as] = '' + s.name + '@' + imported.id;
+				origin[s.as] = s.name + '@' + imported.id;
 			});
 		});
 
@@ -964,9 +966,9 @@ function resolveChains(modules, moduleLookup) {
 
 			x.specifiers.forEach(function (s) {
 				if (hasOwnProp.call(origin, s.name)) {
-					chains['' + s.as + '@' + mod.id] = origin[s.name];
+					chains[s.as + '@' + mod.id] = origin[s.name];
 				} else if (s.as !== s.name) {
-					chains['' + s.as + '@' + mod.id] = '' + s.name + '@' + mod.id;
+					chains[s.as + '@' + mod.id] = s.name + '@' + mod.id;
 				}
 			});
 		});
@@ -982,7 +984,7 @@ function resolveChains(modules, moduleLookup) {
 					return; // TODO can batch imports be chained?
 				}
 
-				setOrigin(s, '' + s.name + '@' + imported.id, chains, moduleLookup);
+				setOrigin(s, s.name + '@' + imported.id, chains, moduleLookup);
 			});
 		});
 
@@ -990,7 +992,7 @@ function resolveChains(modules, moduleLookup) {
 			if (!x.specifiers) return;
 
 			x.specifiers.forEach(function (s) {
-				setOrigin(s, '' + s.as + '@' + mod.id, chains, moduleLookup);
+				setOrigin(s, s.as + '@' + mod.id, chains, moduleLookup);
 			});
 		});
 	});
@@ -1175,9 +1177,9 @@ function populateIdentifierReplacements(bundle) {
 			var result = undefined;
 
 			if (x.hasDeclaration && x.name) {
-				result = hasOwnProp.call(conflicts, x.name) || otherModulesDeclare(mod, x.name) ? '' + mod.name + '__' + x.name : x.name;
+				result = hasOwnProp.call(conflicts, x.name) || otherModulesDeclare(mod, x.name) ? mod.name + '__' + x.name : x.name;
 			} else {
-				result = hasOwnProp.call(conflicts, mod.name) || x.value !== mod.name && ~mod.ast._topLevelNames.indexOf(mod.name) || otherModulesDeclare(mod, mod.name) ? '' + mod.name + '__default' : mod.name;
+				result = hasOwnProp.call(conflicts, mod.name) || x.value !== mod.name && ~mod.ast._topLevelNames.indexOf(mod.name) || otherModulesDeclare(mod, mod.name) ? mod.name + '__default' : mod.name;
 			}
 
 			mod.identifierReplacements['default'] = result;
@@ -1190,7 +1192,7 @@ function populateIdentifierReplacements(bundle) {
 		var moduleIdentifiers = mod.identifierReplacements;
 
 		mod.ast._topLevelNames.forEach(function (n) {
-			moduleIdentifiers[n] = hasOwnProp.call(conflicts, n) ? '' + mod.name + '__' + n : n;
+			moduleIdentifiers[n] = hasOwnProp.call(conflicts, n) ? mod.name + '__' + n : n;
 		});
 
 		mod.imports.forEach(function (x) {
@@ -1224,17 +1226,17 @@ function populateIdentifierReplacements(bundle) {
 						// if it's an external module, always use __default if the
 						// bundle also uses named imports
 						if (imported.isExternal) {
-							replacement = imported.needsNamed ? '' + moduleName + '__default' : moduleName;
+							replacement = imported.needsNamed ? moduleName + '__default' : moduleName;
 						}
 
 						// TODO We currently need to check for the existence of `mod`, because modules
 						// can be skipped. Would be better to replace skipped modules with dummies
 						// - see https://github.com/Rich-Harris/esperanto/issues/32
 						else if (_mod && !_mod.isSkipped) {
-							replacement = _mod.identifierReplacements['default'];
-						}
+								replacement = _mod.identifierReplacements['default'];
+							}
 					} else if (!imported.isExternal) {
-						replacement = hasOwnProp.call(conflicts, specifierName) ? '' + moduleName + '__' + specifierName : specifierName;
+						replacement = hasOwnProp.call(conflicts, specifierName) ? moduleName + '__' + specifierName : specifierName;
 					} else {
 						replacement = moduleName + '.' + specifierName;
 					}
@@ -2156,10 +2158,10 @@ function amdIntro(_ref) {
 		names.unshift('exports');
 	}
 
-	var intro = '\ndefine(' + processName(name) + '' + processIds(ids) + 'function (' + names.join(', ') + ') {\n\n';
+	var intro = '\ndefine(' + processName(name) + processIds(ids) + 'function (' + names.join(', ') + ') {\n\n';
 
 	if (useStrict) {
-		intro += '' + indentStr + '\'use strict\';\n\n';
+		intro += indentStr + '\'use strict\';\n\n';
 	}
 
 	return intro;
@@ -2192,7 +2194,7 @@ function cjs__cjs(mod, options) {
 
 	mod.imports.forEach(function (x) {
 		if (!hasOwnProp.call(seen, x.path)) {
-			var replacement = x.isEmpty ? '' + req(x.path) + ';' : 'var ' + x.as + ' = ' + req(x.path) + ';';
+			var replacement = x.isEmpty ? req(x.path) + ';' : 'var ' + x.as + ' = ' + req(x.path) + ';';
 			mod.body.replace(x.start, x.end, replacement);
 
 			seen[x.path] = true;
@@ -2218,7 +2220,7 @@ function cjs__cjs(mod, options) {
 	}
 
 	if (options.useStrict !== false) {
-		mod.body.prepend('\'use strict\';\n\n').trimLines();
+		mod.body.prepend("'use strict';\n\n").trimLines();
 	}
 
 	return packageResult(mod, mod.body, options, 'toCjs');
@@ -2262,7 +2264,7 @@ function umdIntro(_ref) {
 				names.unshift('exports');
 			}
 
-			amdExport = 'define(' + processName(amdName) + '' + processIds(ids) + 'factory)';
+			amdExport = 'define(' + processName(amdName) + processIds(ids) + 'factory)';
 			defaultsBlock = '';
 			if (externalDefaults && externalDefaults.length > 0) {
 				defaultsBlock = externalDefaults.map(function (x) {
@@ -2270,7 +2272,7 @@ function umdIntro(_ref) {
 				}).join('\n') + '\n\n';
 			}
 		} else {
-			amdExport = 'define(' + processName(amdName) + '' + processIds(ids) + 'factory)';
+			amdExport = 'define(' + processName(amdName) + processIds(ids) + 'factory)';
 			cjsExport = (hasExports ? 'module.exports = ' : '') + ('factory(' + paths.map(req).join(', ') + ')');
 			globalExport = (hasExports ? 'global.' + name + ' = ' : '') + ('factory(' + names.map(globalify).join(', ') + ')');
 
@@ -2394,10 +2396,9 @@ function utils_transformBody__transformBody(mod, body, options) {
 
 	var _getReadOnlyIdentifiers = getReadOnlyIdentifiers(mod.imports);
 
+	// ensure no conflict with `exports`
 	var importedBindings = _getReadOnlyIdentifiers[0];
 	var importedNamespaces = _getReadOnlyIdentifiers[1];
-
-	// ensure no conflict with `exports`
 	identifierReplacements.exports = deconflict('exports', mod.ast._declared);
 
 	traverseAst(mod.ast, body, identifierReplacements, importedBindings, importedNamespaces, exportNames);
@@ -2455,7 +2456,7 @@ function utils_transformBody__transformBody(mod, body, options) {
 			if (!options._evilES3SafeReExports) {
 				earlyExports.push('Object.defineProperty(exports, \'' + exportAs + '\', { enumerable: true, get: function () { return ' + chains[name] + '; }});');
 			} else {
-				var exportSegment = exportAs === 'default' ? '[\'default\']' : '.' + exportAs;
+				var exportSegment = exportAs === 'default' ? "['default']" : '.' + exportAs;
 				lateExports.push('exports' + exportSegment + ' = ' + chains[name] + ';');
 			}
 		} else if (~mod.ast._topLevelFunctionNames.indexOf(name)) {
@@ -2520,7 +2521,7 @@ function strictMode_cjs__cjs(mod, options) {
 			seen[x.path] = true;
 
 			if (x.isEmpty) {
-				return '' + req(x.path) + ';';
+				return req(x.path) + ';';
 			}
 
 			return 'var ' + x.name + ' = ' + req(x.path) + ';';
@@ -2533,7 +2534,7 @@ function strictMode_cjs__cjs(mod, options) {
 	});
 
 	if (options.useStrict !== false) {
-		mod.body.prepend('\'use strict\';\n\n').trimLines();
+		mod.body.prepend("'use strict';\n\n").trimLines();
 	}
 
 	return packageResult(mod, mod.body, options, 'toCjs');
@@ -2609,7 +2610,7 @@ function defaultsMode_cjs__cjs(bundle, options) {
 	}
 
 	if (options.useStrict !== false) {
-		bundle.body.prepend('\'use strict\';\n\n').trimLines();
+		bundle.body.prepend("'use strict';\n\n").trimLines();
 	}
 
 	return packageResult(bundle, bundle.body, options, 'toCjs', true);
@@ -2660,7 +2661,7 @@ function builders_strictMode_amd__amd(bundle, options) {
 		var defaultsBlock = externalDefaults.map(function (x) {
 			// Case 1: default is used, and named is not
 			if (!x.needsNamed) {
-				return '' + x.name + ' = (\'default\' in ' + x.name + ' ? ' + x.name + '[\'default\'] : ' + x.name + ');';
+				return x.name + ' = (\'default\' in ' + x.name + ' ? ' + x.name + '[\'default\'] : ' + x.name + ');';
 			}
 
 			// Case 2: both default and named are used
@@ -2713,7 +2714,7 @@ function builders_strictMode_cjs__cjs(bundle, options) {
 	}
 
 	if (options.useStrict !== false) {
-		bundle.body.prepend('\'use strict\';\n\n').trimLines();
+		bundle.body.prepend("'use strict';\n\n").trimLines();
 	}
 
 	return packageResult(bundle, bundle.body, options, 'toCjs', true);
@@ -2786,12 +2787,26 @@ function concat(bundle, options) {
 	return packageResult(bundle, bundle.body, options, 'toString', true);
 }
 
-var deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
-var alreadyWarned = false;
+var deprecateMessages = {
+	defaultOnly: 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
+	standalone: chalk.red.bold('[DEPRECATION NOTICE] Esperanto is no longer under active development. To convert an ES6 module to another format, consider using Babel (https://babeljs.io)'),
+	bundle: chalk.red.bold('[DEPRECATION NOTICE] Esperanto is no longer under active development. To bundle ES6 modules, consider using Rollup (https://github.com/rollup/rollup)')
+};
+
+var alreadyWarned = {
+	defaultOnly: false,
+	standalone: false,
+	bundle: false
+};
 
 function transpileMethod(format) {
+	if (!alreadyWarned.standalone) {
+		console.error(deprecateMessages.standalone);
+		alreadyWarned.standalone = true;
+	}
+
 	return function (source) {
-		var options = arguments[1] === undefined ? {} : arguments[1];
+		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 		var mod = getStandaloneModule({
 			source: source,
@@ -2799,10 +2814,10 @@ function transpileMethod(format) {
 			strict: options.strict
 		});
 
-		if ('defaultOnly' in options && !alreadyWarned) {
+		if ('defaultOnly' in options && !alreadyWarned.defaultOnly) {
 			// TODO link to a wiki page explaining this, or something
-			console.log(deprecateMessage);
-			alreadyWarned = true;
+			console.error(deprecateMessages.defaultOnly);
+			alreadyWarned.defaultOnly = true;
 		}
 
 		if (options.absolutePaths && !options.amdName) {
@@ -2829,6 +2844,11 @@ function transpileMethod(format) {
 var toAmd = transpileMethod('amd');
 var toCjs = transpileMethod('cjs');
 var toUmd = transpileMethod('umd');function bundle(options) {
+	if (!alreadyWarned.bundle) {
+		console.error(deprecateMessages.bundle);
+		alreadyWarned.bundle = true;
+	}
+
 	return getBundle(options).then(function (bundle) {
 		return {
 			imports: bundle.externalModules.map(function (mod) {
@@ -2852,12 +2872,12 @@ var toUmd = transpileMethod('umd');function bundle(options) {
 		};
 
 		function transpile(format) {
-			var options = arguments[1] === undefined ? {} : arguments[1];
+			var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-			if ('defaultOnly' in options && !alreadyWarned) {
+			if ('defaultOnly' in options && !alreadyWarned.defaultOnly) {
 				// TODO link to a wiki page explaining this, or something
-				console.log(deprecateMessage);
-				alreadyWarned = true;
+				console.error(deprecateMessages.defaultOnly);
+				alreadyWarned.defaultOnly = true;
 			}
 
 			var builder = undefined;
@@ -2908,4 +2928,4 @@ exports.bundle = bundle;
 exports.toAmd = toAmd;
 exports.toCjs = toCjs;
 exports.toUmd = toUmd;
-//# sourceMappingURL=/Users/stefanpenner/src/esperanto/.gobble-build/02-esperantoBundle/1/esperanto.js.map
+//# sourceMappingURL=/www/ESPERANTO/esperanto/.gobble-build/02-esperantoBundle/1/esperanto.js.map
