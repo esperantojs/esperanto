@@ -44,6 +44,15 @@ export default function findImportsAndExports ( ast, source ) {
 				// it's both an import and an export, e.g.
 				// `export { foo } from './bar';
 				passthrough = processImport( node, true );
+
+				passthrough.specifiers.forEach( e => {
+					// the import in `export { default } from 'foo';`
+					// is a default import
+					if ( e.name === 'default' ) {
+						e.isDefault = true;
+					}
+				});
+
 				imports.push( passthrough );
 
 				declaration.passthrough = passthrough;
