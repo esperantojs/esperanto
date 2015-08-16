@@ -16,7 +16,8 @@ function Scope ( options ) {
 
 Scope.prototype = {
 	add: function ( name ) {
-		this.names.push( name );
+		if (! ~this.names.indexOf( name ) ) // redeclaration of existing binding
+			this.names.push( name );
 	},
 
 	contains: function ( name, ignoreTopLevel ) {
