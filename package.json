@@ -10,7 +10,7 @@
     "chalk": "^1.0.0",
     "magic-string": "^0.4.9",
     "minimist": "^1.1.0",
-    "rollup": "^0.11.4",
+    "rollup": "^0.14.0",
     "sander": "^0.2.1"
   },
   "main": "dist/esperanto.js",
