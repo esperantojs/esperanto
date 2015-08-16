@@ -8,6 +8,7 @@ define(['exports'], function (exports) {
 
 	exports.foo = foo;
 
+	// foo
 	foo();
 
 });

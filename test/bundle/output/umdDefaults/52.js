@@ -10,6 +10,7 @@
 
 
 
+	// bar.js
 	console.log( 'baz', not_baz );
 
 

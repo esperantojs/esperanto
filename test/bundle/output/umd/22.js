@@ -10,6 +10,7 @@
 
 	exports.foo = foo;
 
+	// foo
 	foo();
 
 }));

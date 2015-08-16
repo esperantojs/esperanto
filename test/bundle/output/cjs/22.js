@@ -6,4 +6,5 @@ function foo () {
 
 exports.foo = foo;
 
+// foo
 foo();
