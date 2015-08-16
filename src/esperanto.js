@@ -165,7 +165,8 @@ export function bundle ( options ) {
 			});
 
 			if ( bundleOptions.sourceMap === 'inline' ) {
-				result.code += '\n//# sourceMappingURL=' + result.map.toUrl();
+				result.code += '\n//# sourceMap';
+				result.code += 'pingURL=' + result.map.toUrl();
 				result.map = null;
 			}
 
