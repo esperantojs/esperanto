@@ -118,7 +118,7 @@ module.exports = function () {
 						assert.equal( loc.column, 14 );
 						assert.equal( loc.source, 'bundle/foo.js' );
 
-						loc = smc.originalPositionFor({ line: 6, column: 8 });
+						loc = smc.originalPositionFor({ line: 5, column: 8 });
 
 						assert.equal( loc.line, 2 );
 						assert.equal( loc.column, 8 );

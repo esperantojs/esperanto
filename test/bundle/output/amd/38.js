@@ -1,7 +1,5 @@
 define(function () { 'use strict';
 
-	var _foo = notActuallyFoo;
-
 	function notActuallyFoo () {
 		foo();
 	}
@@ -10,6 +8,6 @@ define(function () { 'use strict';
 		console.log( 'actually foo' );
 	}
 
-	_foo();
+	notActuallyFoo();
 
 });

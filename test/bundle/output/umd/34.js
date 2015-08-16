@@ -9,9 +9,7 @@
 		console.log( 'exports should be renamed' );
 	};
 
-	var foo = _exports;
-
-	foo.bar();
+	_exports.bar();
 
 	var main = 'whatever';
 

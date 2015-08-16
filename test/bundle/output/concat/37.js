@@ -2,10 +2,9 @@
 
 	x = 'default' in x ? x['default'] : x;
 
-	var __x = 'wut';
-	var a = __x;
+	var _x = 'wut';
 
 	x();
-	console.log( a );
+	console.log( _x );
 
 })(moment);

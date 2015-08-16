@@ -1,6 +1,6 @@
 (function () { 'use strict';
 
-	function _x () {}
+	function x () {}
 
 	function someOtherName () {}
 
