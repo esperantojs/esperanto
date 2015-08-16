@@ -2,9 +2,10 @@
  * Inspects a module and discovers/categorises import & export declarations
  * @param {object} ast - the result of parsing `source` with acorn
  * @param {string} source - the module's original source code
+ * @param {array} comments - {start, end} position of comments
  * @returns {object} - { imports, exports, defaultExport }
  */
-export default function findImportsAndExports ( ast, source ) {
+export default function findImportsAndExports ( ast, source, comments ) {
 	let imports = [];
 	let exports = [];
 	let defaultExport;
@@ -14,7 +15,24 @@ export default function findImportsAndExports ( ast, source ) {
 		var passthrough, declaration;
 
 		if ( previousDeclaration ) {
-			previousDeclaration.next = node.start;
+			if ( previousDeclaration.node.type === 'ImportDeclaration' && node.type !== 'ImportDeclaration' ) {
+				// For last import statement, next declaration starts at next comment or node, whichever is closest
+				let nextComment;
+				for ( let i = 0, len = comments.length; i < len; i++ ) {
+					if ( comments[i].start > previousDeclaration.end ) {
+						nextComment = comments[i];
+						break;
+					}
+				}
+
+				if ( nextComment && nextComment.start < node.start ) {
+					previousDeclaration.next = nextComment.start;
+				} else {
+					previousDeclaration.next = node.start;
+				}
+			} else {
+				previousDeclaration.next = node.start;	
+			}
 
 			if ( node.type !== 'EmptyStatement' ) {
 				previousDeclaration = null;
