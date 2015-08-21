@@ -11,7 +11,7 @@ import { getName } from 'utils/mappers';
 let deprecateMessages = {
 	defaultOnly: 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
 	standalone: chalk.red.bold( '[DEPRECATION NOTICE] Esperanto is no longer under active development. To convert an ES6 module to another format, consider using Babel (https://babeljs.io)' ),
-	bundle: chalk.red.bold( '[DEPRECATION NOTICE] Esperanto is no longer under active development. To bundle ES6 modules, consider using Rollup (https://github.com/rollup/rollup)' )
+	bundle: chalk.red.bold( '[DEPRECATION NOTICE] Esperanto is no longer under active development. To bundle ES6 modules, consider using Rollup (https://github.com/rollup/rollup). See https://github.com/rollup/rollup/wiki/Migrating-from-Esperanto for help migrating' )
 };
 
 let alreadyWarned = {
