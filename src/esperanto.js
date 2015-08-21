@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import hasNamedImports from 'utils/hasNamedImports';
 import hasNamedExports from 'utils/hasNamedExports';
 import getStandaloneModule from 'standalone/getModule';
@@ -7,10 +8,24 @@ import bundleBuilders from 'bundler/builders';
 import concat from 'bundler/builders/concat';
 import { getName } from 'utils/mappers';
 
-let deprecateMessage = 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.';
-let alreadyWarned = false;
+let deprecateMessages = {
+	defaultOnly: 'options.defaultOnly has been deprecated, and is now standard behaviour. To use named imports/exports, pass `strict: true`.',
+	standalone: chalk.red.bold( '[DEPRECATION NOTICE] Esperanto is no longer under active development. To convert an ES6 module to another format, consider using Babel (https://babeljs.io)' ),
+	bundle: chalk.red.bold( '[DEPRECATION NOTICE] Esperanto is no longer under active development. To bundle ES6 modules, consider using Rollup (https://github.com/rollup/rollup). See https://github.com/rollup/rollup/wiki/Migrating-from-Esperanto for help migrating' )
+};
+
+let alreadyWarned = {
+	defaultOnly: false,
+	standalone: false,
+	bundle: false
+};
 
 function transpileMethod ( format ) {
+	if ( !alreadyWarned.standalone ) {
+		console.error( deprecateMessages.standalone );
+		alreadyWarned.standalone = true;
+	}
+
 	return function ( source, options = {} ) {
 		let mod = getStandaloneModule({
 			source,
@@ -18,10 +33,10 @@ function transpileMethod ( format ) {
 			strict: options.strict
 		});
 
-		if ( 'defaultOnly' in options && !alreadyWarned ) {
+		if ( 'defaultOnly' in options && !alreadyWarned.defaultOnly ) {
 			// TODO link to a wiki page explaining this, or something
-			console.log( deprecateMessage );
-			alreadyWarned = true;
+			console.error( deprecateMessages.defaultOnly );
+			alreadyWarned.defaultOnly = true;
 		}
 
 		if ( options.absolutePaths && !options.amdName ) {
@@ -50,6 +65,11 @@ export const toCjs = transpileMethod( 'cjs' );
 export const toUmd = transpileMethod( 'umd' );
 
 export function bundle ( options ) {
+	if ( !alreadyWarned.bundle ) {
+		console.error( deprecateMessages.bundle );
+		alreadyWarned.bundle = true;
+	}
+
 	return getBundle( options ).then( function ( bundle ) {
 		return {
 			imports: bundle.externalModules.map( mod => mod.id ),
@@ -63,10 +83,10 @@ export function bundle ( options ) {
 		};
 
 		function transpile ( format, options = {} ) {
-			if ( 'defaultOnly' in options && !alreadyWarned ) {
+			if ( 'defaultOnly' in options && !alreadyWarned.defaultOnly ) {
 				// TODO link to a wiki page explaining this, or something
-				console.log( deprecateMessage );
-				alreadyWarned = true;
+				console.error( deprecateMessages.defaultOnly );
+				alreadyWarned.defaultOnly = true;
 			}
 
 			let builder;

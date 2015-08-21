@@ -1,5 +1,7 @@
 # esperanto [![Build Status](https://travis-ci.org/esperantojs/esperanto.svg?branch=master)](https://travis-ci.org/esperantojs/esperanto)
 
+## This project is no longer under active development. To bundle ES6 modules, use [Rollup](https://github.com/rollup/rollup). To convert ES6 modules to another format, use [Babel](https://babeljs.io/docs/usage/modules/). See [#191](https://github.com/esperantojs/esperanto/pull/191) for details.
+
 A better way to transpile ES6 modules to AMD and CommonJS:
 
 * Easier - no laborious configuration

@@ -1,5 +1,9 @@
 # changelog
 
+## 0.7.5
+
+* Add a deprecation warning. (This project is deprecated – for one-to-one transformations you should use [Babel](https://babeljs.io/), for bundling you should use [Rollup](https://github.com/rollup/rollup).)
+
 ## 0.7.3
 
 * `this` at the top-level is no longer treated as a syntax error ([#151](https://github.com/esperantojs/esperanto/issues/151))
