@@ -1,5 +1,9 @@
 # changelog
 
+## 0.7.6
+
+* Update sander to prevent graceful-fs-opocalypse ([#193](https://github.com/esperantojs/esperanto/issues/193))
+
 ## 0.7.5
 
 * Add a deprecation warning. (This project is deprecated – for one-to-one transformations you should use [Babel](https://babeljs.io/), for bundling you should use [Rollup](https://github.com/rollup/rollup).)

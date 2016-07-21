@@ -1,7 +1,7 @@
 {
   "name": "esperanto",
   "description": "An easier way to convert ES6 modules to AMD and CommonJS",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "author": "Rich Harris",
   "repository": "https://github.com/esperantojs/esperanto",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "chalk": "^1.0.0",
     "magic-string": "^0.4.9",
     "minimist": "^1.1.0",
-    "sander": "^0.2.1"
+    "sander": "^0.5.1"
   },
   "main": "dist/esperanto.js",
   "jsnext:main": "src/esperanto.js",
