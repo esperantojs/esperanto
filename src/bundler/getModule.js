@@ -28,6 +28,7 @@ export default function getModule ( mod ) {
 		// before throwing the error
 		if ( err.loc ) {
 			err.file = mod.path;
+			err.message += ' in ' + mod.path;
 		}
 
 		throw err;
